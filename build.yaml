@@ -1,0 +1,28 @@
+# Read about `build.yaml` at https://pub.dev/packages/build_config
+targets:
+  $default:
+    builders:
+      server_utils|rpc:
+        generate_for:
+        - example/*
+        - test/rpc/*
+      server_utils|rpc_client:
+        generate_for:
+        - example/*
+        - test/rpc/*
+
+builders:
+  rpc:
+    import: "package:server_utils/rpc_builder.dart"
+    builder_factories: ["rpcBuilder"]
+    build_extensions: {".dart": ["rpc_builder.g.part"]}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: ["source_gen|combining_builder"]
+  rpc_client:
+    import: "package:server_utils/rpc_builder.dart"
+    builder_factories: ["rpcClientBuilder"]
+    build_extensions: {".dart": [".client.dart"]}
+    auto_apply: dependents
+    build_to: source
+
