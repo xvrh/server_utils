@@ -2,11 +2,16 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:shelf/shelf.dart';
 import 'package:server_utils/rpc.dart';
 import 'package:server_utils/src/rpc_builder/annotations.dart';
+import 'package:shelf_router/shelf_router.dart';
 
 part 'api.g.dart';
 
-@Controller('news')
-class NewsController {
+@Api('news')
+class NewsApi {
+  void mountTo(Router router) {
+    router.mount($newsApi.path, _$NewsApiHandler(this));
+  }
+
   @Get()
   Future<String> simpleString() async => 'Hello';
 
@@ -166,7 +171,19 @@ class NewsController {
   }
 
   @Get()
-  bool throwAnError() => throw Exception('An error');
+  void throwAnException() => throw Exception('An error');
+
+  @Post()
+  void throwANotFoundException() =>
+      throw NotFoundException.resource('A resource');
+
+  @Post()
+  void throwAInvalidInputException() =>
+      InvalidInputException.check(false, 'Invalid input');
+
+  @Post()
+  void throwOtherException({required int d1}) =>
+      throw OtherException('A resource', d1: d1);
 
   @Get()
   List<int?> echoList(List<int?> list) => list;
@@ -180,7 +197,7 @@ class NewsController {
   @Get()
   Map<String?, int?>? echoMapNullable(Map<String?, int?>? map) => map;
 
-  Handler get handler => _$NewsControllerHandler(this);
+  Handler get handler => _$NewsApiHandler(this);
 }
 
 @JsonSerializable()
@@ -216,3 +233,8 @@ class Page<TContent> {
 }
 
 enum MoveType { inside, after, before }
+
+class OtherException extends RpcException {
+  OtherException(String message, {required int d1})
+      : super(500, message, data: {'d1': d1});
+}

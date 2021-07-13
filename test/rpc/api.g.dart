@@ -82,26 +82,26 @@ Map<String, dynamic> _$PageToJson<TContent>(Page<TContent> instance) =>
 // RpcRouterGenerator
 // **************************************************************************
 
-final $newsController = Controller<NewsController>.info(
-    path: '/news/', name: 'NewsController', factory: _$NewsControllerHandler);
+final $newsApi = Api<NewsApi>.info(
+    path: '/news/', name: 'NewsApi', factory: _$NewsApiHandler);
 
-Handler _$NewsControllerHandler(NewsController controller) {
-  var router = createRpcRouter($newsController);
+Handler _$NewsApiHandler(NewsApi api) {
+  var router = createRpcRouter($newsApi);
 
   router.get('simpleString', (request) async {
-    var result = await controller.simpleString();
+    var result = await api.simpleString();
     return result;
   });
 
   router.get('greeting', (request) async {
-    var result = await controller.greeting(
+    var result = await api.greeting(
       request.queryParameter('name').requiredString(),
     );
     return result;
   });
 
   router.get('greetingWithNamed', (request) async {
-    var result = await controller.greetingWithNamed(
+    var result = await api.greetingWithNamed(
       request.queryParameter('name').requiredString(),
       prefix: request.queryParameter('prefix').nullableString(),
       suffix: request.queryParameter('suffix').nullableString(),
@@ -110,14 +110,14 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('greetingWithRequired', (request) async {
-    var result = await controller.greetingWithRequired(
+    var result = await api.greetingWithRequired(
       count: request.queryParameter('count').requiredInt(),
     );
     return result;
   });
 
   router.get('allTypes', (request) async {
-    var result = await controller.allTypes(
+    var result = await api.allTypes(
       aInt: request.queryParameter('aInt').nullableInt(),
       requiredInt: request.queryParameter('requiredInt').requiredInt(),
       aBool: request.queryParameter('aBool').nullableBool(),
@@ -135,7 +135,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('getList', (request) async {
-    var result = await controller.getList(
+    var result = await api.getList(
       (request.queryParameter('ints').requiredJson as List<Object?>)
           .map((i) => (i! as num).toInt())
           .toList(),
@@ -150,7 +150,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('getListNullableValue', (request) async {
-    var result = await controller.getListNullableValue(
+    var result = await api.getListNullableValue(
       (request.queryParameter('ints').requiredJson as List<Object?>)
           .map((i) => (i as num?)?.toInt())
           .toList(),
@@ -165,7 +165,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('getListNullable', (request) async {
-    var result = await controller.getListNullable(
+    var result = await api.getListNullable(
       (request.queryParameter('ints').nullableJson as List<Object?>?)
           ?.map((i) => (i as num?)?.toInt())
           .toList(),
@@ -180,7 +180,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('getMap', (request) async {
-    var result = await controller.getMap(
+    var result = await api.getMap(
       (request.queryParameter('ints').requiredJson as Map<String, Object?>)
           .map((k, v) => MapEntry(k, (v! as num).toInt())),
       (request.queryParameter('bools').requiredJson as Map<String, Object?>)
@@ -193,7 +193,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
 
   router.post('postList', (request) async {
     var body = await request.body;
-    var result = await controller.postList(
+    var result = await api.postList(
       (body['ints']! as List<Object?>).map((i) => (i! as num).toInt()).toList(),
       (body['bools']! as List<Object?>).map((i) => i! as bool).toList(),
       (body['strings']! as List<Object?>).map((i) => i! as String).toList(),
@@ -203,7 +203,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
 
   router.post('postMap', (request) async {
     var body = await request.body;
-    var result = await controller.postMap(
+    var result = await api.postMap(
       (body['ints']! as Map<String, Object?>)
           .map((k, v) => MapEntry(k, (v! as num).toInt())),
       (body['bools']! as Map<String, Object?>)
@@ -215,7 +215,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('lastNews', (request) async {
-    var result = await controller.lastNews(
+    var result = await api.lastNews(
       count: request.queryParameter('count').nullableInt(),
     );
     return result.map((i) => i.toJson()).toList();
@@ -223,7 +223,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
 
   router.post('echo', (request) async {
     var body = await request.body;
-    var result = await controller.echo(
+    var result = await api.echo(
       News.fromJson(body['news']! as Map<String, Object?>),
     );
     return result.toJson();
@@ -231,7 +231,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
 
   router.post('sendReceiveNewsPost', (request) async {
     var body = await request.body;
-    var result = await controller.sendReceiveNewsPost(
+    var result = await api.sendReceiveNewsPost(
       (body['news']! as List<Object?>)
           .map((i) => News.fromJson(i! as Map<String, Object?>))
           .toList(),
@@ -240,7 +240,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('sendReceiveNewsGet', (request) async {
-    var result = await controller.sendReceiveNewsGet(
+    var result = await api.sendReceiveNewsGet(
       (request.queryParameter('news').requiredJson as List<Object?>)
           .map((i) => News.fromJson(i! as Map<String, Object?>))
           .toList(),
@@ -250,7 +250,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
 
   router.post('sendReceiveMapNewsPost', (request) async {
     var body = await request.body;
-    var result = await controller.sendReceiveMapNewsPost(
+    var result = await api.sendReceiveMapNewsPost(
       (body['news']! as Map<String, Object?>).map(
           (k, v) => MapEntry(k, News.fromJson(v! as Map<String, Object?>))),
     );
@@ -258,7 +258,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('sendReceiveMapNewsGet', (request) async {
-    var result = await controller.sendReceiveMapNewsGet(
+    var result = await api.sendReceiveMapNewsGet(
       (request.queryParameter('news').requiredJson as Map<String, Object?>).map(
           (k, v) => MapEntry(k, News.fromJson(v! as Map<String, Object?>))),
     );
@@ -266,69 +266,69 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('getListString', (request) async {
-    var result = await controller.getListString();
+    var result = await api.getListString();
     return result;
   });
 
   router.post('getListStringPost', (request) async {
-    var result = await controller.getListStringPost();
+    var result = await api.getListStringPost();
     return result;
   });
 
   router.get('getListBool', (request) {
-    var result = controller.getListBool();
+    var result = api.getListBool();
     return result;
   });
 
   router.post('getListBoolPost', (request) {
-    var result = controller.getListBoolPost();
+    var result = api.getListBoolPost();
     return result;
   });
 
   router.post('aVoid', (request) async {
     var body = await request.body;
-    controller.aVoid(
+    api.aVoid(
       (body['id']! as num).toInt(),
     );
   });
 
   router.get('returnBool', (request) {
-    var result = controller.returnBool();
+    var result = api.returnBool();
     return result;
   });
 
   router.get('returnNum', (request) {
-    var result = controller.returnNum();
+    var result = api.returnNum();
     return result;
   });
 
   router.get('returnDouble', (request) {
-    var result = controller.returnDouble();
+    var result = api.returnDouble();
     return result;
   });
 
   router.get('returnInt', (request) {
-    var result = controller.returnInt();
+    var result = api.returnInt();
     return result;
   });
 
   router.get('returnDateTime', (request) {
-    var result = controller.returnDateTime();
+    var result = api.returnDateTime();
     return result.toIso8601String();
   });
 
   router.get('returnListDateTime', (request) {
-    var result = controller.returnListDateTime();
+    var result = api.returnListDateTime();
     return result.map((i) => i.toIso8601String()).toList();
   });
 
   router.get('returnFutureListDateTime', (request) async {
-    var result = await controller.returnFutureListDateTime();
+    var result = await api.returnFutureListDateTime();
     return result.map((i) => i.toIso8601String()).toList();
   });
 
   router.get('echoEnum', (request) {
-    var result = controller.echoEnum(
+    var result = api.echoEnum(
       request.queryParameter('type1').requiredEnum(MoveType.values),
       type2: request.queryParameter('type2').nullableEnum(MoveType?.values),
     );
@@ -336,27 +336,41 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('getPage', (request) {
-    var result = controller.getPage();
+    var result = api.getPage();
     return result.toJson();
   });
 
   router.get('getPagesMap', (request) {
-    var result = controller.getPagesMap();
+    var result = api.getPagesMap();
     return result.map((k, v) => MapEntry(k, v.toJson()));
   });
 
   router.get('getPagesList', (request) {
-    var result = controller.getPagesList();
+    var result = api.getPagesList();
     return result.map((i) => i.toJson()).toList();
   });
 
-  router.get('throwAnError', (request) {
-    var result = controller.throwAnError();
-    return result;
+  router.get('throwAnException', (request) {
+    api.throwAnException();
+  });
+
+  router.post('throwANotFoundException', (request) {
+    api.throwANotFoundException();
+  });
+
+  router.post('throwAInvalidInputException', (request) {
+    api.throwAInvalidInputException();
+  });
+
+  router.post('throwOtherException', (request) async {
+    var body = await request.body;
+    api.throwOtherException(
+      d1: (body['d1']! as num).toInt(),
+    );
   });
 
   router.get('echoList', (request) {
-    var result = controller.echoList(
+    var result = api.echoList(
       (request.queryParameter('list').requiredJson as List<Object?>)
           .map((i) => (i as num?)?.toInt())
           .toList(),
@@ -365,7 +379,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('echoMap', (request) {
-    var result = controller.echoMap(
+    var result = api.echoMap(
       (request.queryParameter('map').requiredJson as Map<String, Object?>)
           .map((k, v) => MapEntry(k, (v as num?)?.toInt())),
     );
@@ -373,7 +387,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('echoListNullable', (request) {
-    var result = controller.echoListNullable(
+    var result = api.echoListNullable(
       (request.queryParameter('list').nullableJson as List<Object?>?)
           ?.map((i) => (i as num?)?.toInt())
           .toList(),
@@ -382,7 +396,7 @@ Handler _$NewsControllerHandler(NewsController controller) {
   });
 
   router.get('echoMapNullable', (request) {
-    var result = controller.echoMapNullable(
+    var result = api.echoMapNullable(
       (request.queryParameter('map').nullableJson as Map<String, Object?>?)
           ?.map((k, v) => MapEntry(k, (v as num?)?.toInt())),
     );

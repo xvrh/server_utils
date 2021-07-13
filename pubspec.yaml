@@ -8,7 +8,8 @@ dependencies:
   dart_style:
   markdown:
   more:
-  sanitize_html:
+  postgres:
+  postgres_pool:
   shelf_proxy:
   shelf_router:
   shelf_static:
