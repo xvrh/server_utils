@@ -36,15 +36,15 @@ class IsolateRunner {
 
     var isolateSource = '''
 import 'dart:isolate';
-import 'package:database/migration.dart' show MigrationContext;
+import 'package:server_utils/postgres.dart' show MigrationContext;
 $importBuffers
 
 final methods = <String, Function(MigrationContext)>{
 $methodMap
 };
-'''
-        //language=dart
-        '''
+''';
+    //language=dart
+    isolateSource += '''
 
 main(args, Map message) async {
   SendPort port = message['port'];
@@ -54,13 +54,13 @@ main(args, Map message) async {
   var migrationContext = await MigrationContext.openFromJson(message['migrationContext']);
   try {
     await for (var message in receivePort) {
-      var file = message['file'];
-      var callback = methods[file];
+      var file = message['file']!;
+      var callback = methods[file]!;
       await callback(migrationContext);
       port.send('ok');
     }
   } finally {
-    migrationContext.connection.close();
+    migrationContext.connection?.close();
     receivePort.close();
   }
 }   

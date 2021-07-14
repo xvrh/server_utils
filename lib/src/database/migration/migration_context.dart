@@ -1,5 +1,7 @@
-import 'package:database/postgres.dart';
-import 'package:database/src/utils.dart';
+import 'package:server_utils/src/database/connection_options.dart';
+
+import '../postgres.dart';
+import '../utils.dart';
 import 'package:postgres/postgres.dart';
 
 class MigrationContext {
@@ -13,26 +15,23 @@ class MigrationContext {
   }
 
   static Future<MigrationContext> open(PostgresClient client) async {
-    PostgreSQLConnection connection =
-        connectionFromOptions(client.connectionOptions);
+    var connection = connectionFromOptions(client.connectionOptions);
     await connection.open();
     return MigrationContext._(client, connection);
   }
 
   static Future<MigrationContext> openFromJson(Map<String, dynamic> json) {
-    var binaries = PostgresBinaries.fromJson(json['binaries']);
-    var connectionOptions =
-        ConnectionOptions.fromJson(json['connectionOptions']);
+    var dataPath = json['dataPath']! as String;
+    var connectionOptions = ConnectionOptions.fromJson(
+        json['connectionOptions']! as Map<String, dynamic>);
 
-    return open(PostgresClient(connectionOptions, binaries: binaries));
+    return open(PostgresClient(connectionOptions, dataPath: dataPath));
   }
 
   Map<String, dynamic> toJson() => {
-        'binaries': client.binaries.toJson(),
+        'dataPath': client.dataPath,
         'connectionOptions': connectionOptions.toJson(),
       };
 
   ConnectionOptions get connectionOptions => client.connectionOptions;
-
-  //TODO(xha): accéder aux paramètres
 }

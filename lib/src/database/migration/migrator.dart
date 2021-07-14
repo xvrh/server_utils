@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'isolate_runner.dart';
 import 'migration_context.dart';
 import 'script.dart';
-import 'package:database/src/utils.dart';
-
+import '../utils.dart';
 import '../postgres.dart';
+import 'package:package_config/package_config.dart';
 
 class Migrator {
   static const _migrationTable = '_migration_history';
@@ -24,11 +26,14 @@ select exists (
    and    table_name = '$_migrationTable'
 );
 ''');
-      bool migrationTableExists = existResult[0][0];
+      var migrationTableExists = existResult[0][0] as bool;
       if (!migrationTableExists) {
-        await connection.execute(await Resource(
-                'package:database/src/migration/migration_history.sql')
-            .readAsString());
+        var packageConfig = (await findPackageConfig(Directory.current))!;
+        var testUtilsPackage = packageConfig['server_utils']!;
+        var sqlPath = testUtilsPackage.packageUriRoot
+            .resolve('src/database/migration/migration_history.sql')
+            .toFilePath();
+        await connection.execute(await File(sqlPath).readAsString());
       }
 
       var migrations =
@@ -55,15 +60,12 @@ select exists (
       try {
         for (var script in nonExecutedMigrations) {
           try {
-            //TODO(xha): est-ce qu'il faut être plus strict sur l'ordre autorisé des migrations?
-            // Est-ce qu'il faut être plus stric si 2 migrations ont le même nom?
-
             if (script.type == ScriptType.sql) {
               await client.executeFile(script.file);
             } else {
-              await isolateRunner.callMigrateMethod(script.file.absolute.path);
+              await isolateRunner!.callMigrateMethod(script.file.absolute.path);
             }
-          } catch (e) {
+          } on Exception catch (e) {
             throw MigrationException(script.file.path, e);
           }
 

@@ -23,6 +23,7 @@ class Page<TEntities>
 
   Map<String, dynamic> toJson() => _$PageToJson(this)..['entities'] = entities;
 
+  @override
   int get length => entities.length;
 
   int get pageSize => pageRequest.pageSize;
@@ -50,7 +51,8 @@ class Page<TEntities>
       pageSize: pageRequest.pageSize,
       sort: pageRequest.sort);
 
-  toString() => 'Page(totalLength: $totalLength, '
+  @override
+  String toString() => 'Page(totalLength: $totalLength, '
       'pageRequest: $pageRequest, '
       'entities: ${entities.length})';
 
@@ -73,9 +75,6 @@ class PageRequest {
   factory PageRequest.fromJson(Map<String, dynamic> json) =>
       _$PageRequestFromJson(json);
 
-  PageRequest defaults({required Sort sort}) => PageRequest(
-      pageIndex: pageIndex, pageSize: pageSize, sort: this.sort ?? sort);
-
   Map<String, dynamic> toJson() => _$PageRequestToJson(this);
 
   int get offset => pageIndex * pageSize;
@@ -92,9 +91,11 @@ class PageRequest {
       other.pageIndex == pageIndex &&
       other.sort == sort;
 
-  int get hashCode => pageIndex * pageSize * sort.hashCode;
+  @override
+  int get hashCode => pageIndex ^ pageSize ^ sort.hashCode;
 
-  toString() =>
+  @override
+  String toString() =>
       'PageRequest(pageIndex: $pageIndex, pageSize: $pageSize, sort: $sort)';
 }
 
@@ -104,9 +105,7 @@ class Sort {
   final SortDirection direction;
 
   Sort(this.field, {SortDirection? direction})
-      : direction = direction ?? SortDirection.asc {
-    assert(field != null);
-  }
+      : direction = direction ?? SortDirection.asc;
 
   factory Sort.desc(String field) => Sort(field, direction: SortDirection.desc);
 
@@ -118,7 +117,11 @@ class Sort {
   bool operator ==(other) =>
       other is Sort && other.field == field && other.direction == direction;
 
-  toString() => '$field ${sortDirectionToString(direction)}';
+  @override
+  int get hashCode => field.hashCode ^ direction.hashCode;
+
+  @override
+  String toString() => '$field ${sortDirectionToString(direction)}';
 }
 
 enum SortDirection { asc, desc }
