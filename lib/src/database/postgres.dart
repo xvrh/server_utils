@@ -88,6 +88,8 @@ class Postgres {
       user: username ?? this.username,
       password: password ?? this.password,
       database: database ?? this.database,
+      port: port,
+      hostname: 'localhost',
     ));
   }
 
@@ -209,10 +211,9 @@ class PostgresServer {
   Future stop() async {
     var process = _process!;
 
-    process.kill();
+    process.kill(ProcessSignal.sigint);
 
     await process.exitCode;
-    await Future.delayed(Duration(milliseconds: 100));
 
     for (var subscription in _processStreamSubscriptions) {
       await subscription.cancel();
@@ -307,6 +308,11 @@ ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO $userName;
     return results.trim() == '1';
   }
 
+  Future<bool> databaseExists(String database) async {
+    var databases = await listDatabases();
+    return databases.contains(database);
+  }
+
   Future<void> execute(String script,
       {String? database, bool? transaction}) async {
     /*
@@ -367,6 +373,7 @@ ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO $userName;
         -W, --password           force password prompt (should happen automatically)
      */
 
+    _logger.finest('Execute $script');
     await _psql((stdin) async {
       stdin.writeln('$script;');
       await stdin.close();
@@ -459,7 +466,9 @@ ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO $userName;
       'ON_ERROR_STOP=1',
     ];
 
-    var process = await Process.start('docker', [..._psqlDockerArgs, ...args]);
+    var allArgs = [..._psqlDockerArgs, ...args];
+    var process = await Process.start('docker', allArgs);
+    _logger.fine(allArgs.map((s) => s).join(' '));
 
     var stdoutLines = <String>[];
     var stdoutSub = process.stdout
@@ -511,10 +520,54 @@ ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO $userName;
         .toList();
   }
 
+  Future<List<PostgresRole>> listUsers() async {
+    var result =
+        await _runPsql(['--quiet', '--tuples-only', '--command', r'\du']);
+    return LineSplitter.split(result)
+        .map((line) => line.split('|'))
+        .where((n) => n.length >= 2)
+        .map((l) => PostgresRole(
+            l.first.trim(),
+            l[1]
+                .split(',')
+                .map((r) => r.trim())
+                .where((s) => s.isNotEmpty)
+                .toSet()))
+        .toList();
+  }
+
+  Future<List<PostgresTable>> listTable() async {
+    var result =
+        await _runPsql(['--quiet', '--tuples-only', '--command', r'\dt']);
+    return LineSplitter.split(result)
+        .map((line) => line.split('|'))
+        .where((n) => n.length >= 4)
+        .map((l) =>
+            PostgresTable(l[0].trim(), l[1].trim(), l[2].trim(), l[3].trim()))
+        .toList();
+  }
+  // \dt
+
   //TODO(xha): implement
 //  Future<String> dump({bool data = true, bool schema = true}) {}
 //
 //  Future<void> dumpTo(String path, {bool data = true, bool schema = true}) {}
 
 // TODO(xha): Dump to Stream to http/s3/cloud
+}
+
+class PostgresRole {
+  final String name;
+  final Set<String> attributes;
+
+  PostgresRole(this.name, this.attributes);
+}
+
+class PostgresTable {
+  final String schema;
+  final String name;
+  final String type;
+  final String owner;
+
+  PostgresTable(this.schema, this.name, this.type, this.owner);
 }

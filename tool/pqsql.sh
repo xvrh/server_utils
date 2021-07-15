@@ -1,3 +1,1 @@
-docker exec -it some-postgres psql -d postgres -U username <<-EOSQL \
-  select 1 \
-EOSQL
+docker exec -it some-postgres psql -d postgres -U username --tuples-only --quiet -c '\dt+'

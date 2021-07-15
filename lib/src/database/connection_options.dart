@@ -44,4 +44,13 @@ class ConnectionOptions {
       database: database ?? this.database,
     );
   }
+
+  @override
+  String toString() => 'ConnectionOptions(${{
+        'hostname': hostname,
+        'port': port,
+        'user': user,
+        'password': password,
+        'database': database,
+      }.entries.map((e) => '${e.key}: ${e.value}').join(', ')})';
 }
