@@ -1,30 +1,33 @@
 create table app_configuration
 (
-    id               serial primary key,
-    enable_logs      boolean null
+    id          serial primary key,
+    enable_logs boolean null
 );
 
 create table app_user
 (
     id               serial primary key,
-    email            text not null unique,
+    email            text        not null unique,
+    created          timestamptz not null default now(),
     last_seen        timestamptz,
-    configuration_id int  not null references app_configuration (id),
-    eula_version     text null,
-    first_name       text null,
-    last_name        text null
+
+    -- Filled by the app_user_inserted trigger
+    configuration_id int         not null default 0 references app_configuration (id),
+    eula_version     text        null,
+    first_name       text        null,
+    last_name        text        null
 );
 
 -- Each time the app is open, insert or update the record in this database
 create table mobile_device
 (
     id                         serial primary key,
-    user_id                    int references app_user (id),
+    user_id                    int         not null references app_user (id),
     created                    timestamptz not null default now(),
     last_seen                  timestamptz not null default now(),
     device_identifier          text        not null unique,
     notification_token         text        null,
-    notification_token_updated timestamptz,
+    notification_token_updated timestamptz null,
     os_name                    text        not null,
     os_version                 text        not null default '',
     os_locale                  text        not null default '',
@@ -32,8 +35,49 @@ create table mobile_device
     model                      text        not null default '',
     app_version                text        not null,
     app_language               text        not null,
-    configuration_id           int         not null references app_configuration (id)
+    -- Filled by the mobile_device_inserted trigger
+    configuration_id           int         not null default 0 references app_configuration (id)
 );
+
+create function app_user_inserted() returns trigger as
+$$
+declare
+    config_id int;
+begin
+    insert into app_configuration default values returning id into config_id;
+    new.configuration_id = config_id;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger
+    app_user_inserted
+    before insert
+    on
+        app_user
+    for each row
+execute procedure
+    app_user_inserted();
+
+create function mobile_device_inserted() returns trigger as
+$$
+declare
+    config_id int;
+begin
+    insert into app_configuration default values returning id into config_id;
+    new.configuration_id = config_id;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger
+    mobile_device_inserted
+    before insert
+    on
+        mobile_device
+    for each row
+execute procedure
+    mobile_device_inserted();
 
 create function mobile_device_updated() returns trigger as
 $$

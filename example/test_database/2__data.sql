@@ -1,1 +1,1 @@
-insert into app_configuration (enable_logs) values (true)
+insert into app_user (email) values ('info@xaha.dev')
