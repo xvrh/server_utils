@@ -1,0 +1,1 @@
+insert into app_configuration (enable_logs) values (true)

@@ -159,12 +159,10 @@ class Database {
     return result;
   }
 
-  // Permet d'autoriser de mettre des arguments standards $1, $2 etc... dans la query
-  // et pouvoir passer {'1': xx, '2': xx} dans les paramètres.
-  // Utiliser les paramètres standard est utile pour garder la possibilité d'exécuter
-  // la query facilement dans l'IDE.
+  // Replace parameter of the form :<parameter> which are recognized by the IDE
+  // to parameters of the form @<parameter> which are used by the postgres Dart library.
   String _replaceNormalParametersWithSubstitution(String query) {
-    return query.replaceAllMapped(_normalParameterExtractor, (match) {
+    return query.replaceAllMapped(_parameterExtractor, (match) {
       return '@${match.group(1)}';
     });
   }
@@ -174,4 +172,4 @@ class Database {
   }
 }
 
-final _normalParameterExtractor = RegExp(r'\$([0-9]+)');
+final _parameterExtractor = RegExp(r'[^:]:([a-z]{1}[a-z0-9_]*)');

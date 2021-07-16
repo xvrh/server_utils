@@ -261,12 +261,17 @@ alter user $userName with encrypted password '${password.replaceAll("'", r"\'")}
     await execute('$buffer');
   }
 
-  Future<void> dropDatabase(String databaseName, {bool? ifExists}) async {
+  Future<void> dropDatabase(String databaseName,
+      {bool? ifExists, bool? force}) async {
     ifExists ??= false;
+    force ??= false;
 
     var command = 'drop database $databaseName';
     if (ifExists) {
       command += ' if exists';
+    }
+    if (force) {
+      command += ' with (force)';
     }
 
     await execute(command);
