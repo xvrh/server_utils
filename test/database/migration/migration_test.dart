@@ -7,7 +7,7 @@ final _testDataPath = 'test/database/migration/data';
 void main() {
   late LocalDatabase database;
   setUp(() async {
-    database = await thisPackageTestDatabase.createDatabase();
+    database = await testDatabase.createDatabase();
   });
 
   tearDown(() async {

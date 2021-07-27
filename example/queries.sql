@@ -1,13 +1,13 @@
 
 
---# -findUser
-select * from app_user where id = :id;
+--# !findUser
+select * from app_user where id = :id::int;
 
---# -findUserByEmail
-select * from app_user where email = :email;
+--# !findUserByEmail
+select * from app_user where email = :email::text;
 
---# *query
-select * from app_user where email = :email;
+--# *queryBy
+select * from app_user where email = :email::text;
 
---# findUserByEmail
-select * from app_user where email = :email;
+--# ?findUserByEmail
+select * from app_user where email = :email::text;

@@ -3,6 +3,7 @@ import 'package:postgres_pool/postgres_pool.dart';
 import 'package:postgres/postgres.dart';
 import 'database.dart';
 import 'connection_options.dart';
+import 'database_io.dart';
 import 'postgres.dart';
 import 'utils.dart';
 
@@ -30,7 +31,7 @@ class LocalDatabase {
     var connection = createConnection();
     await connection.open();
     try {
-      return await callback(Database(connection));
+      return await callback(DatabaseIO(connection));
     } finally {
       await connection.close();
     }

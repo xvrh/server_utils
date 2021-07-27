@@ -1,16 +1,60 @@
+create domain translated_text jsonb not null default $${}$$;
+
+create table page
+(
+    id     serial primary key,
+    code   text  null,
+    title  translated_text default $${}$$,
+    title2 jsonb not null  default $${}$$,
+    body   translated_text
+);
+
 create table app_configuration
 (
     id          serial primary key,
     enable_logs boolean null
 );
 
+
+-- http://download.geonames.org/export/dump/readme.txt
+create table country
+(
+    code       char(2) primary key,
+    code_iso3  char(3) not null,
+    currency   char(3) not null,
+    latitude   float   not null,
+    longitude  float   not null,
+    phone_code int     not null
+);
+
+create table timezone
+(
+    name      text primary key,
+    country   char(2) null references country (code),
+    alias_for text    null references timezone (name),
+    lat_long  text    not null
+);
+
+create table app_role
+(
+    code        text not null primary key,
+    index       int  not null,
+    name        text not null,
+    description text not null default ''
+);
+
+insert into app_role (code, index, name)
+values ('ADMIN', 100, 'Admin'),
+       ('USER', 0, 'User');
+
 create table app_user
 (
     id               serial primary key,
+    role             text        not null references app_role (code),
     email            text        not null unique,
     created          timestamptz not null default now(),
     last_seen        timestamptz,
-
+    country_code     char(2)     not null references country (code),
     -- Filled by the app_user_inserted trigger
     configuration_id int         not null default 0 references app_configuration (id),
     eula_version     text        null,

@@ -19,7 +19,7 @@ void main() {
   });
 
   test('Use test database', () async {
-    var postgres = thisPackageTestDatabase;
+    var postgres = testDatabaseSuperuser;
     var superclient = postgres.client();
     var databaseName = 'postgres_test_1';
     var userName = 'postgres_test_1_user';

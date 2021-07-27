@@ -49,6 +49,24 @@ class Postgres {
     return File(path.join(dataPath, 'pgdata', 'PG_VERSION')).existsSync();
   }
 
+  Postgres copyWith({
+    String? dataPath,
+    String? version,
+    String? username,
+    String? password,
+    String? database,
+    int? port,
+  }) {
+    return Postgres(
+      dataPath ?? this.dataPath,
+      version: version ?? this.version,
+      username: username ?? this.username,
+      password: password ?? this.password,
+      database: database ?? this.database,
+      port: port ?? this.port,
+    );
+  }
+
   Future<T> runServer<T>(FutureOr<T> Function(PostgresServer) callback) async {
     var postgresServer = await server();
     try {
@@ -77,12 +95,28 @@ class Postgres {
     throw Exception('Cannot find a free port');
   }
 
-  PostgresClient client(
-      {String? username, String? password, String? database}) {
+  void _checkHasPort() {
     if (port == null) {
       throw Exception(
           'When no port is specified, client should be created from the PostgresServer object');
     }
+  }
+
+  ConnectionOptions get connectionOptions {
+    _checkHasPort();
+
+    return ConnectionOptions(
+      user: username,
+      password: password,
+      database: database,
+      port: port,
+      hostname: 'localhost',
+    );
+  }
+
+  PostgresClient client(
+      {String? username, String? password, String? database}) {
+    _checkHasPort();
 
     return clientFromOptions(ConnectionOptions(
       user: username ?? this.username,
@@ -551,9 +585,8 @@ ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO $userName;
             PostgresTable(l[0].trim(), l[1].trim(), l[2].trim(), l[3].trim()))
         .toList();
   }
-  // \dt
 
-  //TODO(xha): implement
+//TODO(xha): implement
 //  Future<String> dump({bool data = true, bool schema = true}) {}
 //
 //  Future<void> dumpTo(String path, {bool data = true, bool schema = true}) {}
