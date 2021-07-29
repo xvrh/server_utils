@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:meta/meta.dart';
+import 'package:server_utils/src/database/orm/schema.dart';
 
 class SqlFile {
   final queries = <SqlQuery>[];
@@ -108,11 +109,39 @@ enum ResultType { all, single, singleOrNull, page, list }
 class SqlQuery {
   final MethodDescription method;
   final String query;
+  final List<Parameter> parameters;
 
-  SqlQuery({required this.method, required this.query});
+  SqlQuery({required this.method, required this.query})
+      : parameters = extractParameters(query);
+
+  static final _parameterExtractor =
+      RegExp(r'[^:]:([a-z][a-z0-9]*)(::([a-z][a-z0-9]+))?');
+
+  @visibleForTesting
+  static List<Parameter> extractParameters(String sqlQuery) {
+    var matches = _parameterExtractor.allMatches(sqlQuery);
+    var parameters = <Parameter>[];
+    for (var match in matches) {
+      var name = match.group(1)!;
+      var type = match.group(3);
+      if (type == null) {
+        throw Exception(
+            'Parameters in queries must be typed (ie: param::text). Error for $name in query:\n$sqlQuery');
+      }
+      parameters.add(Parameter(name, DataType.fromPostgresName(type)));
+    }
+    return parameters;
+  }
 
   @override
   String toString() => 'SqlQuery(${method.name})';
+}
+
+class Parameter {
+  final String name;
+  final DataType type;
+
+  Parameter(this.name, this.type);
 }
 
 class _SqlQueryBuilder {

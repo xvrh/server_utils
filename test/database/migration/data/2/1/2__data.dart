@@ -1,4 +1,4 @@
-import 'package:server_utils/postgres.dart';
+import 'package:server_utils/database.dart';
 import 'package:faker/faker.dart';
 
 // ignore_for_file: file_names

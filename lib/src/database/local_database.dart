@@ -28,10 +28,15 @@ class LocalDatabase {
   }
 
   Future<T> use<T>(FutureOr<T> Function(Database) callback) async {
+    return useConnection((connection) => callback(DatabaseIO(connection)));
+  }
+
+  Future<T> useConnection<T>(
+      FutureOr<T> Function(PostgreSQLConnection) callback) async {
     var connection = createConnection();
     await connection.open();
     try {
-      return await callback(DatabaseIO(connection));
+      return await callback(connection);
     } finally {
       await connection.close();
     }

@@ -132,22 +132,21 @@ class DatabaseIO implements Database {
 
   Future<PostgreSQLResult> _query(String fmtString,
       {Map<String, dynamic>? args}) {
-    return _connection.query(
-        _replaceNormalParametersWithSubstitution(fmtString),
+    return _connection.query(replaceNormalParametersWithSubstitution(fmtString),
         substitutionValues: args);
   }
 
   @override
   Future<int> execute(String fmtString, {Map<String, dynamic>? args}) async {
     var result = await _connection.execute(
-        _replaceNormalParametersWithSubstitution(fmtString),
+        replaceNormalParametersWithSubstitution(fmtString),
         substitutionValues: args);
     return result;
   }
 
   // Replace parameter of the form :<parameter> which are recognized by the IDE
   // to parameters of the form @<parameter> which are used by the postgres Dart library.
-  String _replaceNormalParametersWithSubstitution(String query) {
+  static String replaceNormalParametersWithSubstitution(String query) {
     return query.replaceAllMapped(_parameterExtractor, (match) {
       return '@${match.group(1)}';
     });

@@ -1,4 +1,4 @@
-import 'package:server_utils/postgres.dart';
+import 'package:server_utils/database.dart';
 import 'package:server_utils/src/test_database.dart';
 import 'package:test/test.dart';
 

@@ -11,6 +11,7 @@ dependencies:
   postgres:
   postgres_pool:
   process_runner:
+  quiver:
   shelf_proxy:
   shelf_router:
   shelf_static:

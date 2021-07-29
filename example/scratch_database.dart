@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:server_utils/postgres.dart';
+import 'package:server_utils/database.dart';
 import 'package:logging/logging.dart';
 
 void main() async {
