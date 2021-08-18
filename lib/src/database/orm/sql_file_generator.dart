@@ -93,7 +93,9 @@ import 'package:server_utils/database.dart';""");
     return QueryResult(result.columnDescriptions);
   }
 
-  Future<String> _inferClassName(SqlQuery query, QueryResult result) async {
+  String _inferClassName(SqlQuery query, QueryResult result) {
+    // TODO(xha): detect single column query
+
     var tableName = result.columns.first.tableName;
     var otherColumn =
         result.columns.firstWhereOrNull((c) => c.tableName != tableName);
@@ -105,10 +107,11 @@ import 'package:server_utils/database.dart';""");
     return result.columns.first.tableName;
   }
 
-  Future<String> _projectionCode(
-      String className, QueryResult queryResult) async {
+  String _projectionCode(String className, QueryResult queryResult) {
     var code = StringBuffer('');
 
+    //TODO(xha): share the code with the table generation.
+    // Needs: fromRow(), toRow(), fromJson, toJson, toString, copyWith
     code.writeln('class $className {');
     for (var column in queryResult.columns) {
       var type = dataTypeFromTypeId(column.typeId);
