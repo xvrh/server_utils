@@ -33,6 +33,9 @@ abstract class DomContext {
 
   /// Creates a DOM Text node.
   Node text(String value);
+
+  /// Creates a DOM node with unsafe raw HTML content.
+  Node unsafeRawHtml(String value);
 }
 
 void _verifyElementTag(String tag) {
@@ -60,17 +63,74 @@ Node element(
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
+  Node? child,
+  String? text,
 }) =>
     dom.element(
       tag,
       id: id,
       classes: classes,
       attributes: attributes,
-      children: children,
+      children: _children(children, child, text),
     );
 
 /// Creates a DOM Text node using the default [DomContext].
 Node text(String value) => dom.text(value);
+
+/// Creates a DOM node with unsafe raw HTML content using the default [DomContext].
+Node unsafeRawHtml(String value) => dom.unsafeRawHtml(value);
+
+/// Creates an `<a>` Element using the default [DomContext].
+Node a({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+  String? href,
+  String? rel,
+  String? target,
+  String? title,
+}) {
+  final hasAttributes = attributes != null ||
+      href != null ||
+      rel != null ||
+      target != null ||
+      title != null;
+  return dom.element(
+    'a',
+    id: id,
+    classes: classes,
+    attributes: hasAttributes
+        ? <String, String>{
+            if (href != null) 'href': href,
+            if (rel != null) 'rel': rel,
+            if (target != null) 'target': target,
+            if (title != null) 'title': title,
+            if (attributes != null) ...attributes,
+          }
+        : null,
+    children: _children(children, child, text),
+  );
+}
+
+/// Creates a `<code>` Element using the default [DomContext].
+Node code({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+}) =>
+    dom.element(
+      'code',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: _children(children, child, text),
+    );
 
 /// Creates a `<div>` Element using the default [DomContext].
 Node div({
@@ -78,13 +138,128 @@ Node div({
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
+  Node? child,
+  String? text,
 }) =>
     dom.element(
       'div',
       id: id,
       classes: classes,
       attributes: attributes,
-      children: children,
+      children: _children(children, child, text),
+    );
+
+/// Creates a `<h1>` Element using the default [DomContext].
+Node h1({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+}) =>
+    dom.element(
+      'h1',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: _children(children, child, text),
+    );
+
+/// Creates a `<h1>` Element using the default [DomContext].
+Node h2({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+}) =>
+    dom.element(
+      'h2',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: _children(children, child, text),
+    );
+
+/// Creates a `<h1>` Element using the default [DomContext].
+Node h3({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+}) =>
+    dom.element(
+      'h3',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: _children(children, child, text),
+    );
+
+/// Creates an `<img>` Element using the default [DomContext].
+Node img({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  String? src,
+  String? title,
+  String? alt,
+}) {
+  final hasAttributes =
+      attributes != null || src != null || title != null || alt != null;
+  return dom.element(
+    'img',
+    id: id,
+    classes: classes,
+    attributes: hasAttributes
+        ? <String, String>{
+            if (src != null) 'src': src,
+            if (title != null) 'title': title,
+            if (alt != null) 'alt': alt,
+            if (attributes != null) ...attributes,
+          }
+        : null,
+    children: children,
+  );
+}
+
+/// Creates a `<li>` Element using the default [DomContext].
+Node li({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+}) =>
+    dom.element(
+      'li',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: _children(children, child, text),
+    );
+
+/// Creates a `<p>` Element using the default [DomContext].
+Node p({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+}) =>
+    dom.element(
+      'p',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: _children(children, child, text),
     );
 
 /// Creates a `<span>` Element using the default [DomContext].
@@ -93,14 +268,121 @@ Node span({
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
+  Node? child,
+  String? text,
 }) =>
     dom.element(
       'span',
       id: id,
       classes: classes,
       attributes: attributes,
+      children: _children(children, child, text),
+    );
+
+/// Creates a `<table>` Element using the default [DomContext].
+Node table({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? head,
+  Iterable<Node>? body,
+}) =>
+    dom.element(
+      'table',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: [
+        if (head != null) dom.element('thead', children: head),
+        if (body != null) dom.element('tbody', children: body),
+      ],
+    );
+
+/// Creates a `<td>` Element using the default [DomContext].
+Node td({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+}) =>
+    dom.element(
+      'td',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: _children(children, child, text),
+    );
+
+/// Creates a `<th>` Element using the default [DomContext].
+Node th({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+  Node? child,
+  String? text,
+}) =>
+    dom.element(
+      'td',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: _children(children, child, text),
+    );
+
+/// Creates a `<tr>` Element using the default [DomContext].
+Node tr({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+}) =>
+    dom.element(
+      'tr',
+      id: id,
+      classes: classes,
+      attributes: attributes,
       children: children,
     );
+
+/// Creates a `<ul>` Element using the default [DomContext].
+Node ul({
+  String? id,
+  Iterable<String>? classes,
+  Map<String, String>? attributes,
+  Iterable<Node>? children,
+}) =>
+    dom.element(
+      'ul',
+      id: id,
+      classes: classes,
+      attributes: attributes,
+      children: children,
+    );
+
+Iterable<Node>? _children(Iterable<Node>? children, Node? child, String? text) {
+  if (children != null) {
+    if (child != null) {
+      throw ArgumentError(
+          'Only one of `child`, `children` or `text` may be specified');
+    }
+    if (text != null) {
+      throw ArgumentError('`text` is not null');
+    }
+    return children;
+  } else if (child != null) {
+    if (text != null) {
+      throw ArgumentError('`text` is not null');
+    }
+    return [child];
+  } else if (text != null) {
+    return [dom.text(text)];
+  } else {
+    return null;
+  }
+}
 
 /// Uses DOM nodes to emit escaped HTML string.
 class _StringDomContext extends DomContext {
@@ -123,6 +405,9 @@ class _StringDomContext extends DomContext {
 
   @override
   Node text(String value) => _StringText(value);
+
+  @override
+  Node unsafeRawHtml(String value) => _StringRawUnsafeHtml(value);
 }
 
 Map<String, String>? _mergeAttributes(
@@ -164,6 +449,23 @@ class _StringNodeList extends _StringNode {
 }
 
 class _StringElement extends _StringNode {
+  static const _selfClosing = <String>{
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr',
+  };
+
   final String _tag;
   final Map<String, String>? _attributes;
   final List<_StringNode>? _children;
@@ -186,9 +488,9 @@ class _StringElement extends _StringNode {
         child.writeHtml(sink);
       }
       sink.write('</$_tag>');
+    } else if (_selfClosing.contains(_tag)) {
+      sink.write('/>');
     } else {
-      // TODO: implement self-closing elements
-      // TODO: implement non-closing elements
       sink.write('></$_tag>');
     }
   }
@@ -202,5 +504,16 @@ class _StringText extends _StringNode {
   @override
   void writeHtml(StringSink sink) {
     sink.write(htmlEscape.convert(_value));
+  }
+}
+
+class _StringRawUnsafeHtml extends _StringNode {
+  final String _value;
+
+  _StringRawUnsafeHtml(this._value);
+
+  @override
+  void writeHtml(StringSink sink) {
+    sink.write(_value);
   }
 }

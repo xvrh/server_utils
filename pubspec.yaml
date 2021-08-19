@@ -6,7 +6,9 @@ environment:
 dependencies:
   analyzer:
   dart_style:
+  markdown:
   more:
+  sanitize_html:
   shelf_proxy:
   shelf_router:
   shelf_static:
