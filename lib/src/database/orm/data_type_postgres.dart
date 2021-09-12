@@ -10,6 +10,7 @@ final dataTypePostgres = <DataType, PostgreSQLDataType>{
   DataType.serial: PostgreSQLDataType.serial,
   DataType.bigserial: PostgreSQLDataType.bigSerial,
   DataType.text: PostgreSQLDataType.text,
+  DataType.name: PostgreSQLDataType.name,
   DataType.textArray: PostgreSQLDataType.textArray,
   DataType.characterVarying: PostgreSQLDataType.varChar,
   DataType.real: PostgreSQLDataType.real,
@@ -32,6 +33,14 @@ final _reverseMap = {
 };
 
 DataType dataTypeFromTypeId(int typeId) {
-  var postgresType = PostgresBinaryDecoder.typeMap[typeId]!;
-  return _reverseMap[postgresType]!;
+  var postgresType = PostgresBinaryDecoder.typeMap[typeId];
+  if (postgresType == null) {
+    // Check here: https://crate.io/docs/crate/reference/en/4.6/interfaces/postgres.html
+    throw Exception('PostgresType not found $typeId');
+  }
+  var dataType = _reverseMap[postgresType];
+  if (dataType == null) {
+    throw Exception('DataType not found: $typeId, $postgresType');
+  }
+  return dataType;
 }

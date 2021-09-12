@@ -107,6 +107,10 @@ class DataType<T> {
     'text',
     dartType: 'String',
   );
+  static const name = DataType<String>._(
+    'name',
+    dartType: 'String',
+  );
   static const textArray = DataType<List<String>>._(
     'text[]',
     dartType: 'List<String>',
@@ -187,6 +191,7 @@ class DataType<T> {
     serial,
     bigserial,
     text,
+    name,
     textArray,
     characterVarying,
     real,

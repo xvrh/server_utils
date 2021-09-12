@@ -74,7 +74,7 @@ class Result {
     } else {
       match = _simpleTypeExtractor.firstMatch(line);
       if (match == null) {
-        throw Exception('Unrecognized result pattern.');
+        throw Exception('Unrecognized result pattern: $line');
       }
       rawName = match.group(1)!;
       var mark = match.group(2);
@@ -114,8 +114,9 @@ class SqlQuery {
   SqlQuery({required this.method, required this.query})
       : parameters = extractParameters(query);
 
-  static final _parameterExtractor =
-      RegExp(r'[^:]:([a-z][a-z0-9]*)(::([a-z][a-z0-9]+))?');
+  static final _parameterExtractor = RegExp(
+      r'[^:]:([a-z][a-z0-9]*)(::([a-z][a-z0-9]+))?',
+      caseSensitive: false);
 
   @visibleForTesting
   static List<Parameter> extractParameters(String sqlQuery) {
@@ -126,7 +127,7 @@ class SqlQuery {
       var type = match.group(3);
       if (type == null) {
         throw Exception(
-            'Parameters in queries must be typed (ie: param::text). Error for $name in query:\n$sqlQuery');
+            'Parameters in queries must be typed (ie: :param::text). Error for $name in query:\n$sqlQuery');
       }
       parameters.add(Parameter(name, DataType.fromPostgresName(type)));
     }

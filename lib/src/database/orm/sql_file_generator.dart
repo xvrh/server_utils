@@ -1,11 +1,23 @@
+import 'dart:io';
+
 import 'package:dart_style/dart_style.dart';
 import 'package:postgres/postgres.dart';
 import 'package:collection/collection.dart';
-
+import 'package:path/path.dart' as p;
 import '../database_io.dart';
 import 'data_type_postgres.dart';
 import 'sql_file_parser.dart';
 import '../../utils/string.dart';
+
+Future<void> generateSqlQueryFile(
+    PostgreSQLConnection connection, File file) async {
+  var generator = SqlFileGenerator(connection);
+  var code = await generator.generate(parseSqlFile(file.readAsStringSync()),
+      fileName: p.basenameWithoutExtension(file.path));
+  File(p.join(p.dirname(file.path),
+          '${p.basenameWithoutExtension(file.path)}.dart'))
+      .writeAsStringSync(code);
+}
 
 class SqlFileGenerator {
   final PostgreSQLConnection connection;
@@ -100,8 +112,10 @@ import 'package:server_utils/database.dart';""");
     var otherColumn =
         result.columns.firstWhereOrNull((c) => c.tableName != tableName);
     if (otherColumn != null) {
-      throw Exception(
-          '${query.method.name} inferred name $tableName but ${otherColumn.columnName} is from ${otherColumn.tableName}');
+      throw Exception('You need to specify a return type. '
+          '[${query.method.name}] inferred table name [$tableName] but [${otherColumn.columnName}] is from [${otherColumn.tableName}]. '
+          'Method [${query.method.name}] has return type [${query.method.result}]'
+          'This means the script tried to discover automatically the return type but failed');
     }
     //TODO(xha): describe the table to check that all the fields are listed
     return result.columns.first.tableName;
