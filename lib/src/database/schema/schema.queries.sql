@@ -1,22 +1,23 @@
---# tablesForSchema -> String
-select table_name
+--# tablesForSchema
+select table_name::text /*nullable=false*/
 from information_schema.tables
 where table_schema = :schemaName::text /*default='public'*/;
 
 --# columnsForSchema -> @Column
-select table_name,
-       column_name,
+select table_name /*nullable=false*/,
+       column_name /*nullable=false*/,
        column_default,
-       data_type,
+       data_type /*nullable=false*/,
        character_maximum_length,
        case
            when is_nullable = 'YES' then true
            else false
-           end as is_nullable
+           end as is_nullable /*nullable=false*/
 from information_schema.columns
 where table_schema = :schemaName::text/*default='public'*/;
 
 --# constraintsForSchema -> @Constraint
+-- columns: nullable=false
 select t.table_catalog,
        t.table_name,
        kcu.constraint_name,
@@ -40,29 +41,26 @@ order by t.table_catalog,
          kcu.ordinal_position;
 
 --# describeTable -> List<@Table>
-select f.attnum                                        as number,
+select f.attnum                                        as number/*nullable=false*/,
        f.attname                                       as name,
        f.attnum,
-       f.attnotnull                                    as "not_null",
-       f.atttypid::int                                 as type_id,
-       pg_catalog.format_type(f.atttypid, f.atttypmod) as type,
+       f.attnotnull                                    as "not_null"/*nullable=false*/,
+       f.atttypid::int                                 as type_id/*nullable=false*/,
+       pg_catalog.format_type(f.atttypid, f.atttypmod) as type/*nullable=false*/,
        case
            when p.contype = 'p' then true
            else false
-           end                                         as primary_key,
+           end                                         as primary_key /*nullable=false*/,
        case
            when p.contype = 'u' then true
            else false
-           end                                         as unique_key,
+           end                                         as unique_key/*nullable=false*/,
        case
            when p.contype = 'f' then g.relname
-           end                                         as foreign_key,
+           end                                         as foreign_key/*nullable=false*/,
        case
            when p.contype = 'f' then p.confkey::int4[]
            end                                         as foreign_key_fieldnum,
-       case
-           when p.contype = 'f' then g.relname
-           end                                         as foreign_key,
        case
            when f.atthasdef = 't' then pg_get_expr(d.adbin, d.adrelid)
            end                                         as "default_info"

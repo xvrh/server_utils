@@ -39,9 +39,17 @@ import 'package:server_utils/database.dart';""");
     for (var query in file.queries) {
       var outputName = query.method.result.name;
       var queryResult = await runQuery(query);
+
+      var isSingleColumn = queryResult.columns.length == 1;
+
       if (query.method.result.isGenerated) {
         outputName ??= '${query.method.name.words.toUpperCamel()}Row';
         projectionsCode.writeln(_projectionCode(outputName, queryResult));
+      } else if (isSingleColumn) {
+        var firstColumn = queryResult.columns.first;
+        var type = dataTypeFromTypeId(firstColumn.typeId);
+        var isNullable = queryResult.isColumnNullable(firstColumn);
+        outputName = '${type.dartType}${isNullable ? '?' : ''}';
       } else {
         outputName ??= await _inferClassName(query, queryResult);
       }
@@ -72,12 +80,32 @@ import 'package:server_utils/database.dart';""");
 
       var returnType = isFuture ? 'Future<$outputType>' : outputType;
       code.writeln('$returnType ${query.method.name}(');
+      if (query.parameters.isNotEmpty) {
+        code.writeln('{');
+      }
+      for (var parameter in query.parameters) {
+        code.writeln(
+            'required ${parameter.type.dartType} ${parameter.name.words.toLowerCamel()},');
+      }
+      if (query.parameters.isNotEmpty) {
+        code.writeln('}');
+      }
       code.writeln(') {');
-      code.writeln("return Query<$outputName>(r'''");
+      code.writeln(
+          'return Query<$outputName>${isSingleColumn ? '.singleColumn' : ''}(this, ');
+      code.writeln('  //language=sql');
+      code.writeln("r'''");
       code.writeln(query.query);
-      code.writeln("''', {");
-
-      code.writeln('})$querySuffix;');
+      code.writeln("''', arguments: {");
+      for (var parameter in query.parameters) {
+        code.writeln(
+            "'${parameter.name}': ${parameter.name.words.toLowerCamel()},");
+      }
+      code.writeln('}');
+      if (!isSingleColumn) {
+        code.writeln(', mapper: $outputName.fromRow,');
+      }
+      code.writeln(')$querySuffix;');
       code.writeln('}');
     }
     code.writeln('}');
@@ -99,15 +127,19 @@ import 'package:server_utils/database.dart';""");
       args[parameter.name] = null;
     }
 
-    var result = await connection.query(
-        DatabaseIO.replaceNormalParametersWithSubstitution(query.query),
-        substitutionValues: args);
-    return QueryResult(result.columnDescriptions);
+    late PostgreSQLResult result;
+    await connection.transaction((connection) async {
+      result = await connection.query(
+          DatabaseIO.replaceNormalParametersWithSubstitution(query.query),
+          substitutionValues: args);
+      connection.cancelTransaction();
+      return result;
+    });
+
+    return QueryResult(query, result.columnDescriptions);
   }
 
   String _inferClassName(SqlQuery query, QueryResult result) {
-    // TODO(xha): detect single column query
-
     var tableName = result.columns.first.tableName;
     var otherColumn =
         result.columns.firstWhereOrNull((c) => c.tableName != tableName);
@@ -129,19 +161,49 @@ import 'package:server_utils/database.dart';""");
     code.writeln('class $className {');
     for (var column in queryResult.columns) {
       var type = dataTypeFromTypeId(column.typeId);
+      var isNullable = queryResult.isColumnNullable(column);
 
       //TODO(xha): describe the table to know if it's nullable or not.
 
       code.writeln(
-          'final ${type.dartType}? ${column.columnName.words.toLowerCamel()};');
+          'final ${type.dartType}${isNullable ? '?' : ''} ${column.columnName.words.toLowerCamel()};');
     }
+
+    code.writeln('');
+    code.writeln('$className({');
+    for (var column in queryResult.columns) {
+      var isNullable = queryResult.isColumnNullable(column);
+
+      code.writeln(
+          '${isNullable ? '' : 'required '}this.${column.columnName.words.toLowerCamel()},');
+    }
+    code.writeln('});');
+    code.writeln('');
+
+    code.writeln('static $className fromRow(Map<String, dynamic> row) {');
+    code.writeln('return $className(');
+    for (var column in queryResult.columns) {
+      var type = dataTypeFromTypeId(column.typeId);
+      var isNullable = queryResult.isColumnNullable(column);
+
+      code.writeln(
+          "${column.columnName.words.toLowerCamel()}: row['${column.columnName}']${isNullable ? '' : '!'} as ${type.dartType}${isNullable ? '?' : ''},");
+    }
+    code.writeln(');');
+    code.writeln('}');
+
     code.writeln('}');
     return '$code';
   }
 }
 
 class QueryResult {
+  final SqlQuery query;
   final List<ColumnDescription> columns;
 
-  QueryResult(this.columns);
+  QueryResult(this.query, this.columns);
+
+  //TODO(xha): check in known tables
+  bool isColumnNullable(ColumnDescription column) =>
+      query.isColumnNullable(column.columnName) ?? true;
 }

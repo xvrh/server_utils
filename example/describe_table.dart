@@ -2,6 +2,7 @@ import 'package:postgres/postgres.dart';
 import 'package:server_utils/database.dart';
 import 'package:server_utils/src/database/database_io.dart';
 import 'package:server_utils/src/test_database.dart';
+import 'package:server_utils/src/database/schema/schema.queries.dart';
 
 Future<PostgreSQLConnection> createConnection() async {
   var options = testDatabase.connectionOptions;
@@ -21,16 +22,11 @@ Future runDatabase(Function(Database) callback) async {
 }
 
 void main() async {
-  var sql =
-      //language=sql
-      r'''
-
-''';
-
   await runDatabase((connection) async {
-    var result =
-        await connection.queryDynamic(sql, args: {'tableName': 'app_user'});
-
-    print(result);
+    var columns = await connection.describeTable(
+        schemaName: 'public', tableName: 'app_user');
+    for (var col in columns) {
+      print('${col.number} ${col.name} ${col.type} ${col.notNull}');
+    }
   });
 }

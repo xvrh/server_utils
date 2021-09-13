@@ -110,9 +110,20 @@ class SqlQuery {
   final MethodDescription method;
   final String query;
   final List<Parameter> parameters;
+  final columnOptions = <String, ColumnOptions>{};
+  final ColumnOptions _defaultColumnOptions;
 
   SqlQuery({required this.method, required this.query})
-      : parameters = extractParameters(query);
+      : parameters = extractParameters(query),
+        _defaultColumnOptions = _extractDefaultColumnOptions(query) {
+    var allHints = _columnHintsExtractors.allMatches(query);
+    for (var match in allHints) {
+      columnOptions[match.group(1)!] = ColumnOptions.parse(match.group(3)!);
+    }
+  }
+
+  static final _columnHintsExtractors = RegExp(
+      r'''["']?([a-zA-Z0-9_]+)(::[a-z0-9]+)?["']?\s*\/\*\s*(.*)\s*\*\/''');
 
   static final _parameterExtractor = RegExp(
       r'[^:]:([a-z][a-z0-9]*)(::([a-z][a-z0-9]+))?',
@@ -134,6 +145,22 @@ class SqlQuery {
     return parameters;
   }
 
+  static final _defaultColumnsOptionExtractor =
+      RegExp(r'^--\s*columns\s*:(.*)');
+  static ColumnOptions _extractDefaultColumnOptions(String query) {
+    for (var line in LineSplitter.split(query)) {
+      var match = _defaultColumnsOptionExtractor.firstMatch(line);
+      if (match != null) {
+        var options = match.group(1)!;
+        return ColumnOptions.parse(options);
+      }
+    }
+    return ColumnOptions();
+  }
+
+  bool? isColumnNullable(String columnName) =>
+      columnOptions[columnName]?.isNullable ?? _defaultColumnOptions.isNullable;
+
   @override
   String toString() => 'SqlQuery(${method.name})';
 }
@@ -143,6 +170,33 @@ class Parameter {
   final DataType type;
 
   Parameter(this.name, this.type);
+}
+
+class ColumnOptions {
+  final bool? isNullable;
+  final String? defaultValue;
+
+  ColumnOptions({this.isNullable, this.defaultValue});
+
+  static ColumnOptions parse(String input) {
+    bool? isNullable;
+    String? defaultValue;
+
+    for (var option in input.split(',')) {
+      var keyValue = option.trim().split('=');
+      if (keyValue.length == 2) {
+        var key = keyValue[0].trim();
+        var value = keyValue[1].trim();
+        if (key == 'nullable') {
+          isNullable = value.toLowerCase() == 'true';
+        } else if (key == 'default') {
+          defaultValue = value;
+        }
+      }
+    }
+
+    return ColumnOptions(isNullable: isNullable, defaultValue: defaultValue);
+  }
 }
 
 class _SqlQueryBuilder {
