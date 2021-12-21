@@ -42,6 +42,9 @@ class Script {
             ? ScriptType.dart
             : ScriptType.sql,
         name = p.basenameWithoutExtension(file.path);
+
+  @override
+  String toString() => 'Script(${file.path})';
 }
 
 enum ScriptType { sql, dart }

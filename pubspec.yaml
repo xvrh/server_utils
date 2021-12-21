@@ -1,7 +1,7 @@
 name: server_utils
 
 environment:
-  sdk: '>=2.14.0 <3.0.0'
+  sdk: '>=2.15.0 <3.0.0'
 
 dependencies:
   analyzer:
@@ -9,6 +9,7 @@ dependencies:
   logging:
   markdown:
   more:
+  petitparser:
   postgres:
   postgres_pool:
   process_runner:

@@ -1,9 +1,11 @@
+import 'package:server_utils/src/database/orm/utils/sql_parameter.dart';
+
 import 'connection_options.dart';
 import 'database.dart';
+import 'orm/utils/sql_parser.dart';
 import 'page.dart';
 import 'package:postgres/postgres.dart'
-    show PostgreSQLExecutionContext, PostgreSQLResult;
-import 'package:postgres/postgres.dart';
+    show PostgreSQLExecutionContext, PostgreSQLConnection, PostgreSQLResult;
 
 import 'utils.dart';
 
@@ -132,24 +134,19 @@ class DatabaseIO implements Database {
 
   Future<PostgreSQLResult> _query(String fmtString,
       {Map<String, dynamic>? args}) {
-    return _connection.query(replaceNormalParametersWithSubstitution(fmtString),
+    var query = SqlQuery.parse(fmtString);
+    assert((args?.length ?? 0) == query.parameters.length);
+    return _connection.query(query.bodyWithDartSubstitutions,
         substitutionValues: args);
   }
 
   @override
   Future<int> execute(String fmtString, {Map<String, dynamic>? args}) async {
-    var result = await _connection.execute(
-        replaceNormalParametersWithSubstitution(fmtString),
+    var query = SqlQuery.parse(fmtString);
+    assert((args?.length ?? 0) == query.parameters.length);
+    var result = await _connection.execute(query.bodyWithDartSubstitutions,
         substitutionValues: args);
     return result;
-  }
-
-  // Replace parameter of the form :<parameter> which are recognized by the IDE
-  // to parameters of the form @<parameter> which are used by the postgres Dart library.
-  static String replaceNormalParametersWithSubstitution(String query) {
-    return query.replaceAllMapped(_parameterExtractor, (match) {
-      return '@${match.group(1)}';
-    });
   }
 
   @override
@@ -168,5 +165,3 @@ class DatabaseIO implements Database {
     _connection.cancelTransaction(reason: reason);
   }
 }
-
-final _parameterExtractor = RegExp(r'[^:]:([a-z]{1}[a-z0-9_]*)');

@@ -1,6 +1,6 @@
 import 'package:server_utils/database.dart';
-import 'package:server_utils/src/database/orm/sql_file_generator.dart';
-import 'package:server_utils/src/database/orm/sql_file_parser.dart';
+import 'package:server_utils/src/database/orm/queries_generator.dart';
+import 'package:server_utils/src/database/schema/schema_extractor.dart';
 import 'package:server_utils/src/test_database.dart';
 import 'package:test/test.dart';
 
@@ -14,25 +14,37 @@ void main() {
     await database.drop();
   });
 
+  test('Return type parser', () {
+    var type = ReturnType('List<XX>');
+    expect(type.returnType, 'Future<List<XX>>');
+    expect(type.methodCall, '.list');
+    expect(type.queryType, 'XX');
+  });
+
   test('Generate file', () async {
     var migrator =
         Migrator(database.client, ['test/database/orm/data/country']);
     await migrator.migrate();
 
     var queries = '''
---# import 'path.dart' as abc;
+--@import 'path.dart' as abc;
 
---# allCountries -> abc.Country
+/***
+Query<abc.Country> allCountries()
+***/
 select * from country;
 
---# allCountries2
+/***
+Query<abc.Country> allCountries2()
+***/
 -- detect we are reading all columns from entity
 select * from country;
 ''';
 
-    var result = await database.useConnection((db) {
-      var generator = SqlFileGenerator(db);
-      return generator.generate(parseSqlFile(queries), fileName: 'my_queries');
+    var result = await database.useConnection((db) async {
+      var dbSchema = await SchemaExtractor(DatabaseIO(db)).schema();
+      var generator = QueriesGenerator(dbSchema, PostgresQueryEvaluator(db));
+      return generator.generate(queries, filePath: 'my_queries');
     });
 
     expect(result, """

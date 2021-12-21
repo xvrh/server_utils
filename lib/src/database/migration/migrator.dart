@@ -45,7 +45,6 @@ select exists (
       var nonExecutedMigrations = scripts.where((script) => migrations
           .every((m) => m.name.toLowerCase() != script.name.toLowerCase()));
 
-      print("Scripts $scripts");
       var nonExecutedDartMigrations = nonExecutedMigrations
           .where((s) => s.type == ScriptType.dart)
           .toList();
@@ -60,7 +59,6 @@ select exists (
       }
       try {
         for (var script in nonExecutedMigrations) {
-          print("Scrt $script");
           try {
             if (script.type == ScriptType.sql) {
               await client.executeFile(script.file);

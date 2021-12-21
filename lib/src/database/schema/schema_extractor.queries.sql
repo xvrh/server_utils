@@ -1,25 +1,38 @@
---# tablesForSchema
-select table_name::text /*nullable=false*/
-from information_schema.tables
-where table_schema = :schemaName::text /*default='public'*/;
 
---# columnsForSchema -> @Column
-select table_name /*nullable=false*/,
-       column_name /*nullable=false*/,
+/******************************
+List<String> tablesForSchema({String schemaName = 'public'})
+*******************************/
+select table_name::text
+from information_schema.tables
+where table_schema = :schemaName::text;
+
+/******************************
+List<Column> columnsForSchema({String schemaName = 'public'})
+projection Column (
+  * not null,
+  column_default null,
+  character_maximum_length null,
+)
+*******************************/
+select table_name,
+       column_name,
        column_default,
-       data_type /*nullable=false*/,
+       data_type,
        character_maximum_length,
        case
            when is_nullable = 'YES' then true
            else false
-           end as is_nullable /*nullable=false*/
+           end as is_nullable
 from information_schema.columns
-where table_schema = :schemaName::text/*default='public'*/;
+where table_schema = :schemaName::text;
 
---# constraintsForSchema -> @Constraint
--- columns: nullable=false
-select t.table_catalog,
-       t.table_name,
+/******************************
+List<Constraint> constraintsForSchema({String schemaName = 'public'})
+projection Constraint (
+  * not null,
+)
+*******************************/
+select t.table_name,
        kcu.constraint_name,
        kcu.column_name,
        kcu.ordinal_position
@@ -34,30 +47,38 @@ from information_schema.tables t
                        and kcu.table_schema = tc.table_schema
                        and kcu.table_name = tc.table_name
                        and kcu.constraint_name = tc.constraint_name
-where t.table_schema = :schemaName::text/*default='public'*/
+where t.table_schema = :schemaName::text
 order by t.table_catalog,
          t.table_name,
          kcu.constraint_name,
          kcu.ordinal_position;
 
---# describeTable -> List<@Table>
-select f.attnum                                        as number/*nullable=false*/,
+/******************************
+List<ColumnDescription> describeTable({String schemaName = 'public', required String tableName})
+projection ColumnDescription (
+  * not null,
+  foreign_key null,
+  foreign_key_fieldnum null,
+  default_info null,
+)
+*******************************/
+select f.attnum                                        as number,
        f.attname                                       as name,
        f.attnum,
-       f.attnotnull                                    as "not_null"/*nullable=false*/,
-       f.atttypid::int                                 as type_id/*nullable=false*/,
-       pg_catalog.format_type(f.atttypid, f.atttypmod) as type/*nullable=false*/,
+       f.attnotnull                                    as "not_null",
+       f.atttypid::int                                 as type_id,
+       pg_catalog.format_type(f.atttypid, f.atttypmod) as type,
        case
            when p.contype = 'p' then true
            else false
-           end                                         as primary_key /*nullable=false*/,
+           end                                         as primary_key,
        case
            when p.contype = 'u' then true
            else false
-           end                                         as unique_key/*nullable=false*/,
+           end                                         as unique_key,
        case
            when p.contype = 'f' then g.relname
-           end                                         as foreign_key/*nullable=false*/,
+           end                                         as foreign_key,
        case
            when p.contype = 'f' then p.confkey::int4[]
            end                                         as foreign_key_fieldnum,

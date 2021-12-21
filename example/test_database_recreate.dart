@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:glob/glob.dart';
 import 'package:glob/list_local_fs.dart';
 import 'package:server_utils/migration.dart';
-import 'package:server_utils/src/database/orm/sql_file_generator.dart';
 import 'package:server_utils/src/database/utils.dart';
 import 'package:server_utils/src/test_database.dart';
 import 'package:logging/logging.dart';
@@ -25,11 +24,11 @@ void main() async {
   var migrator = Migrator(dbClient, [testDatabaseScripts]);
   await migrator.migrate();
 
-  await useConnectionOptions(testDatabase.connectionOptions,
-      (connection) async {
-    for (var file
-        in Glob('example/**.queries.sql').listSync().whereType<File>()) {
-      await generateSqlQueryFile(connection, file);
-    }
-  });
+  //await useConnectionOptions(testDatabase.connectionOptions,
+  //    (connection) async {
+  //  for (var file
+  //      in Glob('example/**.queries.sql').listSync().whereType<File>()) {
+  //    await generateSqlQueryFile(connection, file);
+  //  }
+  //});
 }

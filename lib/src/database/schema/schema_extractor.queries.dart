@@ -1,58 +1,51 @@
 // GENERATED-CODE: do not edit
-// Code is generated from schema.queries.sql
+// Code is generated from ./lib/src/database/schema/schema_extractor.queries.sql.sql
 import 'package:server_utils/database.dart';
 
-extension SchemaQueries on Database {
-  Query<String> tablesForSchema({
-    required String schemaName,
-  }) {
+extension SchemaExtractorQueries on Database {
+  Future<List<String>> tablesForSchema({String schemaName = 'public'}) {
     return Query<String>.singleColumn(this,
         //language=sql
         r'''
-select table_name::text /*nullable=false*/
+select table_name::text
 from information_schema.tables
-where table_schema = :schemaName::text /*default='public'*/;
+where table_schema = :schemaName::text;
 ''', arguments: {
       'schemaName': schemaName,
-    });
+    }).list;
   }
 
-  Query<Column> columnsForSchema({
-    required String schemaName,
-  }) {
+  Future<List<Column>> columnsForSchema({String schemaName = 'public'}) {
     return Query<Column>(
       this,
       //language=sql
       r'''
-select table_name /*nullable=false*/,
-       column_name /*nullable=false*/,
+select table_name,
+       column_name,
        column_default,
-       data_type /*nullable=false*/,
+       data_type,
        character_maximum_length,
        case
            when is_nullable = 'YES' then true
            else false
-           end as is_nullable /*nullable=false*/
+           end as is_nullable
 from information_schema.columns
-where table_schema = :schemaName::text/*default='public'*/;
+where table_schema = :schemaName::text;
 ''',
       arguments: {
         'schemaName': schemaName,
       },
       mapper: Column.fromRow,
-    );
+    ).list;
   }
 
-  Query<Constraint> constraintsForSchema({
-    required String schemaName,
-  }) {
+  Future<List<Constraint>> constraintsForSchema(
+      {String schemaName = 'public'}) {
     return Query<Constraint>(
       this,
       //language=sql
       r'''
--- columns: nullable=false
-select t.table_catalog,
-       t.table_name,
+select t.table_name,
        kcu.constraint_name,
        kcu.column_name,
        kcu.ordinal_position
@@ -67,7 +60,7 @@ from information_schema.tables t
                        and kcu.table_schema = tc.table_schema
                        and kcu.table_name = tc.table_name
                        and kcu.constraint_name = tc.constraint_name
-where t.table_schema = :schemaName::text/*default='public'*/
+where t.table_schema = :schemaName::text
 order by t.table_catalog,
          t.table_name,
          kcu.constraint_name,
@@ -77,34 +70,32 @@ order by t.table_catalog,
         'schemaName': schemaName,
       },
       mapper: Constraint.fromRow,
-    );
+    ).list;
   }
 
-  Future<List<Table>> describeTable({
-    required String schemaName,
-    required String tableName,
-  }) {
-    return Query<Table>(
+  Future<List<ColumnDescription>> describeTable(
+      {String schemaName = 'public', required String tableName}) {
+    return Query<ColumnDescription>(
       this,
       //language=sql
       r'''
-select f.attnum                                        as number/*nullable=false*/,
+select f.attnum                                        as number,
        f.attname                                       as name,
        f.attnum,
-       f.attnotnull                                    as "not_null"/*nullable=false*/,
-       f.atttypid::int                                 as type_id/*nullable=false*/,
-       pg_catalog.format_type(f.atttypid, f.atttypmod) as type/*nullable=false*/,
+       f.attnotnull                                    as "not_null",
+       f.atttypid::int                                 as type_id,
+       pg_catalog.format_type(f.atttypid, f.atttypmod) as type,
        case
            when p.contype = 'p' then true
            else false
-           end                                         as primary_key /*nullable=false*/,
+           end                                         as primary_key,
        case
            when p.contype = 'u' then true
            else false
-           end                                         as unique_key/*nullable=false*/,
+           end                                         as unique_key,
        case
            when p.contype = 'f' then g.relname
-           end                                         as foreign_key/*nullable=false*/,
+           end                                         as foreign_key,
        case
            when p.contype = 'f' then p.confkey::int4[]
            end                                         as foreign_key_fieldnum,
@@ -128,7 +119,7 @@ order by number
         'schemaName': schemaName,
         'tableName': tableName,
       },
-      mapper: Table.fromRow,
+      mapper: ColumnDescription.fromRow,
     ).list;
   }
 }
@@ -163,14 +154,12 @@ class Column {
 }
 
 class Constraint {
-  final String tableCatalog;
   final String tableName;
   final String constraintName;
   final String columnName;
   final int ordinalPosition;
 
   Constraint({
-    required this.tableCatalog,
     required this.tableName,
     required this.constraintName,
     required this.columnName,
@@ -179,7 +168,6 @@ class Constraint {
 
   static Constraint fromRow(Map<String, dynamic> row) {
     return Constraint(
-      tableCatalog: row['table_catalog']! as String,
       tableName: row['table_name']! as String,
       constraintName: row['constraint_name']! as String,
       columnName: row['column_name']! as String,
@@ -188,44 +176,44 @@ class Constraint {
   }
 }
 
-class Table {
+class ColumnDescription {
   final int number;
-  final String? name;
-  final int? attnum;
+  final String name;
+  final int attnum;
   final bool notNull;
   final int typeId;
   final String type;
   final bool primaryKey;
   final bool uniqueKey;
-  final String foreignKey;
+  final String? foreignKey;
   final List<int>? foreignKeyFieldnum;
   final String? defaultInfo;
 
-  Table({
+  ColumnDescription({
     required this.number,
-    this.name,
-    this.attnum,
+    required this.name,
+    required this.attnum,
     required this.notNull,
     required this.typeId,
     required this.type,
     required this.primaryKey,
     required this.uniqueKey,
-    required this.foreignKey,
+    this.foreignKey,
     this.foreignKeyFieldnum,
     this.defaultInfo,
   });
 
-  static Table fromRow(Map<String, dynamic> row) {
-    return Table(
+  static ColumnDescription fromRow(Map<String, dynamic> row) {
+    return ColumnDescription(
       number: row['number']! as int,
-      name: row['name'] as String?,
-      attnum: row['attnum'] as int?,
+      name: row['name']! as String,
+      attnum: row['attnum']! as int,
       notNull: row['not_null']! as bool,
       typeId: row['type_id']! as int,
       type: row['type']! as String,
       primaryKey: row['primary_key']! as bool,
       uniqueKey: row['unique_key']! as bool,
-      foreignKey: row['foreign_key']! as String,
+      foreignKey: row['foreign_key'] as String?,
       foreignKeyFieldnum: row['foreign_key_fieldnum'] as List<int>?,
       defaultInfo: row['default_info'] as String?,
     );

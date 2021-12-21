@@ -4,8 +4,8 @@ import 'package:glob/glob.dart';
 import 'package:glob/list_local_fs.dart';
 import 'package:server_utils/database.dart';
 import 'package:server_utils/migration.dart';
-import 'package:server_utils/src/database/orm/sql_file_generator.dart';
-import 'package:server_utils/src/database/orm/sql_file_parser.dart';
+import 'package:server_utils/src/database/orm/queries_generator.dart';
+import 'package:server_utils/src/database/schema/schema.dart';
 import 'package:server_utils/src/database/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
@@ -28,13 +28,18 @@ void main() async {
   await migrator.migrate();
 
   await useConnectionOptions(dbClient.connectionOptions, (connection) async {
+    var evaluator = PostgresQueryEvaluator(connection);
+    var generator = QueriesGenerator(DatabaseSchema.empty, evaluator);
+
     for (var file in Glob('lib/**.queries.sql').listSync().whereType<File>()) {
-      var generator = SqlFileGenerator(connection);
-      var code = await generator.generate(parseSqlFile(file.readAsStringSync()),
-          fileName: p.basenameWithoutExtension(file.path));
-      File(p.join(p.dirname(file.path),
-              '${p.basenameWithoutExtension(file.path)}.dart'))
-          .writeAsStringSync(code);
+      try {
+        var dartResult = await generator.generate(file.readAsStringSync(),
+            filePath: file.path);
+        File(p.setExtension(file.path, '.dart')).writeAsStringSync(dartResult);
+      } catch (e, s) {
+        print(
+            'Failed to generate SQL queries file (file://${p.normalize(p.absolute(file.path))})\n$e\n$s');
+      }
     }
   });
 }

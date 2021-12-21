@@ -19,20 +19,20 @@ create table app_configuration
 -- http://download.geonames.org/export/dump/readme.txt
 create table country
 (
-    code       char(2) primary key,
-    code_iso3  char(3) not null,
-    currency   char(3) not null,
-    latitude   float   not null,
-    longitude  float   not null,
-    phone_code int     not null
+    code       varchar(2) primary key,
+    code_iso3  varchar(3) not null,
+    currency   varchar(3) not null,
+    latitude   float      not null,
+    longitude  float      not null,
+    phone_code int        not null
 );
 
 create table timezone
 (
     name      text primary key,
-    country   char(2) null references country (code),
-    alias_for text    null references timezone (name),
-    lat_long  text    not null
+    country   varchar(2) null references country (code),
+    alias_for text       null references timezone (name),
+    lat_long  text       not null
 );
 
 create table app_role
@@ -54,7 +54,7 @@ create table app_user
     email            text        not null unique,
     created          timestamptz not null default now(),
     last_seen        timestamptz,
-    country_code     char(2)     not null references country (code),
+    country_code     varchar(2)  not null references country (code),
     -- Filled by the app_user_inserted trigger
     configuration_id int         not null default 0 references app_configuration (id),
     eula_version     text        null,

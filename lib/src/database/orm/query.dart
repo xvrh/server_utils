@@ -13,8 +13,15 @@ class Query<TReturn> {
   Query.singleColumn(this.database, this.sql, {required this.arguments})
       : mapper = _singleColumnMapper;
 
+  Query.noResult(this.database, this.sql, {required this.arguments})
+      : mapper = _voidMapper;
+
   static T _singleColumnMapper<T>(Map<String, dynamic> row) {
     return row.values.first as T;
+  }
+
+  static Never _voidMapper(Map<String, dynamic> _) {
+    throw StateError('void mapper');
   }
 
   Future<TReturn> get single {
@@ -32,5 +39,9 @@ class Query<TReturn> {
   Future<Page<TReturn>> page(PageRequest page) {
     return database.queryPage(sql,
         mapper: mapper, args: arguments, pageRequest: page);
+  }
+
+  Future<int> get affectedRows {
+    return database.execute(sql, args: arguments);
   }
 }

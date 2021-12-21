@@ -3,12 +3,14 @@ import 'dart:io';
 
 import 'package:glob/glob.dart';
 import 'package:glob/list_local_fs.dart';
+import 'package:postgres/postgres.dart';
 import 'package:server_utils/database.dart';
 import 'package:logging/logging.dart';
+import 'package:server_utils/src/database/schema/schema_extractor.dart';
 import 'package:watcher/watcher.dart';
 import 'package:path/path.dart' as p;
 
-import 'orm/sql_file_generator.dart';
+import 'orm/queries_generator.dart';
 import 'utils.dart';
 
 final _logger = Logger('database_builder');
@@ -118,19 +120,39 @@ class _DatabaseBuilder {
 
   Future<void> _generateAllQueries() async {
     await useConnectionOptions(_client.connectionOptions, (connection) async {
-      for (var file
-          in Glob('lib/**.queries.sql').listSync().whereType<File>()) {
-        await generateSqlQueryFile(connection, file);
-        _logger.fine('Generated query ${file.path}');
+      var generator = await _queryGenerator(connection);
+      for (var queryGlob in queries) {
+        for (var file in Glob(queryGlob).listSync().whereType<File>()) {
+          await _generateQueryFile(generator, file);
+        }
       }
     });
   }
 
   Future<void> _generateQuery(File file) async {
     await useConnectionOptions(_client.connectionOptions, (connection) async {
-      await generateSqlQueryFile(connection, file);
-      _logger.fine('Generated query ${file.path}');
+      var generator = await _queryGenerator(connection);
+      await _generateQueryFile(generator, file);
     });
+  }
+
+  Future<QueriesGenerator> _queryGenerator(
+      PostgreSQLConnection connection) async {
+    var dbSchema = await SchemaExtractor(DatabaseIO(connection)).schema();
+    var evaluator = PostgresQueryEvaluator(connection);
+    return QueriesGenerator(dbSchema, evaluator);
+  }
+
+  Future<void> _generateQueryFile(QueriesGenerator generator, File file) async {
+    try {
+      var result = await generator.generate(file.readAsStringSync(),
+          filePath: file.path);
+      File(p.setExtension(file.path, '.dart')).writeAsStringSync(result);
+      _logger.fine('Generated query ${file.path}');
+    } catch (e, s) {
+      _logger.warning('Failed to generate SQL queries file '
+          '(file://${p.normalize(p.absolute(file.path))})\n$e\n$s');
+    }
   }
 
   void dispose() {

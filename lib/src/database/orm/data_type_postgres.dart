@@ -1,4 +1,4 @@
-import 'schema.dart';
+import '../schema/schema.dart';
 import 'package:postgres/postgres.dart';
 import 'package:postgres/src/binary_codec.dart';
 
@@ -13,6 +13,7 @@ final dataTypePostgres = <DataType, PostgreSQLDataType>{
   DataType.name: PostgreSQLDataType.name,
   DataType.textArray: PostgreSQLDataType.textArray,
   DataType.characterVarying: PostgreSQLDataType.varChar,
+  DataType.character: PostgreSQLDataType.varChar,
   DataType.real: PostgreSQLDataType.real,
   DataType.doublePrecision: PostgreSQLDataType.double,
   DataType.doubleArray: PostgreSQLDataType.doubleArray,
@@ -32,15 +33,15 @@ final _reverseMap = {
   for (var entry in dataTypePostgres.entries) entry.value: entry.key,
 };
 
-DataType dataTypeFromTypeId(int typeId) {
+DataType dataTypeFromTypeId(int typeId, {required String debugMessage}) {
   var postgresType = PostgresBinaryDecoder.typeMap[typeId];
   if (postgresType == null) {
     // Check here: https://crate.io/docs/crate/reference/en/4.6/interfaces/postgres.html
-    throw Exception('PostgresType not found $typeId');
+    throw Exception('PostgresType not found [$typeId] ($debugMessage)');
   }
   var dataType = _reverseMap[postgresType];
   if (dataType == null) {
-    throw Exception('DataType not found: $typeId, $postgresType');
+    throw Exception('DataType not found: [$typeId], [$postgresType]');
   }
   return dataType;
 }
