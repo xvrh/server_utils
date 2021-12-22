@@ -115,13 +115,32 @@ where c.relkind = 'r'::char
   and n.nspname = :schemaName::text
   and c.relname = :tableName::text
   and f.attnum > 0
-order by number
+order by number;
 ''',
       arguments: {
         'schemaName': schemaName,
         'tableName': tableName,
       },
       mapper: ColumnDescription.fromRow,
+    ).list;
+  }
+
+  Future<List<DomainDescription>> domainsForSchema(
+      {String schemaName = 'public'}) {
+    return Query<DomainDescription>(
+      this,
+      //language=sql
+      r'''
+select pg_type.oid::int, typname as "name", typnotnull as "not_null", typdefault as "default_value"
+from pg_catalog.pg_type
+         join pg_catalog.pg_namespace on pg_namespace.oid = pg_type.typnamespace
+where typtype = 'd'
+  and nspname = :schemaName::text
+''',
+      arguments: {
+        'schemaName': schemaName,
+      },
+      mapper: DomainDescription.fromRow,
     ).list;
   }
 }
@@ -221,6 +240,29 @@ class ColumnDescription {
       foreignKey: row['foreign_key'] as String?,
       foreignKeyFieldnum: row['foreign_key_fieldnum'] as List<int>?,
       defaultInfo: row['default_info'] as String?,
+    );
+  }
+}
+
+class DomainDescription {
+  final int oid;
+  final String name;
+  final bool notNull;
+  final String? defaultValue;
+
+  DomainDescription({
+    required this.oid,
+    required this.name,
+    required this.notNull,
+    this.defaultValue,
+  });
+
+  static DomainDescription fromRow(Map<String, dynamic> row) {
+    return DomainDescription(
+      oid: row['oid']! as int,
+      name: row['name']! as String,
+      notNull: row['not_null']! as bool,
+      defaultValue: row['default_value'] as String?,
     );
   }
 }

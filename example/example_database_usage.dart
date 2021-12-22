@@ -4,6 +4,7 @@ import 'package:server_utils/src/test_database.dart';
 
 import 'example_database_builder.dart';
 import 'select.queries.dart';
+import 'example_database_crud.dart';
 
 Future<PostgreSQLConnection> createConnection() async {
   var options = testDatabaseSuperuser
@@ -37,8 +38,16 @@ void main() async {
     var found = await db.findUserByEmail('info@xaha.dev');
     print(found);
 
-    var belgium = await db.queryByCountry('BE').list;
+    var belgium = await db.queryByCountry('FR').list;
     print(belgium);
+
+    var newPage =
+        await db.page.insert(body: {'fr': 'The body ${DateTime.now()}'});
+    print('New page ${newPage.id}');
+
+    print((await db.page.find(newPage.id)).body);
+
+    print(await db.country.delete('ZZ'));
   });
   print('Run in ${stopwatch.elapsed}');
 }

@@ -1,8 +1,8 @@
 import 'dart:developer' as dev;
 import 'dart:io';
 import 'package:logging/logging.dart';
+import 'package:postgres/postgres.dart';
 import 'package:server_utils/database.dart';
-import 'package:server_utils/src/database/generate_script.dart';
 import 'package:server_utils/src/test_database.dart';
 import 'package:vm_service/utils.dart';
 import 'package:vm_service/vm_service.dart';
@@ -44,15 +44,26 @@ void main() async {
     exampleDatabaseName,
     migrations: {'example/test_database'},
     queries: {'example/**.queries.sql'},
-    afterCreate: (connection) async {
-      await generateSchema(
-          connection, File('example/example_database_schema.dart'));
-    },
+    afterCreate: _afterCreate,
+    afterRefresh: _afterRefresh,
   );
 }
 
 Future<void> _afterReload() async {
   Logger.root.level = Level.ALL;
+}
+
+Future<void> _afterCreate(PostgreSQLConnection connection) async {}
+
+Future<void> _afterRefresh(PostgreSQLConnection connection) async {
+  var schema = await SchemaExtractor(DatabaseIO(connection)).schema();
+  var code = DartGenerator();
+  var schemaFile = 'example_database_schema.dart';
+  File('example/$schemaFile')
+      .writeAsStringSync(await code.generateEntities(schema.tables));
+
+  File('example/example_database_crud.dart').writeAsStringSync(
+      await code.generateCrudFile(schema.tables, imports: [schemaFile]));
 }
 
 class StdoutLog extends Log {

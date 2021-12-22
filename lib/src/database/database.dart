@@ -56,3 +56,26 @@ abstract class Database {
 
   void cancelTransaction({String reason});
 }
+
+extension DatabaseExtension on Database {
+  Future<T> insert<T>(
+    String tableName, {
+    required Map<String, dynamic> values,
+    required Mapper<T> mapper,
+  }) {
+    var keys = values.keys.toList();
+    if (tableName.contains('"')) {
+      throw Exception('Table name is invalid ($tableName)');
+    }
+    if (keys.any((k) => k.contains('"'))) {
+      throw Exception('One column has an invalid name ($keys)');
+    }
+    return single(
+      'insert into "$tableName" '
+      '(${keys.map((j) => '"$j"').join(', ')}) '
+      'values (${keys.map((k) => '@$k').join(',')}) returning *',
+      mapper: mapper,
+      args: values,
+    );
+  }
+}

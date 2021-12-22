@@ -6,7 +6,7 @@ create table page
     code      text  null,
     title     translated_text default $${}$$,
     title2    jsonb not null  default $${}$$,
-    title3    jsonb null  default $${}$$,
+    title3    jsonb null      default $${}$$,
     body      translated_text,
     page_type text  null
 );

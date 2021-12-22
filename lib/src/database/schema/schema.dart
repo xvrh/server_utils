@@ -27,15 +27,18 @@ class TableDefinition {
 class ColumnDefinition {
   final DataType type;
   final String name;
+  final String? domain;
   final bool isNullable, isPrimaryKey;
   final String? defaultValue;
 
-  const ColumnDefinition(this.name,
-      {required this.type,
-      bool? isNullable,
-      bool? isPrimaryKey,
-      this.defaultValue})
-      : isNullable = isNullable ?? true,
+  const ColumnDefinition(
+    this.name, {
+    required this.type,
+    bool? isNullable,
+    bool? isPrimaryKey,
+    this.defaultValue,
+    this.domain,
+  })  : isNullable = isNullable ?? true,
         isPrimaryKey = isPrimaryKey ?? false;
 
   @override

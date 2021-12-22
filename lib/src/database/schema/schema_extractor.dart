@@ -2,6 +2,7 @@ import 'schema.dart';
 
 import '../database.dart';
 import 'schema_extractor.queries.dart';
+import 'package:collection/collection.dart';
 
 class SchemaExtractor {
   final Database database;
@@ -17,6 +18,7 @@ class SchemaExtractor {
     var allColumns = await database.columnsForSchema(schemaName: schemaName);
     var primaryKeys =
         await database.constraintsForSchema(schemaName: schemaName);
+    var domains = await database.domainsForSchema(schemaName: schemaName);
 
     var results = <TableDefinition>[];
     for (var tableName in tableNames.where(tableFilter)) {
@@ -28,11 +30,21 @@ class SchemaExtractor {
         var isPrimaryKey = primaryKeys.any((c) =>
             c.tableName == tableName && c.columnName == column.columnName);
 
-        var field = ColumnDefinition(column.columnName,
-            type: DataType.fromPostgresName(column.dataType),
-            isNullable: column.isNullable,
-            isPrimaryKey: isPrimaryKey,
-            defaultValue: column.columnDefault);
+        var domain =
+            domains.firstWhereOrNull((e) => e.name == column.domainName);
+        var isNullable = column.isNullable;
+        if (domain != null && domain.notNull) {
+          isNullable = false;
+        }
+
+        var field = ColumnDefinition(
+          column.columnName,
+          type: DataType.fromPostgresName(column.dataType),
+          isNullable: isNullable,
+          isPrimaryKey: isPrimaryKey,
+          defaultValue: column.columnDefault ?? domain?.defaultValue,
+          domain: domain?.name,
+        );
         columnList.add(field);
       }
     }

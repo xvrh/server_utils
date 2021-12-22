@@ -1,4 +1,3 @@
-
 /******************************
 List<String> tablesForSchema({String schemaName = 'public'})
 *******************************/
@@ -99,4 +98,17 @@ where c.relkind = 'r'::char
   and n.nspname = :schemaName::text
   and c.relname = :tableName::text
   and f.attnum > 0
-order by number
+order by number;
+
+/******************************
+List<DomainDescription> domainsForSchema({String schemaName = 'public'})
+projection DomainDescription (
+  * not null,
+  default_value null,
+)
+*******************************/
+select pg_type.oid::int, typname as "name", typnotnull as "not_null", typdefault as "default_value"
+from pg_catalog.pg_type
+         join pg_catalog.pg_namespace on pg_namespace.oid = pg_type.typnamespace
+where typtype = 'd'
+  and nspname = :schemaName::text

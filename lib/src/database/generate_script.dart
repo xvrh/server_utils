@@ -6,7 +6,6 @@ import 'package:glob/list_local_fs.dart';
 import 'package:postgres/postgres.dart';
 import 'package:server_utils/database.dart';
 import 'package:logging/logging.dart';
-import 'package:server_utils/src/database/schema/schema_extractor.dart';
 import 'package:watcher/watcher.dart';
 import 'package:path/path.dart' as p;
 
@@ -24,6 +23,7 @@ Future<void> runDatabaseBuilder(
   required Set<String> migrations,
   required Set<String> queries,
   required Future<void> Function(PostgreSQLConnection) afterCreate,
+  Future<void> Function(PostgreSQLConnection)? afterRefresh,
 }) async {
   // if (!stdin.hasTerminal) {
   //   print('Run this script using the standard shell instead of IntelliJ. '
@@ -42,6 +42,7 @@ Available options:
     migrations: migrations,
     queries: queries,
     afterCreate: afterCreate,
+    afterRefresh: afterRefresh,
   );
   await builder.run();
 
@@ -54,6 +55,7 @@ class _DatabaseBuilder {
   final Set<String> migrations;
   final Set<String> queries;
   final Future<void> Function(PostgreSQLConnection) afterCreate;
+  final Future<void> Function(PostgreSQLConnection)? afterRefresh;
   final PostgresClient _client;
   final _eventsController = StreamController();
 
@@ -63,21 +65,22 @@ class _DatabaseBuilder {
     required this.migrations,
     required this.queries,
     required this.afterCreate,
+    this.afterRefresh,
   }) : _client = database.copyWith(database: databaseName).client();
 
   Future<void> run() async {
     await _recreateDatabase();
-    await _generateAllQueries();
+    await _refresh();
     _listenEvents();
 
     await for (var event in _eventsController.stream) {
       if (event is _RefreshQueryScriptEvent) {
         await _generateQuery(event.file);
       } else if (event is _RefreshAllQueryScriptsEvent) {
-        await _generateAllQueries();
+        await _refresh();
       } else if (event is _RecreateDatabaseEvent) {
         await _recreateDatabase();
-        await _generateAllQueries();
+        await _refresh();
       }
     }
   }
@@ -140,7 +143,7 @@ class _DatabaseBuilder {
     }
   }
 
-  Future<void> _generateAllQueries() async {
+  Future<void> _refresh() async {
     await useConnectionOptions(_client.connectionOptions, (connection) async {
       var generator = await _queryGenerator(connection);
       for (var queryGlob in queries) {
@@ -149,6 +152,15 @@ class _DatabaseBuilder {
         }
       }
     });
+
+    var afterRefresh = this.afterRefresh;
+    if (afterRefresh != null) {
+      try {
+        await useConnectionOptions(_client.connectionOptions, afterRefresh);
+      } catch (e, s) {
+        _logger.warning('Failed after refresh event: $e\n$s');
+      }
+    }
   }
 
   Future<void> _generateQuery(File file) async {
