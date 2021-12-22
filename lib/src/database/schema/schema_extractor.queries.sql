@@ -24,7 +24,8 @@ select table_name,
            else false
            end as is_nullable
 from information_schema.columns
-where table_schema = :schemaName::text;
+where table_schema = :schemaName::text
+order by ordinal_position;
 
 /******************************
 List<Constraint> constraintsForSchema({String schemaName = 'public'})
