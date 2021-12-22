@@ -15,27 +15,16 @@ import 'utils.dart';
 
 final _logger = Logger('database_builder');
 
-// TODO(xha): run an app. Create a temporary database, create it from scratch
-// based on the migrationScripts.
-// Watch all folders in migration script. For each change, recreate the db.
-// Generate all Dart code based on this database (for the tables)
-// Generate all the queries + watch for the queryGlobs & regenerate the query
-// for 1 file when it changes.
-// + Add a stdin input to force a refresh of ALL queries.
+const _refreshAllQueriesCommand = 'r';
+const _refreshAllCommand = 'a';
 
-// Workflow: create a file database_builder.dart with this script
-// Create an other file database_recreate.dart => a one shot file to create
-//   only a database from the migration file. This is generally the test database
-//   where you will have your test data?
-//   => Maybe this second script is useless and a bad idea. Just always use the
-// first one so it is immediatly up-to-date when you ctrl-s the file.
-
-Future<void> runDatabaseBuilder(Postgres database, String databaseName,
-    {required Set<String> migrations, required Set<String> queries}) async {
-  Logger.root
-    ..level = Level.ALL
-    ..onRecord.listen(print);
-
+Future<void> runDatabaseBuilder(
+  Postgres database,
+  String databaseName, {
+  required Set<String> migrations,
+  required Set<String> queries,
+  required Future<void> Function(PostgreSQLConnection) afterCreate,
+}) async {
   // if (!stdin.hasTerminal) {
   //   print('Run this script using the standard shell instead of IntelliJ. '
   //       'ie: dart tool/database_builder.dart');
@@ -43,12 +32,17 @@ Future<void> runDatabaseBuilder(Postgres database, String databaseName,
   // stdin.lineMode = false;
   print('''
 Available options:
-  r: refresh all query files
-  a: refresh all (migrations + query files)
+  $_refreshAllQueriesCommand: refresh all query files
+  $_refreshAllCommand: recreate database
 ''');
 
-  var builder = _DatabaseBuilder(database, databaseName,
-      migrations: migrations, queries: queries);
+  var builder = _DatabaseBuilder(
+    database,
+    databaseName,
+    migrations: migrations,
+    queries: queries,
+    afterCreate: afterCreate,
+  );
   await builder.run();
 
   builder.dispose();
@@ -59,12 +53,17 @@ class _DatabaseBuilder {
   final String databaseName;
   final Set<String> migrations;
   final Set<String> queries;
+  final Future<void> Function(PostgreSQLConnection) afterCreate;
   final PostgresClient _client;
   final _eventsController = StreamController();
 
-  _DatabaseBuilder(this.database, this.databaseName,
-      {required this.migrations, required this.queries})
-      : _client = database.copyWith(database: databaseName).client();
+  _DatabaseBuilder(
+    this.database,
+    this.databaseName, {
+    required this.migrations,
+    required this.queries,
+    required this.afterCreate,
+  }) : _client = database.copyWith(database: databaseName).client();
 
   Future<void> run() async {
     await _recreateDatabase();
@@ -100,22 +99,43 @@ class _DatabaseBuilder {
 
     stdin.listen((event) {
       var option = String.fromCharCodes(event);
-      if (option.startsWith('r')) {
+      if (option.startsWith(_refreshAllQueriesCommand)) {
         _logger.info('Refresh all query scripts');
         _eventsController.add(_RefreshAllQueryScriptsEvent());
+      } else if (option.startsWith(_refreshAllCommand)) {
+        _logger.info('Refresh all');
+        _eventsController.add(_RecreateDatabaseEvent());
       }
     });
   }
 
   Future<void> _recreateDatabase() async {
+    var globalStopwatch = Stopwatch()..start();
+    var stopwatch = Stopwatch()..start();
     var superClient = database.client();
     if (await superClient.databaseExists(databaseName)) {
       await superClient.dropDatabase(databaseName, force: true);
     }
+    _logger.fine('Drop database in ${stopwatch.elapsed}');
+    stopwatch.reset();
     await superClient.createDatabase(databaseName);
+    _logger.fine('Create database in ${stopwatch.elapsed}');
 
-    var migrator = Migrator(_client, [...migrations]);
-    await migrator.migrate();
+    stopwatch.reset();
+
+    try {
+      var migrator = Migrator(_client, [...migrations]);
+      await migrator.migrate();
+      _logger.fine('Apply migrations in ${stopwatch.elapsed}');
+
+      stopwatch.reset();
+      await useConnectionOptions(_client.connectionOptions, afterCreate);
+      _logger.fine('After create actions in ${stopwatch.elapsed}');
+
+      _logger.info('Recreated database step in ${globalStopwatch.elapsed}');
+    } catch (e, s) {
+      _logger.warning('Failed to re-create database: $e\n$s');
+    }
   }
 
   Future<void> _generateAllQueries() async {

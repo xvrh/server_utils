@@ -6,7 +6,8 @@ create table page
     code   text  null,
     title  translated_text default $${}$$,
     title2 jsonb not null  default $${}$$,
-    body   translated_text
+    body   translated_text,
+    page_type text null
 );
 
 create table app_configuration
@@ -14,7 +15,6 @@ create table app_configuration
     id          serial primary key,
     enable_logs boolean null
 );
-
 
 -- http://download.geonames.org/export/dump/readme.txt
 create table country
@@ -59,6 +59,7 @@ create table app_user
     configuration_id int         not null default 0 references app_configuration (id),
     eula_version     text        null,
     first_name       text        null,
+    middle_name      text        null,
     last_name        text        null
 );
 

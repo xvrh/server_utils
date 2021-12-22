@@ -1,93 +1,96 @@
 // GENERATED-FILE
 class Page {
-  final String? code;
   final dynamic body;
-  final dynamic title2;
+  final String? code;
   final int id;
+  final dynamic title2;
   final dynamic title;
+  final String? pageType;
 
   Page({
-    this.code,
     required this.body,
-    required this.title2,
+    this.code,
     required this.id,
+    required this.title2,
     required this.title,
+    this.pageType,
   });
 
   static Page fromRow(Map<String, dynamic> row) {
     return Page(
-      code: row['code'] as String?,
       body: row['body']! as dynamic,
-      title2: row['title2']! as dynamic,
+      code: row['code'] as String?,
       id: row['id']! as int,
+      title2: row['title2']! as dynamic,
       title: row['title']! as dynamic,
+      pageType: row['page_type'] as String?,
     );
   }
 }
 
 class AppConfiguration {
-  final int id;
   final bool? enableLogs;
+  final int id;
 
   AppConfiguration({
-    required this.id,
     this.enableLogs,
+    required this.id,
   });
 
   static AppConfiguration fromRow(Map<String, dynamic> row) {
     return AppConfiguration(
-      id: row['id']! as int,
       enableLogs: row['enable_logs'] as bool?,
+      id: row['id']! as int,
     );
   }
 }
 
 class Country {
-  final String codeIso3;
   final double longitude;
-  final int phoneCode;
-  final double latitude;
-  final String code;
+  final String codeIso3;
   final String currency;
+  final String code;
+  final double latitude;
+  final int phoneCode;
 
   Country({
-    required this.codeIso3,
     required this.longitude,
-    required this.phoneCode,
-    required this.latitude,
-    required this.code,
+    required this.codeIso3,
     required this.currency,
+    required this.code,
+    required this.latitude,
+    required this.phoneCode,
   });
 
   static Country fromRow(Map<String, dynamic> row) {
     return Country(
-      codeIso3: row['code_iso3']! as String,
       longitude: row['longitude']! as double,
-      phoneCode: row['phone_code']! as int,
-      latitude: row['latitude']! as double,
-      code: row['code']! as String,
+      codeIso3: row['code_iso3']! as String,
       currency: row['currency']! as String,
+      code: row['code']! as String,
+      latitude: row['latitude']! as double,
+      phoneCode: row['phone_code']! as int,
     );
   }
 }
 
 class Timezone {
-  final String latLong;
   final String name;
+  final String latLong;
   final String? aliasFor;
   final String? country;
 
   Timezone({
-    required this.latLong,
     required this.name,
+    required this.latLong,
     this.aliasFor,
     this.country,
   });
 
   static Timezone fromRow(Map<String, dynamic> row) {
     return Timezone(
-      latLong: row['lat_long']! as String,
       name: row['name']! as String,
+      latLong: row['lat_long']! as String,
       aliasFor: row['alias_for'] as String?,
       country: row['country'] as String?,
     );
@@ -95,121 +98,124 @@ class Timezone {
 }
 
 class AppRole {
-  final int index;
   final String description;
   final String code;
   final String name;
+  final int index;
 
   AppRole({
-    required this.index,
     required this.description,
     required this.code,
     required this.name,
+    required this.index,
   });
 
   static AppRole fromRow(Map<String, dynamic> row) {
     return AppRole(
-      index: row['index']! as int,
       description: row['description']! as String,
       code: row['code']! as String,
       name: row['name']! as String,
+      index: row['index']! as int,
     );
   }
 }
 
 class AppUser {
-  final String countryCode;
-  final String? eulaVersion;
-  final int configurationId;
-  final String? firstName;
-  final String email;
-  final int id;
-  final DateTime created;
+  final String? middleName;
   final String role;
   final String? lastName;
   final DateTime? lastSeen;
+  final String? eulaVersion;
+  final String countryCode;
+  final int id;
+  final DateTime created;
+  final String? firstName;
+  final int configurationId;
+  final String email;
 
   AppUser({
-    required this.countryCode,
-    this.eulaVersion,
-    required this.configurationId,
-    this.firstName,
-    required this.email,
-    required this.id,
-    required this.created,
+    this.middleName,
     required this.role,
     this.lastName,
     this.lastSeen,
+    this.eulaVersion,
+    required this.countryCode,
+    required this.id,
+    required this.created,
+    this.firstName,
+    required this.configurationId,
+    required this.email,
   });
 
   static AppUser fromRow(Map<String, dynamic> row) {
     return AppUser(
-      countryCode: row['country_code']! as String,
-      eulaVersion: row['eula_version'] as String?,
-      configurationId: row['configuration_id']! as int,
-      firstName: row['first_name'] as String?,
-      email: row['email']! as String,
-      id: row['id']! as int,
-      created: row['created']! as DateTime,
+      middleName: row['middle_name'] as String?,
       role: row['role']! as String,
       lastName: row['last_name'] as String?,
       lastSeen: row['last_seen'] as DateTime?,
+      eulaVersion: row['eula_version'] as String?,
+      countryCode: row['country_code']! as String,
+      id: row['id']! as int,
+      created: row['created']! as DateTime,
+      firstName: row['first_name'] as String?,
+      configurationId: row['configuration_id']! as int,
+      email: row['email']! as String,
     );
   }
 }
 
 class MobileDevice {
-  final String manufacturer;
-  final int userId;
-  final String osLocale;
-  final String model;
-  final int configurationId;
-  final String deviceIdentifier;
-  final String appVersion;
+  final int id;
+  final DateTime lastSeen;
+  final String osVersion;
+  final DateTime? notificationTokenUpdated;
+  final DateTime created;
+  final String appLanguage;
   final String osName;
   final String? notificationToken;
-  final DateTime lastSeen;
-  final int id;
-  final String appLanguage;
-  final DateTime created;
-  final DateTime? notificationTokenUpdated;
-  final String osVersion;
+  final String appVersion;
+  final String deviceIdentifier;
+  final int configurationId;
+  final String model;
+  final String osLocale;
+  final int userId;
+  final String manufacturer;
 
   MobileDevice({
-    required this.manufacturer,
-    required this.userId,
-    required this.osLocale,
-    required this.model,
-    required this.configurationId,
-    required this.deviceIdentifier,
-    required this.appVersion,
+    required this.id,
+    required this.lastSeen,
+    required this.osVersion,
+    this.notificationTokenUpdated,
+    required this.created,
+    required this.appLanguage,
     required this.osName,
     this.notificationToken,
-    required this.lastSeen,
-    required this.id,
-    required this.appLanguage,
-    required this.created,
-    this.notificationTokenUpdated,
-    required this.osVersion,
+    required this.appVersion,
+    required this.deviceIdentifier,
+    required this.configurationId,
+    required this.model,
+    required this.osLocale,
+    required this.userId,
+    required this.manufacturer,
   });
 
   static MobileDevice fromRow(Map<String, dynamic> row) {
     return MobileDevice(
-      manufacturer: row['manufacturer']! as String,
-      userId: row['user_id']! as int,
-      osLocale: row['os_locale']! as String,
-      model: row['model']! as String,
-      configurationId: row['configuration_id']! as int,
-      deviceIdentifier: row['device_identifier']! as String,
-      appVersion: row['app_version']! as String,
+      id: row['id']! as int,
+      lastSeen: row['last_seen']! as DateTime,
+      osVersion: row['os_version']! as String,
+      notificationTokenUpdated: row['notification_token_updated'] as DateTime?,
+      created: row['created']! as DateTime,
+      appLanguage: row['app_language']! as String,
       osName: row['os_name']! as String,
       notificationToken: row['notification_token'] as String?,
-      lastSeen: row['last_seen']! as DateTime,
-      id: row['id']! as int,
-      appLanguage: row['app_language']! as String,
-      created: row['created']! as DateTime,
-      notificationTokenUpdated: row['notification_token_updated'] as DateTime?,
-      osVersion: row['os_version']! as String,
+      appVersion: row['app_version']! as String,
+      deviceIdentifier: row['device_identifier']! as String,
+      configurationId: row['configuration_id']! as int,
+      model: row['model']! as String,
+      osLocale: row['os_locale']! as String,
+      userId: row['user_id']! as int,
+      manufacturer: row['manufacturer']! as String,
     );
   }
 }

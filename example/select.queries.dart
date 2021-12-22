@@ -1,5 +1,5 @@
 // GENERATED-CODE: do not edit
-// Code is generated from /Users/xavier/projects/server_utils/example/select.queries.sql.sql
+// Code is generated from ./example/select.queries.sql.sql
 import 'package:server_utils/database.dart';
 import 'example_database_schema.dart';
 
@@ -21,7 +21,7 @@ where id = :id::int;
   }
 
   Future<AppUser?> findUserByEmail(String email) {
-    return Query<AppUser>(
+    return Query<AppUser?>(
       this,
       //language=sql
       r'''
@@ -52,8 +52,8 @@ where country_code = :country::text;
     );
   }
 
-  Future<List<String>> allNames() {
-    return Query<String>.singleColumn(this,
+  Future<List<String?>> allNames() {
+    return Query<String?>.singleColumn(this,
         //language=sql
         r'''
 select first_name
@@ -123,16 +123,20 @@ where id = :deviceId;
     ).single;
   }
 
-  Future<int> devicesOlderThan(DateTime refDate) {
-    return Query<void>.noResult(this,
-        //language=sql
-        r'''
+  Future<MobileDevice> devicesOlderThan(DateTime refDate) {
+    return Query<MobileDevice>(
+      this,
+      //language=sql
+      r'''
 select *
 from mobile_device
 where notification_token_updated < :refDate::date;
-''', arguments: {
-      'refDate': refDate,
-    }).affectedRows;
+''',
+      arguments: {
+        'refDate': refDate,
+      },
+      mapper: MobileDevice.fromRow,
+    ).single;
   }
 
   Future<int> deleteDeviceOlderThan(DateTime date) {

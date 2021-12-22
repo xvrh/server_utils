@@ -22,10 +22,11 @@ Future runDatabase(Function(Database) callback) async {
 
 void main() async {
   await runDatabase((connection) async {
-    var columns = await connection.describeTable(tableName: 'app_user');
+    var columns = await connection.describeTable(tableName: 'page');
     print('Result $columns');
     for (var col in columns) {
-      print('${col.number} ${col.name} ${col.type} ${col.notNull}');
+      print(
+          '${col.number} ${col.name} ${col.type} (${col.typeId}) null: ${col.notNull}');
     }
   });
 }

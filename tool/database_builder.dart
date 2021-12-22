@@ -37,6 +37,7 @@ void main() async {
     'server_utils_tool',
     migrations: {},
     queries: {'lib/**.queries.sql'},
+    afterCreate: (connection) async {},
   );
 }
 

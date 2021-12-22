@@ -23,7 +23,7 @@ from app_user
 where country_code = :country::text;
 
 /***********************
-List<String> allNames()
+List<String?> allNames()
 ************************/
 select first_name
 from app_user;
@@ -59,7 +59,7 @@ from mobile_device
 where id = :deviceId;
 
 /***********************
-void devicesOlderThan(DateTime refDate)
+MobileDevice devicesOlderThan(DateTime refDate)
 ************************/
 select *
 from mobile_device

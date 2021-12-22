@@ -1,9 +1,22 @@
-import 'package:dart_style/dart_style.dart';
+import 'dart:io';
+
+import 'package:postgres/postgres.dart';
 import 'package:server_utils/src/database/schema/schema.dart';
+import 'package:server_utils/src/database/schema/schema_extractor.dart';
+import 'package:server_utils/src/utils/quick_dart_formatter.dart';
 import '../../utils/string.dart';
+import '../database_io.dart';
+
+Future<void> generateSchema(
+    PostgreSQLConnection connection, File destination) async {
+  var schema = await SchemaExtractor(DatabaseIO(connection)).schema();
+  var dartGenerator = DartClassGenerator();
+  var code = await dartGenerator.generateFile(schema.tables);
+  destination.writeAsStringSync(code);
+}
 
 class DartClassGenerator {
-  String generateFile(List<TableDefinition> tables) {
+  Future<String> generateFile(List<TableDefinition> tables) async {
     var code = StringBuffer('''
 // GENERATED-FILE
 ''');
@@ -14,7 +27,7 @@ class DartClassGenerator {
     }
     var resultCode = '$code';
     try {
-      resultCode = DartFormatter().format(resultCode);
+      resultCode = await formatDartCode(resultCode);
     } catch (e) {
       print('Error while formatting code: $e');
     }

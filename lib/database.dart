@@ -7,3 +7,4 @@ export 'src/database/database.dart' show Database;
 export 'src/database/database_io.dart' show DatabaseIO;
 export 'src/database/utils.dart' show connectionFromOptions;
 export 'src/database/orm/query.dart' show Query;
+export 'src/database/orm/dart_class_generator.dart' show generateSchema;

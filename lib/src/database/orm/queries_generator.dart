@@ -1,8 +1,8 @@
-import 'package:dart_style/dart_style.dart';
 import 'package:postgres/postgres.dart';
 import 'package:server_utils/src/database/orm/queries_parser.dart';
 import 'package:server_utils/src/database/schema/schema.dart';
 import 'package:path/path.dart' as p;
+import 'package:server_utils/src/utils/quick_dart_formatter.dart';
 import '../../utils/string.dart';
 import 'data_type_postgres.dart';
 import 'utils/sql_parser.dart';
@@ -81,7 +81,7 @@ class $className {
 
       var returnType = ReturnType(query.header.method.returnType);
       var isSimpleType = columns.length == 1 &&
-          columns.first.type.dartType == returnType.queryType;
+          columns.first.type.dartType == returnType.innerTypeWithoutNullability;
 
       var queryConstructor = '';
       if (isSimpleType) {
@@ -93,7 +93,7 @@ class $className {
       code.writeln('${returnType.returnType} ${query.header.method.name}'
           '${query.header.method.parameters.rawDeclaration} {');
       code.writeln(
-          'return Query<${returnType.queryType}>$queryConstructor(this, ');
+          'return Query<${returnType.innerType}>$queryConstructor(this, ');
       code.writeln('  //language=sql');
       code.writeln("r'''");
       code.writeln(query.query.body);
@@ -103,7 +103,8 @@ class $className {
       }
       code.writeln('}');
       if (!isSimpleType && !returnType._isVoid) {
-        code.writeln(', mapper: ${returnType.queryType}.fromRow,');
+        code.writeln(
+            ', mapper: ${returnType.innerTypeWithoutNullability}.fromRow,');
       }
       code.writeln(')${returnType.methodCall};');
       code.writeln('}');
@@ -114,7 +115,7 @@ class $className {
 
     var resultCode = '$code';
     try {
-      resultCode = DartFormatter().format(resultCode);
+      resultCode = await formatDartCode(resultCode);
     } catch (e) {
       print('Error while formatting code: $e');
     }
@@ -180,16 +181,24 @@ class ReturnType {
     }
   }
 
-  String get queryType {
+  static String removeNullability(String type) {
+    if (type.endsWith('?')) {
+      return type.substring(0, type.length - 1);
+    }
+    return type;
+  }
+
+  String get innerType {
     var parameterIndex = rawType.indexOf('<');
     if (parameterIndex >= 0) {
       return rawType.substring(parameterIndex + 1, rawType.length - 1);
     } else {
-      if (rawType.endsWith('?')) {
-        return rawType.substring(0, rawType.length - 1);
-      }
       return rawType;
     }
+  }
+
+  String get innerTypeWithoutNullability {
+    return removeNullability(innerType);
   }
 
   String get methodCall {

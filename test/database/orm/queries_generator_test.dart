@@ -7,18 +7,34 @@ import 'package:test/test.dart';
 void main() {
   late LocalDatabase database;
   setUp(() async {
-    database = await testDatabase.createDatabase();
+    database = await testDatabaseSuperuser.createDatabase();
   });
 
   tearDown(() async {
     await database.drop();
   });
 
-  test('Return type parser', () {
+  test('Return type parser (1)', () {
     var type = ReturnType('List<XX>');
     expect(type.returnType, 'Future<List<XX>>');
     expect(type.methodCall, '.list');
-    expect(type.queryType, 'XX');
+    expect(type.innerType, 'XX');
+  });
+
+  test('Return type parser (2)', () {
+    var type = ReturnType('List<String?>');
+    expect(type.returnType, 'Future<List<String?>>');
+    expect(type.methodCall, '.list');
+    expect(type.innerType, 'String?');
+    expect(type.innerTypeWithoutNullability, 'String');
+  });
+
+  test('Return type parser (3)', () {
+    var type = ReturnType('String?');
+    expect(type.returnType, 'Future<List<String?>>');
+    expect(type.methodCall, '.list');
+    expect(type.innerType, 'String?');
+    expect(type.innerTypeWithoutNullability, 'String');
   });
 
   test('Generate file', () async {

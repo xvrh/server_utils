@@ -191,6 +191,9 @@ class PostgresServer {
       'POSTGRES_DB=${_postgres.database}',
       '-e',
       'PGDATA=/var/lib/postgresql/data/pgdata',
+      //TODO(xha): make it work and add a flag. This could speed up db creation.
+      //'-e',
+      //'POSTGRES_INITDB_ARGS="--no-sync"',
       '-v',
       '$dataPath:/var/lib/postgresql/data',
       '--publish',
@@ -515,7 +518,7 @@ ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO $userName;
         .transform(const LineSplitter())
         .listen((line) {
       stdoutLines.add(line);
-      _logger.info(line);
+      _logger.finest(line);
     });
 
     var stderrLines = <String>[];
