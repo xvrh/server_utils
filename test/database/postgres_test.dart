@@ -1,21 +1,28 @@
 import 'dart:io';
 
+import 'package:logging/logging.dart';
 import 'package:server_utils/database.dart';
 import 'package:server_utils/src/test_database.dart';
 import 'package:test/test.dart';
 
 void main() {
+  Logger.root
+    ..level = Level.ALL
+    ..onRecord.listen(print);
   test('Start database in empty directory', () async {
     var dataPath = Postgres.temporaryPath;
     var postgres = Postgres(dataPath);
     var server = await postgres.server();
-    expect(Postgres.isDataDirectory(dataPath), true);
-    var client = server.client();
-    await client.execute('create database my_database', transaction: false);
-    var databases = await client.listDatabases();
-    expect(databases, contains('my_database'));
-    await server.stop();
-    Directory(dataPath).deleteSync(recursive: true);
+    try {
+      expect(Postgres.isDataDirectory(dataPath), true);
+      var client = server.client();
+      await client.execute('create database my_database', transaction: false);
+      var databases = await client.listDatabases();
+      expect(databases, contains('my_database'));
+    } finally {
+      await server.stop();
+      Directory(dataPath).deleteSync(recursive: true);
+    }
   });
 
   test('Use test database', () async {

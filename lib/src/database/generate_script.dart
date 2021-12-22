@@ -110,9 +110,11 @@ class _DatabaseBuilder {
   }
 
   Future<void> _recreateDatabase() async {
+    _logger.fine('Will recreate database');
     var globalStopwatch = Stopwatch()..start();
     var stopwatch = Stopwatch()..start();
     var superClient = database.client();
+
     if (await superClient.databaseExists(databaseName)) {
       await superClient.dropDatabase(databaseName, force: true);
     }

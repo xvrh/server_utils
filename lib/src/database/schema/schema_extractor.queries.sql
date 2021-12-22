@@ -12,6 +12,7 @@ projection Column (
   * not null,
   column_default null,
   character_maximum_length null,
+  domain_name null,
 )
 *******************************/
 select table_name,
@@ -19,6 +20,7 @@ select table_name,
        column_default,
        data_type,
        character_maximum_length,
+       domain_name,
        case
            when is_nullable = 'YES' then true
            else false

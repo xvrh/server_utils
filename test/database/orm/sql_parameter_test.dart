@@ -47,7 +47,7 @@ void main() {
     expect(SqlQuery.parse(':id select * id = :id').bodyWithDartSubstitutions,
         '@id select * id = @id');
     expect(SqlQuery.parse(':id').bodyWithDartSubstitutions, '@id');
-    expect(SqlQuery.parse(' :id ').bodyWithDartSubstitutions, ' @id ');
+    expect(SqlQuery.parse(' :id ').bodyWithDartSubstitutions, ' @id');
     expect(SqlQuery.parse('''
 select 
     * /*:id2*/
@@ -57,8 +57,7 @@ select
 select 
     * /*:id2*/
     id = 
-    @id
-''');
+    @id''');
   });
 
   test('Dart substitutions', () {
@@ -70,7 +69,27 @@ where table_schema = :schemaName::text;
     expect(SqlQuery.parse(sql).bodyWithDartSubstitutions, '''
 select table_name::text
 from information_schema.tables
-where table_schema = @schemaName::text;
-''');
+where table_schema = @schemaName::text;''');
+  });
+
+  test('SqlParser without colon', () {
+    var sql = 'select count(*) from actor';
+    var query = SqlQuery.parse(sql);
+    expect(query.body, sql);
+  });
+
+  test('SqlParser with @ for parameters', () {
+    var sql = 'select * from customers where customer_id = @customerId';
+    var query = SqlQuery.parse(sql);
+    expect(query.body, sql);
+    expect(query.parameters, hasLength(1));
+    expect(query.parameters[0].name, 'customerId');
+    expect(query.parameters[0].type, isNull);
+  });
+
+  test('SqlParser with leading _', () {
+    var sql = 'select count(*) as c from _migration_history';
+    var query = SqlQuery.parse(sql);
+    expect(query.body, sql);
   });
 }

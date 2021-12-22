@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:process_runner/process_runner.dart';
+
 import 'connection_options.dart';
 import 'local_database.dart';
 import 'utils.dart';
@@ -544,14 +546,15 @@ ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO $userName;
   }
 
   Future<String> _runPsql(List<String> args) async {
-    var result = await Process.run('docker', [..._psqlDockerArgs, ...args]);
+    var result = await ProcessRunner()
+        .runProcess(['docker', ..._psqlDockerArgs, ...args]);
 
     if (result.exitCode != 0) {
       throw Exception(
           'psql exited with code ${result.exitCode}.\n${result.stderr}');
     }
 
-    return result.stdout as String;
+    return result.stdout;
   }
 
   Future<List<String>> listDatabases() async {

@@ -36,7 +36,7 @@ class IsolateRunner {
 
     var isolateSource = '''
 import 'dart:isolate';
-import 'package:server_utils/postgres.dart' show MigrationContext;
+import 'package:server_utils/migration.dart' show MigrationContext;
 $importBuffers
 
 final methods = <String, Function(MigrationContext)>{

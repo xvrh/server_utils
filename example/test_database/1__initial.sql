@@ -2,12 +2,13 @@ create domain translated_text jsonb not null default $${}$$;
 
 create table page
 (
-    id     serial primary key,
-    code   text  null,
-    title  translated_text default $${}$$,
-    title2 jsonb not null  default $${}$$,
-    body   translated_text,
-    page_type text null
+    id        serial primary key,
+    code      text  null,
+    title     translated_text default $${}$$,
+    title2    jsonb not null  default $${}$$,
+    title3    jsonb null  default $${}$$,
+    body      translated_text,
+    page_type text  null
 );
 
 create table app_configuration

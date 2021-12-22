@@ -1,5 +1,3 @@
-import 'package:server_utils/src/database/orm/utils/sql_parameter.dart';
-
 import 'connection_options.dart';
 import 'database.dart';
 import 'orm/utils/sql_parser.dart';
@@ -27,7 +25,7 @@ class DatabaseIO implements Database {
 
   @override
   Future<T> scalar<T>(String query, {Map<String, dynamic>? args}) async {
-    return single<T>(query, args: args, mapper: (row) => row[0] as T);
+    return single<T>(query, args: args, mapper: (row) => row.values.first as T);
   }
 
   @override

@@ -46,7 +46,7 @@ class SqlGrammarDefinition extends GrammarDefinition {
 
   Parser stringContentSingleQuoted() => anyOf("'\n\r").neg();
 
-  Parser sqlParameter() => (char(':').token() &
+  Parser sqlParameter() => (anyOf(':@').token() &
           ref0(identifierLexicalToken) &
           ref0(sqlParameterType).optional())
       .map((s) => SqlParameter(s[0] as Token<String>, s[1] as Token<String>,
@@ -62,12 +62,13 @@ class SqlGrammarDefinition extends GrammarDefinition {
 
   Parser identifier() => ref1(token, ref0(identifierLexicalToken));
 
-  Parser identifierLexicalToken() =>
-      (ref0(letter) & ref0(identifierPartLexicalToken).star())
-          .flatten()
-          .token();
+  Parser identifierLexicalToken() => (ref0(identifierStartLexicalToken) &
+          ref0(identifierPartLexicalToken).star())
+      .flatten()
+      .token();
 
   Parser identifierPartLexicalToken() => ref0(letter) | ref0(digit) | char('_');
+  Parser identifierStartLexicalToken() => ref0(letter) | char('_');
 
   Parser newlineLexicalToken() => pattern('\n\r');
 
@@ -118,7 +119,7 @@ class SqlQuery {
     var result = parser.parse(content).map((e) => e as SqlQuery);
     if (result.isFailure) {
       throw SqlQueryParseException(
-          'Fail to parse SQL: ${result.message} (${result.toPositionString()})');
+          'Fail to parse SQL: ${result.message} (${result.toPositionString()}).\nQuery: [$content]');
     }
     return result.value;
   }

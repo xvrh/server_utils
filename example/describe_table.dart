@@ -3,8 +3,12 @@ import 'package:server_utils/database.dart';
 import 'package:server_utils/src/test_database.dart';
 import 'package:server_utils/src/database/schema/schema_extractor.queries.dart';
 
+import 'example_database_builder.dart';
+
 Future<PostgreSQLConnection> createConnection() async {
-  var options = testDatabase.connectionOptions;
+  var options = testDatabaseSuperuser
+      .copyWith(database: exampleDatabaseName)
+      .connectionOptions;
   var connection = connectionFromOptions(options);
   await connection.open();
 

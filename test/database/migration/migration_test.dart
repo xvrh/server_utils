@@ -7,7 +7,7 @@ final _testDataPath = 'test/database/migration/data';
 void main() {
   late LocalDatabase database;
   setUp(() async {
-    database = await testDatabase.createDatabase();
+    database = await testDatabaseSuperuser.createDatabase();
   });
 
   tearDown(() async {
@@ -50,7 +50,7 @@ void main() {
     await Migrator(database.client, ['$_testDataPath/2']).migrate();
 
     await database.use((db) async {
-      var result = await db.scalar('select count(*) from film');
+      var result = await db.scalar<int>('select count(*) from film');
       expect(result, greaterThan(100));
 
       var actors = await db.scalar<int>('select count(*) from actor');

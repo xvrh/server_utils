@@ -740,7 +740,7 @@ class DartGrammarDefinition extends GrammarDefinition {
   Parser hexDigitLexicalToken() => pattern('0-9a-fA-F');
 
   Parser identifierStartLexicalToken() =>
-      ref0(identifierStartNoDollarLexicalToken) | char('\$');
+      ref0(identifierStartNoDollarLexicalToken) | char(r'$');
 
   Parser identifierStartNoDollarLexicalToken() =>
       ref0(letterLexicalToken) | char('_');

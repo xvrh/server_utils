@@ -16,7 +16,7 @@ void main() async {
     ..level = Level.ALL
     ..onRecord.listen(print);
   var databaseName = 'server_utils_database';
-  var database = testDatabase;
+  var database = testDatabaseSuperuser;
   var superClient = database.client();
   if (await superClient.databaseExists(databaseName)) {
     await superClient.dropDatabase(databaseName, force: true);

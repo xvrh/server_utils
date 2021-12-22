@@ -25,12 +25,14 @@ select table_name,
        column_default,
        data_type,
        character_maximum_length,
+       domain_name,
        case
            when is_nullable = 'YES' then true
            else false
            end as is_nullable
 from information_schema.columns
-where table_schema = :schemaName::text;
+where table_schema = :schemaName::text
+order by ordinal_position;
 ''',
       arguments: {
         'schemaName': schemaName,
@@ -130,6 +132,7 @@ class Column {
   final String? columnDefault;
   final String dataType;
   final int? characterMaximumLength;
+  final String? domainName;
   final bool isNullable;
 
   Column({
@@ -138,6 +141,7 @@ class Column {
     this.columnDefault,
     required this.dataType,
     this.characterMaximumLength,
+    this.domainName,
     required this.isNullable,
   });
 
@@ -148,6 +152,7 @@ class Column {
       columnDefault: row['column_default'] as String?,
       dataType: row['data_type']! as String,
       characterMaximumLength: row['character_maximum_length'] as int?,
+      domainName: row['domain_name'] as String?,
       isNullable: row['is_nullable']! as bool,
     );
   }

@@ -1,7 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:shelf/shelf.dart';
 import 'package:server_utils/rpc.dart';
-import 'package:server_utils/src/rpc_builder/annotations.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 part 'api.g.dart';

@@ -15,6 +15,7 @@ const exampleDatabaseName = 'example_database';
 void main() async {
   // Change the level in "afterReload" function
   Logger.root.onRecord.listen(print);
+  await _afterReload();
 
   var observatoryUri = (await dev.Service.getInfo()).serverUri;
   if (observatoryUri != null) {

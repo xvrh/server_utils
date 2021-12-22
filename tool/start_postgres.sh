@@ -3,5 +3,5 @@ docker run --rm --name some-postgres \
   -e POSTGRES_PASSWORD=password \
   -e PGDATA=/var/lib/postgresql/data/pgdata \
   -v /Users/xavier/_data/some-postgres:/var/lib/postgresql/data \
-  --publish 5433:5432 \
-  postgres:13.3
+  --publish 5434:5432 \
+  postgres:13.5

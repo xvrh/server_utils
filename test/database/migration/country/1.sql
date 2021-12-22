@@ -1,7 +1,7 @@
 create table country
 (
     id            serial primary key,
-    code          char(2) not null unique,
+    code          varchar(2) not null unique,
     currency_rate real,
     name          jsonb,
     is_inEurope   boolean not null default false,
