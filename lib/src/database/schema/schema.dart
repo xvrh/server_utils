@@ -134,11 +134,11 @@ class DataType<T> {
   );
   static const json = DataType<dynamic>._(
     'json',
-    dartType: 'dynamic',
+    dartType: 'Object',
   );
   static const jsonb = DataType<dynamic>._(
     'jsonb',
-    dartType: 'dynamic',
+    dartType: 'Object',
   );
   static const jsonbArray = DataType<List<dynamic>>._(
     'jsonb[]',
