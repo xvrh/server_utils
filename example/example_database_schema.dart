@@ -2,10 +2,10 @@
 class Page {
   final int id;
   final String? code;
-  final dynamic title;
-  final dynamic title2;
-  final dynamic? title3;
-  final dynamic body;
+  final Object title;
+  final Object title2;
+  final Object? title3;
+  final Object body;
   final String? pageType;
 
   Page({
@@ -22,10 +22,10 @@ class Page {
     return Page(
       id: row['id']! as int,
       code: row['code'] as String?,
-      title: row['title']! as dynamic,
-      title2: row['title2']! as dynamic,
-      title3: row['title3'] as dynamic?,
-      body: row['body']! as dynamic,
+      title: row['title']! as Object,
+      title2: row['title2']! as Object,
+      title3: row['title3'] as Object?,
+      body: row['body']! as Object,
       pageType: row['page_type'] as String?,
     );
   }

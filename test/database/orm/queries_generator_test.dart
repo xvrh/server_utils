@@ -1,6 +1,5 @@
 import 'package:server_utils/database.dart';
 import 'package:server_utils/src/database/orm/queries_generator.dart';
-import 'package:server_utils/src/database/schema/schema_extractor.dart';
 import 'package:server_utils/src/test_database.dart';
 import 'package:test/test.dart';
 
