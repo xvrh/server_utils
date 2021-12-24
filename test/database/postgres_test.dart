@@ -23,7 +23,11 @@ void main() {
       expect(databases, contains('my_database'));
     } finally {
       await server.stop();
-      Directory(dataPath).deleteSync(recursive: true);
+      try {
+        Directory(dataPath).deleteSync(recursive: true);
+      } catch (e) {
+        // Swallow errors
+      }
     }
   });
 
