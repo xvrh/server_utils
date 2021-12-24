@@ -15,7 +15,7 @@ jobs:
     steps:
       - run: echo $POSTGRES_DATA_DIR
         env:
-          POSTGRES_DATA_DIR: '${GITHUB_WORKSPACE}/.postgres-data'
+          POSTGRES_DATA_DIR: '${env.RUNNER_TEMP}/.postgres-data'
 #      - uses: dart-lang/setup-dart@v0.3
 #        with:
 #          sdk: ${{ matrix.sdk }}
