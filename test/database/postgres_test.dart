@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:logging/logging.dart';
 import 'package:server_utils/database.dart';
-import '../../example/example_database.dart';
 import 'package:test/test.dart';
 
 import 'utils.dart';
