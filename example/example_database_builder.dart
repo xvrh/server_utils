@@ -3,12 +3,13 @@ import 'dart:io';
 import 'package:logging/logging.dart';
 import 'package:postgres/postgres.dart';
 import 'package:server_utils/database.dart';
-import 'package:server_utils/src/test_database.dart';
 import 'package:vm_service/utils.dart';
 import 'package:vm_service/vm_service.dart';
 import 'package:vm_service/vm_service_io.dart';
 import 'package:watcher/watcher.dart';
 import 'package:stream_transform/stream_transform.dart';
+
+import 'example_database.dart';
 
 const exampleDatabaseName = 'example_database';
 
@@ -40,7 +41,7 @@ void main() async {
   }
 
   await runDatabaseBuilder(
-    testDatabaseSuperuser,
+    exampleDatabaseSuperUser,
     exampleDatabaseName,
     migrations: {'example/test_database'},
     queries: {'example/**.queries.sql'},

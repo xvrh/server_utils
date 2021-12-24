@@ -9,14 +9,15 @@ import 'package:server_utils/src/database/schema/schema.dart';
 import 'package:server_utils/src/database/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
-import 'package:server_utils/src/test_database.dart';
+
+import '../example/example_database.dart';
 
 void main() async {
   Logger.root
     ..level = Level.ALL
     ..onRecord.listen(print);
   var databaseName = 'server_utils_database';
-  var database = testDatabaseSuperuser;
+  var database = exampleDatabaseSuperUser;
   var superClient = database.client();
   if (await superClient.databaseExists(databaseName)) {
     await superClient.dropDatabase(databaseName, force: true);

@@ -2,12 +2,13 @@ import 'dart:developer' as dev;
 import 'dart:io';
 import 'package:logging/logging.dart';
 import 'package:server_utils/src/database/generate_script.dart';
-import 'package:server_utils/src/test_database.dart';
 import 'package:vm_service/utils.dart';
 import 'package:vm_service/vm_service.dart';
 import 'package:vm_service/vm_service_io.dart';
 import 'package:watcher/watcher.dart';
 import 'package:stream_transform/stream_transform.dart';
+
+import '../example/example_database.dart';
 
 void main() async {
   // Change the level in "afterReload" function
@@ -35,7 +36,7 @@ void main() async {
   }
 
   await runDatabaseBuilder(
-    testDatabaseSuperuser,
+    exampleDatabaseSuperUser,
     'server_utils_tool',
     migrations: {},
     queries: {'lib/**.queries.sql'},

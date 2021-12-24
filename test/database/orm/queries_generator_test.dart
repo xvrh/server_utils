@@ -1,17 +1,11 @@
 import 'package:server_utils/database.dart';
 import 'package:server_utils/src/database/orm/queries_generator.dart';
-import 'package:server_utils/src/test_database.dart';
 import 'package:test/test.dart';
 
-void main() {
-  late LocalDatabase database;
-  setUp(() async {
-    database = await testDatabaseSuperuser.createDatabase();
-  });
+import '../utils.dart';
 
-  tearDown(() async {
-    await database.drop();
-  });
+void main() {
+  var testUtils = DatabaseTestUtils();
 
   test('Return type parser (1)', () {
     var type = ReturnType('List<XX>');
@@ -37,6 +31,7 @@ void main() {
   });
 
   test('Generate file', () async {
+    var database = testUtils.database;
     var migrator =
         Migrator(database.client, ['test/database/orm/data/country']);
     await migrator.migrate();

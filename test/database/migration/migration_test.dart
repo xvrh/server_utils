@@ -1,20 +1,17 @@
+import 'dart:io';
+
 import 'package:server_utils/database.dart';
-import 'package:server_utils/src/test_database.dart';
 import 'package:test/test.dart';
+
+import '../utils.dart';
 
 final _testDataPath = 'test/database/migration/data';
 
 void main() {
-  late LocalDatabase database;
-  setUp(() async {
-    database = await testDatabaseSuperuser.createDatabase();
-  });
-
-  tearDown(() async {
-    await database.drop();
-  });
+  var testUtils = DatabaseTestUtils();
 
   test('Can apply migration from folder', () async {
+    var database = testUtils.database;
     var migrator = Migrator(database.client, ['$_testDataPath/1']);
 
     await migrator.migrate();
@@ -27,6 +24,7 @@ void main() {
   });
 
   test('Can create northwind database', () async {
+    var database = testUtils.database;
     var migrator = Migrator(database.client,
         ['package:server_utils/src/database/test_data/northwind']);
 
@@ -41,6 +39,7 @@ void main() {
   });
 
   test('Continue migration from existing database', () async {
+    var database = testUtils.database;
     await Migrator(database.client, ['$_testDataPath/2/1']).migrate();
     await database.use((db) async {
       var result = await db.queryDynamic('select count(*) c from film');

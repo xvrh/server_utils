@@ -20,5 +20,4 @@ jobs:
       - run: dart --version
       - run: dart pub get
       - run: dart analyze --fatal-infos .
-      - run: dart tool/start_database.dart
       - run: dart test

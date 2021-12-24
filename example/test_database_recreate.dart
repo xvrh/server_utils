@@ -1,7 +1,7 @@
 import 'package:server_utils/migration.dart';
-import 'package:server_utils/src/test_database.dart';
 import 'package:logging/logging.dart';
 
+import 'example_database.dart';
 import 'example_database_builder.dart';
 
 final testDatabaseScripts = 'example/test_database';
@@ -11,13 +11,13 @@ void main() async {
     ..level = Level.ALL
     ..onRecord.listen(print);
   var databaseName = exampleDatabaseName;
-  var superClient = testDatabaseSuperuser.client();
+  var superClient = exampleDatabaseSuperUser.client();
   if (await superClient.databaseExists(databaseName)) {
     await superClient.dropDatabase(databaseName, force: true);
   }
   await superClient.createDatabase(databaseName);
   var dbClient =
-      testDatabaseSuperuser.copyWith(database: databaseName).client();
+      exampleDatabaseSuperUser.copyWith(database: databaseName).client();
 
   var migrator = Migrator(dbClient, [testDatabaseScripts]);
   await migrator.migrate();
