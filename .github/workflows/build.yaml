@@ -13,7 +13,7 @@ jobs:
         sdk: ['stable']
     runs-on: ${{ matrix.os }}
     env:
-      POSTGRES_DATA_DIR: '${{ GITHUB_WORKSPACE }}/.postgres-data'
+      POSTGRES_DATA_DIR: '$GITHUB_WORKSPACE/.postgres-data'
     steps:
       - run: echo $POSTGRES_DATA_DIR
       - uses: dart-lang/setup-dart@v0.3
