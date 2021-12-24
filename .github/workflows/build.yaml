@@ -14,13 +14,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - run: echo $POSTGRES_DATA_DIR
-      - uses: dart-lang/setup-dart@v0.3
-        with:
-          sdk: ${{ matrix.sdk }}
-      - uses: actions/checkout@v2
-      - run: dart --version
-      - run: dart pub get
-      - run: dart analyze --fatal-infos .
-      - run: dart test
         env:
           POSTGRES_DATA_DIR: '${{ env.GITHUB_WORKSPACE }}/.postgres-data'
+#      - uses: dart-lang/setup-dart@v0.3
+#        with:
+#          sdk: ${{ matrix.sdk }}
+#      - uses: actions/checkout@v2
+#      - run: dart --version
+#      - run: dart pub get
+#      - run: dart analyze --fatal-infos .
+#      - run: dart test
+#        env:
+#          POSTGRES_DATA_DIR: '${{ env.GITHUB_WORKSPACE }}/.postgres-data'
