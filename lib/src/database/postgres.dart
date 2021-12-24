@@ -34,8 +34,10 @@ class Postgres {
         database = database ?? 'username';
 
   static String createDataPath(String name) {
-    var root = Platform.environment['POSTGRES_DATA_DIR'] ??
-        path.join(Platform.environment['HOME']!, '.postgres-data');
+    var overridePath = Platform.environment['POSTGRES_DATA_DIR'];
+    var root = overridePath != null
+        ? path.absolute(overridePath)
+        : path.join(Platform.environment['HOME']!, '.postgres-data');
     var userDir = Directory(path.join(root, name));
     if (!userDir.existsSync()) {
       userDir.createSync(recursive: true);
