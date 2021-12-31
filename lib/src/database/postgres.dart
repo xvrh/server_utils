@@ -258,7 +258,7 @@ class PostgresServer {
     await process.exitCode;
 
     // Wait a little bit to release the locks on the data directory
-    await Future.delayed(Duration(milliseconds: 10));
+    await Future.delayed(Duration(milliseconds: 100));
 
     for (var subscription in _processStreamSubscriptions) {
       await subscription.cancel();
