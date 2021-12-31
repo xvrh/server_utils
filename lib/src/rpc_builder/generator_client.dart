@@ -12,7 +12,7 @@ import 'utils.dart';
 
 final _dartFormatter = DartFormatter();
 
-class RpcClientGenerator extends GeneratorForAnnotation<Controller> {
+class RpcClientGenerator extends GeneratorForAnnotation<Api> {
   const RpcClientGenerator();
 
   @override
@@ -21,13 +21,12 @@ class RpcClientGenerator extends GeneratorForAnnotation<Controller> {
     if (element is! ClassElement) {
       final name = element.name;
       throw InvalidGenerationSourceError('Generator cannot target `$name`.',
-          todo: 'Remove the @Controller annotation from `$name`.',
-          element: element);
+          todo: 'Remove the @Api annotation from `$name`.', element: element);
     }
     var classElement = element;
     final className = classElement.name;
 
-    var controllerAnnotation = readControllerAnnotation(annotation);
+    var apiAnnotation = readApiAnnotation(annotation);
 
     var code = StringBuffer();
 
@@ -47,7 +46,7 @@ class RpcClientGenerator extends GeneratorForAnnotation<Controller> {
 
         code.writeln(
             '''Future<${futureType(method.returnType)}> ${method.name}(${encodeParameters(method.parameters)}) async {
-          var \$url = Uri.parse(path_helper.url.join(_basePath, '${controllerAnnotation.path}', '${method.name}'));''');
+          var \$url = Uri.parse(path_helper.url.join(_basePath, '${apiAnnotation.path}', '${method.name}'));''');
 
         var queryParameters = method.parameters;
         String sendCode;

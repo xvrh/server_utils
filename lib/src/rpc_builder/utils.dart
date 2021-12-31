@@ -7,8 +7,8 @@ import 'package:meta/meta.dart';
 import 'package:source_gen/source_gen.dart';
 import 'annotations.dart';
 
-Controller readControllerAnnotation(ConstantReader reader) =>
-    Controller(reader.read('path').stringValue);
+Api readApiAnnotation(ConstantReader reader) =>
+    Api(reader.read('path').stringValue);
 
 DartObject? findActionAnnotation(MethodElement element) {
   return const TypeChecker.fromRuntime(Action).firstAnnotationOf(element);

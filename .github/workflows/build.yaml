@@ -1,0 +1,25 @@
+name: Build
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  test:
+    name: Run tests ${{matrix.sdk}} on ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        sdk: ['stable']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: dart-lang/setup-dart@v0.3
+        with:
+          sdk: ${{ matrix.sdk }}
+      - uses: actions/checkout@v2
+      - run: dart --version
+      - run: dart pub get
+      - run: dart analyze --fatal-infos .
+      - run: dart test --concurrency=1
+        env:
+          POSTGRES_DATA_DIR: '.postgres-data'

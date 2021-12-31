@@ -1,20 +1,16 @@
-import 'dart:io';
-import 'dart:isolate';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:more/char_matcher.dart';
-import 'package:path/path.dart' as p;
 import 'package:source_gen/source_gen.dart';
 import '../utils/string.dart';
 import 'annotations.dart';
-import 'generator_client.dart';
 import 'type.dart';
 import 'type_dart.dart';
 import 'utils.dart';
 
-class RpcRouterGenerator extends GeneratorForAnnotation<Controller> {
+class RpcRouterGenerator extends GeneratorForAnnotation<Api> {
   const RpcRouterGenerator();
 
   @override
@@ -23,25 +19,23 @@ class RpcRouterGenerator extends GeneratorForAnnotation<Controller> {
     if (element is! ClassElement) {
       final name = element.name;
       throw InvalidGenerationSourceError('Generator cannot target `$name`.',
-          todo: 'Remove the @Controller annotation from `$name`.',
-          element: element);
+          todo: 'Remove the @Api annotation from `$name`.', element: element);
     }
-    var controllerAnnotation = readControllerAnnotation(annotation);
+    var apiAnnotation = readApiAnnotation(annotation);
 
     var classElement = element;
     final className = classElement.name;
 
     var code = StringBuffer();
 
-    var trimmedPath =
-        CharMatcher.charSet('/').trimFrom(controllerAnnotation.path);
+    var trimmedPath = CharMatcher.charSet('/').trimFrom(apiAnnotation.path);
     var infoVariableName = '\$${className.words.toLowerCamel()}';
     var factoryVariableName = '_\$${className}Handler';
 
     code.writeln('''
-final $infoVariableName = Controller<$className>.info(path: '/$trimmedPath/', name: '$className', factory: $factoryVariableName);    
+final $infoVariableName = Api<$className>.info(path: '/$trimmedPath/', name: '$className', factory: $factoryVariableName);    
 
-Handler $factoryVariableName($className controller) {
+Handler $factoryVariableName($className api) {
   var router = createRpcRouter($infoVariableName);
 ''');
 
@@ -54,7 +48,7 @@ Handler $factoryVariableName($className controller) {
 
         var methodContent = StringBuffer();
 
-        methodContent.writeln('controller.${method.name}(');
+        methodContent.writeln('api.${method.name}(');
 
         var needBody = false;
         for (var parameter in method.parameters) {
@@ -141,16 +135,5 @@ String _castMethodForType(DartType type, {required bool isNullable}) {
     return '${methodPrefix}Enum($type.values)';
   } else {
     return '${methodPrefix}Json';
-  }
-}
-
-Future<String> _libraryUriToFilePath(Uri uri) async {
-  if (uri.scheme == 'package') {
-    var sourceUri = (await Isolate.resolvePackageUri(uri))!;
-    return sourceUri.toFilePath();
-  } else if (uri.scheme == 'asset') {
-    return p.joinAll(p.split(uri.path).skip(1));
-  } else {
-    return uri.toFilePath();
   }
 }

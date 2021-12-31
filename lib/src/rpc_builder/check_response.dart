@@ -1,25 +1,39 @@
 import 'dart:convert';
 import 'package:http/http.dart';
 import '../../rpc_client.dart';
+import 'exception_wrapper.dart';
 
 void checkResponseSuccess(Uri url, Response response) {
   if (response.statusCode < 400) return;
 
-  RpcException? rpcException;
-  if (response.statusCode == 400 || response.statusCode == 500) {
-    try {
-      rpcException = RpcException.fromJson(
-          jsonDecode(response.body) as Map<String, dynamic>);
-    } catch (_) {
-      // On essaye de désérializer le body, si on n'y arrive pas c'est que c'est
-      // une erreur à autre niveau de la stack
+  RpcExceptionWrapper rpcException;
+  try {
+    rpcException = RpcExceptionWrapper.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>);
+  } catch (_) {
+    // deserialization failed, this is not an encoded RpcException
+    var message = 'Request to $url failed with status ${response.statusCode}';
+    if (response.reasonPhrase != null) {
+      message = '$message: ${response.reasonPhrase}';
     }
+    throw ClientException('$message.', url);
   }
-  if (rpcException != null) throw rpcException;
 
-  var message = 'Request to $url failed with status ${response.statusCode}';
-  if (response.reasonPhrase != null) {
-    message = '$message: ${response.reasonPhrase}';
+  var innerJson = rpcException.rpcExceptionJson;
+  if (innerJson != null) {
+    var exception =
+        RpcException.deserialize(rpcException.rpcExceptionType, innerJson);
+    throw exception;
+  } else {
+    throw InternalServerException(rpcException);
   }
-  throw ClientException('$message.', url);
+}
+
+class InternalServerException implements Exception {
+  final RpcExceptionWrapper exception;
+
+  InternalServerException(this.exception);
+
+  @override
+  String toString() => exception.message;
 }

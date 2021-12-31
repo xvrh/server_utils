@@ -13,12 +13,11 @@ import 'package:path/path.dart' as path_helper;
 import 'package:server_utils/rpc_client.dart';
 import 'api.dart' show News, MoveType, Page;
 
-class NewsController {
+class NewsApi {
   final Client _client;
   final String _basePath;
 
-  NewsController(this._client, {required String basePath})
-      : _basePath = basePath;
+  NewsApi(this._client, {required String basePath}) : _basePath = basePath;
 
   void close() => _client.close();
 
@@ -435,13 +434,35 @@ class NewsController {
         .toList();
   }
 
-  Future<bool> throwAnError() async {
+  Future<void> throwAnException() async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'throwAnError'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'throwAnException'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
-    var $decodedResponse = jsonDecode($response.body);
-    return $decodedResponse! as bool;
+  }
+
+  Future<void> throwANotFoundException() async {
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'throwANotFoundException'));
+    var $response = await _client.post($url);
+    checkResponseSuccess($url, $response);
+  }
+
+  Future<void> throwAInvalidInputException() async {
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'throwAInvalidInputException'));
+    var $response = await _client.post($url);
+    checkResponseSuccess($url, $response);
+  }
+
+  Future<void> throwOtherException({required int d1}) async {
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'throwOtherException'));
+    var $response = await _client.post($url,
+        body: jsonEncode({
+          'd1': d1,
+        }));
+    checkResponseSuccess($url, $response);
   }
 
   Future<List<int?>> echoList(List<int?> list) async {

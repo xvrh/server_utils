@@ -9,11 +9,11 @@ import 'api.g.client.dart' as client_lib;
 
 void main() {
   late HttpServer server;
-  late client_lib.NewsController client;
+  late client_lib.NewsApi client;
 
   setUpAll(() async {
     var router = Router();
-    router.mount($newsController.path, NewsController().handler);
+    NewsApi().mountTo(router);
     server = await io.serve(router, InternetAddress.anyIPv4, 0);
   });
 
@@ -22,7 +22,7 @@ void main() {
   });
 
   setUp(() {
-    client = client_lib.NewsController(Client(),
+    client = client_lib.NewsApi(Client(),
         basePath: '${'http'}://${server.address.host}:${server.port}');
   });
 
@@ -183,11 +183,20 @@ void main() {
   });
 
   test('Rethrow server error', () async {
-    expect(client.throwAnError,
+    expect(client.throwAnException,
         throwsA(predicate((e) => '$e'.contains('An error'))));
-    expect(client.throwAnError, throwsA(isA<RpcException>()));
-    expect(client.throwAnError,
-        throwsA(predicate((RpcException e) => e.internalError != null)));
+    expect(client.throwAnException, throwsA(isA<InternalServerException>()));
+
+    expect(
+        () => client.throwANotFoundException(),
+        throwsA(predicate((e) =>
+            e is NotFoundException && e.message.contains('A resource'))));
+
+    expect(() => client.throwAInvalidInputException(),
+        throwsA(predicate((e) => e is InvalidInputException)));
+
+    expect(() => client.throwOtherException(d1: 8),
+        throwsA(predicate((e) => e is RpcException && e.data['d1'] == 8)));
   });
 
   test('Can transfer enum', () async {

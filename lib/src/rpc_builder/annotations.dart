@@ -1,19 +1,18 @@
 import 'package:shelf/shelf.dart' show Handler;
 
-class Controller<T> {
+class Api<T> {
   final String path;
-  final String? name;
+  final String name;
   final Handler Function(T)? factory;
 
-  const Controller(this.path)
-      : name = null,
+  const Api(this.path)
+      : name = '',
         factory = null;
 
-  Controller.info(
-      {required this.path, required this.name, required this.factory});
+  Api.info({required this.path, required this.name, required this.factory});
 
-  Handler handler(T controller) {
-    return factory!(controller);
+  Handler handler(T api) {
+    return factory!(api);
   }
 }
 

@@ -1,6 +1,9 @@
-
-
 .*
 _*
 
 !.gitignore
+!.metadata
+!.github
+!.dockerignore
+
+*.iml

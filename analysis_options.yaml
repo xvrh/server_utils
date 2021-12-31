@@ -26,3 +26,5 @@ linter:
     unnecessary_statements: true
     unsafe_html: true
     use_raw_strings: true
+
+    file_names: false

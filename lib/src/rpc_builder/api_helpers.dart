@@ -4,21 +4,20 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'annotations.dart' show Controller;
+import 'annotations.dart' show Api;
 import 'error_handler.dart';
-import 'rpc_exception.dart';
+import 'exceptions.dart';
 
 /// Permet au code générer par le rpc_builder d'utiliser les classes nécessaires
 /// sans devoir les exporter dans `package:web/rpc.dart` et les exposer à l'utilisateur
 /// finale.
-_RpcRouter createRpcRouter(Controller controllerInfo) =>
-    _RpcRouter(controllerInfo);
+_RpcRouter createRpcRouter(Api apiInfo) => _RpcRouter(apiInfo);
 
 class _RpcRouter {
-  final Controller controllerInfo;
+  final Api apiInfo;
   final _router = Router();
 
-  _RpcRouter(this.controllerInfo);
+  _RpcRouter(this.apiInfo);
 
   void get(String path, FutureOr Function(_RequestWrapper) callback) {
     _router.get(_path(path), _rpcHandler(path, callback));
@@ -48,7 +47,7 @@ class _RpcRouter {
         return Response.ok(jsonEncode(response),
             headers: {HttpHeaders.contentTypeHeader: 'application/json'});
       } catch (e, stackTrace) {
-        return rpcErrorHandler(e, stackTrace);
+        return rpcErrorHandler(apiInfo, request, e, stackTrace);
       }
     };
   }
@@ -87,11 +86,8 @@ class _ParameterWrapper {
 
   T _ensureNotNull<T>(T? value) {
     if (value == null) {
-      throw RpcArgumentError(
-          field: parameterName,
-          rawValue: _rawValue,
-          message:
-              '$parameterName has value $_rawValue and cannot be converted to type $T');
+      throw InvalidInputException(
+          "$parameterName with value $_rawValue can't be converted to type $T");
     }
     return value;
   }
