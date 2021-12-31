@@ -20,6 +20,6 @@ jobs:
       - run: dart --version
       - run: dart pub get
       - run: dart analyze --fatal-infos .
-      - run: dart test
+      - run: dart test --concurrency=1
         env:
           POSTGRES_DATA_DIR: '.postgres-data'

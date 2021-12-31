@@ -12,7 +12,7 @@ void main() {
     ..onRecord.listen(print);
 
   test('Start database in empty directory', () async {
-    var dataPath = Postgres.temporaryPath;
+    var dataPath = Postgres.temporaryPath();
     var postgres = Postgres(dataPath);
     var server = await postgres.server();
     try {

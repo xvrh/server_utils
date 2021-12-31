@@ -14,7 +14,7 @@ class DatabaseTestUtils {
   DatabaseTestUtils() {
     setUpAll(() async {
       if (isCI) {
-        var tempPostgres = Postgres(Postgres.temporaryPath);
+        var tempPostgres = Postgres(Postgres.temporaryPath());
         var postgresServerLocal = postgresServer = await tempPostgres.server();
         var postgresWithPort =
             tempPostgres.copyWith(port: postgresServerLocal.port);

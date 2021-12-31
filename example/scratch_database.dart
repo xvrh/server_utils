@@ -9,7 +9,7 @@ void main() async {
     Logger.root
       ..level = Level.ALL
       ..onRecord.listen(print);
-    var dataPath = Postgres.temporaryPath;
+    var dataPath = Postgres.temporaryPath();
 
     try {
       var postgres = Postgres(dataPath);

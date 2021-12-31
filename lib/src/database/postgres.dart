@@ -28,7 +28,7 @@ class Postgres {
       String? password,
       String? database,
       this.port})
-      : version = version ?? '13.3',
+      : version = version ?? '14.1',
         username = username ?? 'username',
         password = password ?? 'password',
         database = database ?? 'username';
@@ -45,7 +45,7 @@ class Postgres {
     return userDir.path;
   }
 
-  static String get temporaryPath {
+  static String temporaryPath() {
     var userDir = Directory(createDataPath('temp'));
     return userDir.createTempSync().path;
   }
@@ -256,6 +256,9 @@ class PostgresServer {
     process.kill(ProcessSignal.sigint);
 
     await process.exitCode;
+
+    // Wait a little bit to release the locks on the data directory
+    await Future.delayed(Duration(milliseconds: 10));
 
     for (var subscription in _processStreamSubscriptions) {
       await subscription.cancel();
