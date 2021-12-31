@@ -13,13 +13,9 @@ void main() {
 
   test('Start database in empty directory', () async {
     var dataPath = Postgres.temporaryPath();
-    print("Datapath: $dataPath"); // When remove, re-set flutter analyze
     var postgres = Postgres(dataPath);
     var server = await postgres.server();
     try {
-      //print(
-      //    "Datapath: ${Directory(dataPath).listSync(recursive: true).map((f) => '${f.path}').join(',')}");
-      //expect(Postgres.isDataDirectory(dataPath), true);
       var client = server.client();
       await client.execute('create database my_database', transaction: false);
       var databases = await client.listDatabases();
@@ -27,7 +23,7 @@ void main() {
     } finally {
       await server.stop();
       if (!isCI) {
-        // It fails on Github Actions for some unknown reason
+        // On Github the user doesn't have the permission on this directory
         Directory(dataPath).deleteSync(recursive: true);
       }
     }
