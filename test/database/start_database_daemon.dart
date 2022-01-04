@@ -13,6 +13,7 @@ void main() async {
   var client = server.client();
   var databases = await client.listDatabases();
   print('Databases: $databases');
+  print('Container: ${server.name}');
 
   exit(0);
 }
