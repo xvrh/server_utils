@@ -54,12 +54,12 @@ select * from country;
     var result = await database.useConnection((db) async {
       var dbSchema = await SchemaExtractor(DatabaseIO(db)).schema();
       var generator = QueriesGenerator(dbSchema, PostgresQueryEvaluator(db));
-      return generator.generate(queries, filePath: 'my_queries');
+      return generator.generate(queries, filePath: 'my_queries.sql');
     });
 
-    expect(result.startsWith('''
+    expect(result, startsWith('''
 // GENERATED-CODE: do not edit
 // Code is generated from my_queries.sql
-'''), isTrue);
+'''));
   });
 }
