@@ -81,7 +81,7 @@ class Postgres {
     }
   }
 
-  Future<PostgresServer> server() async {
+  Future<PostgresServer> server({bool? detached}) async {
     var port = this.port;
     for (var i = 0; i < 5; i++) {
       if (port == null || port == 0) {
@@ -90,7 +90,7 @@ class Postgres {
 
       var server = PostgresServer._(this, port: port);
       try {
-        await server._start();
+        await server._start(detached: detached);
         return server;
       } on _AddressAlreadyInUseException catch (_) {
         // Continue the loop
@@ -175,36 +175,44 @@ class PostgresServer {
   /// Location of the database storage area
   String get dataPath => _postgres.dataPath;
 
+  String get name => _dockerName(dataPath);
+
   final int port;
   Process? _process;
 
-  Future<void> _start() async {
+  Future<void> _start({bool? detached}) async {
+    detached ??= false;
     var process = _process;
     assert(process == null);
 
     var innerPort = 5432;
-    _process = process = await Process.start('docker', [
-      'run',
-      '--rm',
-      '--name',
-      _dockerName(dataPath),
-      '-e',
-      'POSTGRES_USER=${_postgres.username}',
-      '-e',
-      'POSTGRES_PASSWORD=${_postgres.password}',
-      '-e',
-      'POSTGRES_DB=${_postgres.database}',
-      '-e',
-      'PGDATA=/var/lib/postgresql/data/pgdata',
-      //TODO(xha): make it work and add a flag. This could speed up db creation.
-      //'-e',
-      //'POSTGRES_INITDB_ARGS="--no-sync"',
-      '-v',
-      '$dataPath:/var/lib/postgresql/data',
-      '--publish',
-      '$port:$innerPort',
-      'postgres:${_postgres.version}',
-    ]);
+    _process = process = await Process.start(
+        'docker',
+        [
+          'run',
+          '--rm',
+          '--name',
+          _dockerName(dataPath),
+          '-e',
+          'POSTGRES_USER=${_postgres.username}',
+          '-e',
+          'POSTGRES_PASSWORD=${_postgres.password}',
+          '-e',
+          'POSTGRES_DB=${_postgres.database}',
+          '-e',
+          'PGDATA=/var/lib/postgresql/data/pgdata',
+          //TODO(xha): make it work and add a flag. This could speed up db creation.
+          //'-e',
+          //'POSTGRES_INITDB_ARGS="--no-sync"',
+          '-v',
+          '$dataPath:/var/lib/postgresql/data',
+          '--publish',
+          '$port:$innerPort',
+          'postgres:${_postgres.version}',
+        ],
+        mode: detached
+            ? ProcessStartMode.detachedWithStdio
+            : ProcessStartMode.normal);
 
     try {
       await for (String errorLine in process.stderr

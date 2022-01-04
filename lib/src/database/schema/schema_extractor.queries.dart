@@ -179,23 +179,23 @@ class Column {
 
 class Constraint {
   final String tableName;
-  final String constraintName;
-  final String columnName;
-  final int ordinalPosition;
+  final String? constraintName;
+  final String? columnName;
+  final int? ordinalPosition;
 
   Constraint({
     required this.tableName,
-    required this.constraintName,
-    required this.columnName,
-    required this.ordinalPosition,
+    this.constraintName,
+    this.columnName,
+    this.ordinalPosition,
   });
 
   static Constraint fromRow(Map<String, dynamic> row) {
     return Constraint(
       tableName: row['table_name']! as String,
-      constraintName: row['constraint_name']! as String,
-      columnName: row['column_name']! as String,
-      ordinalPosition: row['ordinal_position']! as int,
+      constraintName: row['constraint_name'] as String?,
+      columnName: row['column_name'] as String?,
+      ordinalPosition: row['ordinal_position'] as int?,
     );
   }
 }
