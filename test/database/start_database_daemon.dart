@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:server_utils/src/database/postgres.dart';
 import 'package:logging/logging.dart';
 import '../../example/example_database.dart';
 
