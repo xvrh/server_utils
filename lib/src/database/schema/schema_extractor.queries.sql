@@ -31,7 +31,8 @@ order by ordinal_position;
 /******************************
 List<Constraint> constraintsForSchema({String schemaName = 'public'})
 projection Constraint (
-  * not null,
+  * null,
+  table_name not null
 )
 *******************************/
 select t.table_name,

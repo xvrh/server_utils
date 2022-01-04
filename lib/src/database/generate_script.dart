@@ -20,8 +20,8 @@ const _refreshAllCommand = 'a';
 Future<void> runDatabaseBuilder(
   Postgres database,
   String databaseName, {
-  required Set<String> migrations,
-  required Set<String> queries,
+  required List<String> migrations,
+  required List<String> queries,
   required Future<void> Function(PostgreSQLConnection) afterCreate,
   Future<void> Function(PostgreSQLConnection)? afterRefresh,
 }) async {
@@ -52,8 +52,8 @@ Available options:
 class _DatabaseBuilder {
   final Postgres database;
   final String databaseName;
-  final Set<String> migrations;
-  final Set<String> queries;
+  final List<String> migrations;
+  final List<String> queries;
   final Future<void> Function(PostgreSQLConnection) afterCreate;
   final Future<void> Function(PostgreSQLConnection)? afterRefresh;
   final PostgresClient _client;

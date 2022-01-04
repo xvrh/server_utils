@@ -1,5 +1,4 @@
 import 'package:server_utils/database.dart';
 
-final exampleDatabaseSuperUser = Postgres(
-    Postgres.createDataPath('server_utils_example_database'),
-    port: 8888);
+final exampleDatabaseSuperUser =
+    Postgres(Postgres.createDataPath('local_database'), port: 8888);

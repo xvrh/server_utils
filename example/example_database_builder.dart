@@ -43,8 +43,8 @@ void main() async {
   await runDatabaseBuilder(
     exampleDatabaseSuperUser,
     exampleDatabaseName,
-    migrations: {'example/test_database'},
-    queries: {'example/**.queries.sql'},
+    migrations: ['example/test_database'],
+    queries: ['example/**.queries.sql'],
     afterCreate: _afterCreate,
     afterRefresh: _afterRefresh,
   );
