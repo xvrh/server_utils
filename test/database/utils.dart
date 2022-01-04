@@ -14,6 +14,7 @@ class DatabaseTestUtils {
   DatabaseTestUtils() {
     setUpAll(() async {
       postgres = exampleDatabaseSuperUser;
+      print("Setup ${postgres.dataPath}");
     });
 
     setUp(() async {

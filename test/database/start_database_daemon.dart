@@ -9,6 +9,7 @@ void main() async {
     ..onRecord.listen(print);
 
   var server = await exampleDatabaseSuperUser.server();
+  print("Start deamon ${server.dataPath}");
 
   var client = server.client();
   var databases = await client.listDatabases();
