@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:server_utils/src/rpc_builder/exception_wrapper.dart';
 import 'package:shelf/shelf.dart';
 import 'annotations.dart';
 import 'exceptions.dart';
@@ -36,3 +35,52 @@ Response rpcErrorHandler(
     );
   }
 }
+
+/*
+final Middleware globalRpcErrorMiddleware =
+    createMiddleware(errorHandler: (e, s) async {
+  return Response.internalServerError(
+    body: jsonEncode(
+      RpcExceptionWrapper(
+        api: '',
+        url: '',
+        stackTrace: '$s',
+        method: '',
+        message: '$e',
+      ),
+    ),
+  );
+});*/
+
+Handler globalRpcErrorMiddleware(Handler innerHandler) {
+  return (request) async {
+    try {
+      return await innerHandler(request);
+    } catch (e, s) {
+      return Response.internalServerError(
+        body: jsonEncode(
+          RpcExceptionWrapper(
+            api: '',
+            url: request.requestedUri.toString(),
+            stackTrace: '$s',
+            method: request.method,
+            message: '$e',
+          ),
+        ),
+      );
+    }
+  };
+}
+
+/*
+    return (request) async {
+      try {
+        var response = await callback(_RequestWrapper(request));
+
+        return Response.ok(jsonEncode(response),
+            headers: {HttpHeaders.contentTypeHeader: 'application/json'});
+      } catch (e, stackTrace) {
+        return rpcErrorHandler(apiInfo, request, e, stackTrace);
+      }
+    };
+ */

@@ -134,7 +134,7 @@ class _DatabaseBuilder {
       _logger.fine('Apply migrations in ${stopwatch.elapsed}');
 
       stopwatch.reset();
-      await useConnectionOptions(_client.connectionOptions, afterCreate);
+      await useEndpoint(_client.endpoint, afterCreate);
       _logger.fine('After create actions in ${stopwatch.elapsed}');
 
       _logger.info('Recreated database step in ${globalStopwatch.elapsed}');
@@ -144,7 +144,7 @@ class _DatabaseBuilder {
   }
 
   Future<void> _refresh() async {
-    await useConnectionOptions(_client.connectionOptions, (connection) async {
+    await useEndpoint(_client.endpoint, (connection) async {
       var generator = await _queryGenerator(connection);
       for (var queryGlob in queries) {
         for (var file in Glob(queryGlob).listSync().whereType<File>()) {
@@ -156,7 +156,7 @@ class _DatabaseBuilder {
     var afterRefresh = this.afterRefresh;
     if (afterRefresh != null) {
       try {
-        await useConnectionOptions(_client.connectionOptions, afterRefresh);
+        await useEndpoint(_client.endpoint, afterRefresh);
       } catch (e, s) {
         _logger.warning('Failed after refresh event: $e\n$s');
       }
@@ -164,7 +164,7 @@ class _DatabaseBuilder {
   }
 
   Future<void> _generateQuery(File file) async {
-    await useConnectionOptions(_client.connectionOptions, (connection) async {
+    await useEndpoint(_client.endpoint, (connection) async {
       var generator = await _queryGenerator(connection);
       await _generateQueryFile(generator, file);
     });

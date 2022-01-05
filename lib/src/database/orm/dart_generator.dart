@@ -1,4 +1,5 @@
 import 'package:server_utils/src/database/schema/schema.dart';
+import 'package:server_utils/src/rpc_builder/type.dart';
 import 'package:server_utils/src/utils/quick_dart_formatter.dart';
 import '../../utils/string.dart';
 
@@ -42,7 +43,7 @@ class DartGenerator {
     code.writeln('});');
     code.writeln('');
 
-    code.writeln('static $className fromRow(Map<String, dynamic> row) {');
+    code.writeln('factory $className.fromRow(Map<String, dynamic> row) {');
     code.writeln('return $className(');
     for (var column in columns) {
       code.writeln('${column.name.words.toLowerCamel()}: '
@@ -50,6 +51,34 @@ class DartGenerator {
           "as ${column.type.dartType}${column.isNullable ? '?' : ''},");
     }
     code.writeln(');');
+    code.writeln('}');
+    code.writeln('');
+
+    code.writeln('factory $className.fromJson(Map<String, dynamic> json) {');
+    code.writeln('return $className(');
+    for (var column in columns) {
+      var accessor = "json['${column.name.words.toLowerCamel()}']";
+      var type = ValueType.fromTypeName(column.type.dartType,
+          isNullable: column.isNullable);
+
+      var fromJsonCode = type.fromJsonCode(Value(accessor, ObjectType()));
+
+      code.writeln('${column.name.words.toLowerCamel()}: $fromJsonCode,');
+    }
+    code.writeln(');');
+    code.writeln('}');
+    code.writeln('');
+
+    code.writeln(' Map<String, dynamic> toJson() {');
+    code.writeln('return {');
+    for (var column in columns) {
+      var type = ValueType.fromTypeName(column.type.dartType,
+          isNullable: column.isNullable);
+
+      var toJsonCode = type.toJsonCode(column.name.words.toLowerCamel());
+      code.writeln("'${column.name.words.toLowerCamel()}': $toJsonCode,");
+    }
+    code.writeln('};');
     code.writeln('}');
 
     code.writeln('}');

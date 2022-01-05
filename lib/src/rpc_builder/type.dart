@@ -51,6 +51,29 @@ abstract class ValueType {
 
   @override
   String toString() => 'Type($name)';
+
+  static ValueType fromTypeName(String dartType, {required bool isNullable}) {
+    switch (dartType) {
+      case 'int':
+        return IntType(isNullable: isNullable);
+      case 'num':
+        return NumType(isNullable: isNullable);
+      case 'double':
+        return DoubleType(isNullable: isNullable);
+      case 'bool':
+        return BoolType(isNullable: isNullable);
+      case 'Object':
+        return ObjectType(isNullable: isNullable);
+      case 'dynamic':
+        return ObjectType(isNullable: isNullable);
+      case 'String':
+        return StringType(isNullable: isNullable);
+      case 'DateTime':
+        return DateTimeType(isNullable: isNullable);
+      default:
+        throw UnimplementedError('$dartType is not yet recognized');
+    }
+  }
 }
 
 class ObjectType extends ValueType {

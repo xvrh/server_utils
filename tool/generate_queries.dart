@@ -28,7 +28,7 @@ void main() async {
   var migrator = Migrator(dbClient, ['db_for_generate_queries/**']);
   await migrator.migrate();
 
-  await useConnectionOptions(dbClient.connectionOptions, (connection) async {
+  await useEndpoint(dbClient.endpoint, (connection) async {
     var evaluator = PostgresQueryEvaluator(connection);
     var generator = QueriesGenerator(DatabaseSchema.empty, evaluator);
 

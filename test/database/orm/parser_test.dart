@@ -23,11 +23,22 @@ void main() {
 
 /**
 xx.Page<Output> allColumn()
+testValues = {
+  id: 'value',
+}
 **/
 select * from machin where id=:id::text;
 
 /*******************************
 List<yy.Output> oneCol(String name,)/* After*/
+testValues = {
+  name: 12.2,
+  name: 12,
+  name: true,
+  name: false,
+  name: null,
+  name: 'null',
+}
 projection Output (
   /* comment */
   one_column not null,
@@ -64,6 +75,16 @@ select * from machin;
     expect(nameLine.modifiers[1], isA<ProjectionModifierAs>());
     expect((nameLine.modifiers[1] as ProjectionModifierAs).type.name,
         'TranslatedString');
+
+    var oneColQuery = result.value.queries
+        .firstWhere((e) => e.header.method.name == 'oneCol');
+    expect(oneColQuery.header.testValues!.values[0].name.name, 'name');
+    expect(oneColQuery.header.testValues!.values[0].value, 12.2);
+    expect(oneColQuery.header.testValues!.values[1].value, 12);
+    expect(oneColQuery.header.testValues!.values[2].value, true);
+    expect(oneColQuery.header.testValues!.values[3].value, false);
+    expect(oneColQuery.header.testValues!.values[4].value, null);
+    expect(oneColQuery.header.testValues!.values[5].value, 'null');
   });
 
   test('Parse Dart parameters', () {

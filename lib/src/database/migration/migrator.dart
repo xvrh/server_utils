@@ -15,7 +15,7 @@ class Migrator {
   Migrator(this.client, this.scriptLocations);
 
   Future<void> migrate() async {
-    var connection = connectionFromOptions(client.connectionOptions);
+    var connection = connectionFromEndpoint(client.endpoint);
     await connection.open();
     try {
       var existResult = await connection.query('''

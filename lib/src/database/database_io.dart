@@ -1,9 +1,7 @@
-import 'connection_options.dart';
+import 'package:postgres_pool/postgres_pool.dart';
 import 'database.dart';
 import 'orm/utils/sql_parser.dart';
 import 'page.dart';
-import 'package:postgres/postgres.dart'
-    show PostgreSQLExecutionContext, PostgreSQLConnection, PostgreSQLResult;
 
 import 'utils.dart';
 
@@ -12,9 +10,9 @@ class DatabaseIO implements Database {
 
   DatabaseIO(this._connection);
 
-  static Future<void> use(ConnectionOptions connectionOptions,
-      Future Function(Database) callback) async {
-    var connection = connectionFromOptions(connectionOptions);
+  static Future<void> use(
+      PgEndpoint endpoint, Future Function(Database) callback) async {
+    var connection = connectionFromEndpoint(endpoint);
     await connection.open();
     try {
       await callback(DatabaseIO(connection));
@@ -133,7 +131,9 @@ class DatabaseIO implements Database {
   Future<PostgreSQLResult> _query(String fmtString,
       {Map<String, dynamic>? args}) {
     var query = SqlQuery.parse(fmtString);
-    assert((args?.length ?? 0) == query.parameters.length);
+    var uniqueParameters = query.parameters.map((p) => p.name).toSet();
+    assert((args?.length ?? 0) == uniqueParameters.length,
+        '$args vs [$uniqueParameters]');
     return _connection.query(query.bodyWithDartSubstitutions,
         substitutionValues: args);
   }

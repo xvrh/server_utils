@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'connection_options.dart';
-import 'package:postgres/postgres.dart';
+import 'package:postgres_pool/postgres_pool.dart';
 
 Future<int> findUnusedPort() async {
   int port;
@@ -18,13 +17,9 @@ Future<int> findUnusedPort() async {
   return port;
 }
 
-PostgreSQLConnection connectionFromOptions(ConnectionOptions options) =>
-    PostgreSQLConnection(
-        options.hostname ?? 'localhost',
-        options.port ?? ConnectionOptions.defaultPort,
-        options.database ?? options.user ?? 'postgres',
-        username: options.user,
-        password: options.password);
+PostgreSQLConnection connectionFromEndpoint(PgEndpoint endpoint) =>
+    PostgreSQLConnection(endpoint.host, endpoint.port, endpoint.database,
+        username: endpoint.username, password: endpoint.password);
 
 Directory createRandomDirectory(String basePath) {
   var dataDirectory = Directory(basePath);
@@ -34,9 +29,9 @@ Directory createRandomDirectory(String basePath) {
   return dataDirectory.createTempSync();
 }
 
-Future<T> useConnectionOptions<T>(ConnectionOptions options,
+Future<T> useEndpoint<T>(PgEndpoint endpoint,
     FutureOr<T> Function(PostgreSQLConnection) callback) async {
-  var connection = connectionFromOptions(options);
+  var connection = connectionFromEndpoint(endpoint);
   await connection.open();
   try {
     return await callback(connection);

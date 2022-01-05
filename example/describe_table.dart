@@ -6,10 +6,9 @@ import 'example_database.dart';
 import 'example_database_builder.dart';
 
 Future<PostgreSQLConnection> createConnection() async {
-  var options = exampleDatabaseSuperUser
-      .copyWith(database: exampleDatabaseName)
-      .connectionOptions;
-  var connection = connectionFromOptions(options);
+  var options =
+      exampleDatabaseSuperUser.copyWith(database: exampleDatabaseName).endpoint;
+  var connection = connectionFromEndpoint(options);
   await connection.open();
 
   return connection;

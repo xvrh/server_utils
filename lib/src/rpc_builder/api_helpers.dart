@@ -8,9 +8,6 @@ import 'annotations.dart' show Api;
 import 'error_handler.dart';
 import 'exceptions.dart';
 
-/// Permet au code générer par le rpc_builder d'utiliser les classes nécessaires
-/// sans devoir les exporter dans `package:web/rpc.dart` et les exposer à l'utilisateur
-/// finale.
 _RpcRouter createRpcRouter(Api apiInfo) => _RpcRouter(apiInfo);
 
 class _RpcRouter {

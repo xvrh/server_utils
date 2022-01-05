@@ -59,17 +59,25 @@ class $className {
           'extension ${extensionDirective?.name?.name ?? defaultName} on Database {');
     }
     for (var query in result.queries) {
-      var sqlParameters = query.query.parameters.map((p) => p.name).toList();
+      var sqlParameters = query.query.parameters.map((p) => p.name).toSet();
       var methodParameters =
-          query.header.method.parameters.parameters.map((p) => p.name).toList();
+          query.header.method.parameters.parameters.map((p) => p.name).toSet();
+      var errorHeader =
+          'Error generating (file://${p.normalize(p.absolute(filePath))}) - ${query.header.method.name}:\n';
       if (!const UnorderedIterableEquality()
           .equals(sqlParameters, methodParameters)) {
         throw Exception(
-            'Error generating (file://${p.normalize(p.absolute(filePath))}) - ${query.header.method.name}:\n'
-            'The declared parameters ($methodParameters) and sql parameters ($sqlParameters) has a mismatch');
+            '${errorHeader}The declared parameters ($methodParameters) and sql parameters ($sqlParameters) has a mismatch');
+      }
+      var testValues =
+          query.header.testValues?.values.map((p) => p.name).toSet();
+      if (testValues != null &&
+          testValues.any((t) => !sqlParameters.contains(t.name))) {
+        throw Exception(
+            '${errorHeader}The test values ($testValues) and sql parameters ($sqlParameters) has a mismatch');
       }
 
-      var queryResult = await evaluator.runQuery(query.query);
+      var queryResult = await evaluator.runQuery(query.query, query.header);
 
       var projection = query.header.projection;
       var columns =
@@ -221,7 +229,7 @@ class ReturnType {
 }
 
 abstract class QueryEvaluator {
-  Future<List<ColumnInfo>> runQuery(SqlQuery query);
+  Future<List<ColumnInfo>> runQuery(SqlQuery query, QueryHeader queryHeader);
 }
 
 class PostgresQueryEvaluator implements QueryEvaluator {
@@ -230,10 +238,32 @@ class PostgresQueryEvaluator implements QueryEvaluator {
   PostgresQueryEvaluator(this.connection);
 
   @override
-  Future<List<ColumnInfo>> runQuery(SqlQuery query) async {
+  Future<List<ColumnInfo>> runQuery(
+      SqlQuery query, QueryHeader queryHeader) async {
     var args = <String, dynamic>{};
     for (var parameter in query.parameters) {
-      args[parameter.name] = null;
+      var testValue = queryHeader.testValues?.values
+          .firstWhereOrNull((p) => p.name.name == parameter.name);
+      dynamic defaultValue;
+      if (testValue != null) {
+        defaultValue = testValue.value;
+      } else {
+        var dartParameter = queryHeader.method.parameters.parameters
+            .firstWhere((p) => p.name == parameter.name);
+        switch (dartParameter.type) {
+          case 'String':
+            defaultValue = '';
+            break;
+          case 'int':
+            defaultValue = 0;
+            break;
+          case 'bool':
+            defaultValue = false;
+            break;
+        }
+      }
+
+      args[parameter.name] = defaultValue;
     }
 
     late PostgreSQLResult result;

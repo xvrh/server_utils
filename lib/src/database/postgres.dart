@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:postgres_pool/postgres_pool.dart';
 import 'package:process_runner/process_runner.dart';
 
-import 'connection_options.dart';
 import 'local_database.dart';
 import 'utils.dart';
 import 'package:logging/logging.dart';
@@ -107,15 +107,15 @@ class Postgres {
     }
   }
 
-  ConnectionOptions get connectionOptions {
+  PgEndpoint get endpoint {
     _checkHasPort();
 
-    return ConnectionOptions(
-      user: username,
+    return PgEndpoint(
+      username: username,
       password: password,
       database: database,
-      port: port,
-      hostname: 'localhost',
+      port: port!,
+      host: 'localhost',
     );
   }
 
@@ -123,17 +123,17 @@ class Postgres {
       {String? username, String? password, String? database}) {
     _checkHasPort();
 
-    return clientFromOptions(ConnectionOptions(
-      user: username ?? this.username,
+    return clientFromEndpoint(PgEndpoint(
+      username: username ?? this.username,
       password: password ?? this.password,
       database: database ?? this.database,
-      port: port,
-      hostname: 'localhost',
+      port: port!,
+      host: 'localhost',
     ));
   }
 
-  PostgresClient clientFromOptions(ConnectionOptions options) =>
-      PostgresClient(options, dataPath: dataPath);
+  PostgresClient clientFromEndpoint(PgEndpoint endpoint) =>
+      PostgresClient(endpoint, dataPath: dataPath);
 
   Future<LocalDatabase> createDatabase(
       {String? databaseName,
@@ -156,10 +156,10 @@ class Postgres {
 
     return LocalDatabase(
         this,
-        ConnectionOptions(
-            hostname: 'localhost',
+        PgEndpoint(
+            host: 'localhost',
             port: port!,
-            user: username,
+            username: username,
             password: password,
             database: databaseName));
   }
@@ -248,10 +248,10 @@ class PostgresServer {
   PostgresClient client(
       {String? username, String? password, String? database}) {
     return PostgresClient(
-      ConnectionOptions(
-          hostname: 'localhost',
+      PgEndpoint(
+          host: 'localhost',
           port: port,
-          user: username ?? _postgres.username,
+          username: username ?? _postgres.username,
           password: password ?? _postgres.password,
           database: database ?? _postgres.database),
       dataPath: dataPath,
@@ -285,9 +285,9 @@ class PostgresClient {
 
   final String dataPath;
 
-  final ConnectionOptions connectionOptions;
+  final PgEndpoint endpoint;
 
-  PostgresClient(this.connectionOptions, {required this.dataPath});
+  PostgresClient(this.endpoint, {required this.dataPath});
 
   Future<void> createUser(String userName, {required String password}) async {
     await execute("""
@@ -307,7 +307,7 @@ alter user $userName with encrypted password '${password.replaceAll("'", r"\'")}
     if (params.isNotEmpty) {
       buffer.write(' with ');
       for (var param in params.entries) {
-        buffer.write('${param.key} ${param.value}');
+        buffer.write('${param.key} ${param.value} ');
       }
     }
 
@@ -342,8 +342,7 @@ alter user $userName with encrypted password '${password.replaceAll("'", r"\'")}
   }
 
   Future<void> grandAllPrivileges(String userName, {String? database}) {
-    database ??= connectionOptions.database;
-    database!;
+    database ??= endpoint.database;
     return execute('''
 GRANT CONNECT ON DATABASE $database TO $userName;
 GRANT USAGE ON SCHEMA public TO $userName;
@@ -445,14 +444,14 @@ ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO $userName;
   }
 
   List<String> get _psqlDockerArgs {
-    var database = connectionOptions.database;
-    var user = connectionOptions.user;
+    var database = endpoint.database;
+    var user = endpoint.username;
     return [
       'exec',
       '-i',
       _dockerName(dataPath),
       'psql',
-      if (database != null) ...['--dbname', database],
+      ...['--dbname', database],
       if (user != null) ...['--username', user],
       '--no-password',
     ];

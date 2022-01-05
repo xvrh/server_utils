@@ -24,7 +24,8 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
           todo: 'Remove the @Api annotation from `$name`.', element: element);
     }
     var classElement = element;
-    final className = classElement.name;
+    var className = classElement.name;
+    className = className.replaceAll(RegExp(r'Api$'), 'Client');
 
     var apiAnnotation = readApiAnnotation(annotation);
 
@@ -120,6 +121,7 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
     }
 
     var groupedImports = <String>[];
+    var groupedExports = <String>[];
     var thisUri = classElement.source.uri;
     for (var importUri in extraImports.map((i) => i.uri).toSet()) {
       var shows = extraImports
@@ -133,6 +135,7 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
       }
 
       groupedImports.add("import '$importUri' show $shows;");
+      groupedExports.add("export '$importUri' show $shows;");
     }
 
     var fileCode = '''
@@ -144,6 +147,8 @@ import 'package:http/http.dart';
 import 'package:path/path.dart' as path_helper;
 import 'package:server_utils/rpc_client.dart';
 ${groupedImports.join('\n')}
+
+${groupedExports.join('\n')}
  
 class $className {
   final Client _client;

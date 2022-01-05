@@ -15,6 +15,11 @@ class QueriesGrammarDefinition extends GrammarDefinition {
     return dartDefinition.build(start: dartDefinition.functionDeclaration);
   })();
 
+  final Parser _dartLiteralParser = (() {
+    var dartDefinition = DartLiteralDefinition();
+    return dartDefinition.build(start: dartDefinition.valueLiteral);
+  })();
+
   final Parser _sqlParser = (() {
     var sqlDefinition = SqlGrammarDefinition();
     return sqlDefinition.build(start: sqlDefinition.query);
@@ -74,14 +79,49 @@ class QueriesGrammarDefinition extends GrammarDefinition {
   Parser closeQueryHeader() =>
       string('**') & string('*').star() & char('/') & ref0(newlineLexicalToken);
 
-  Parser queryHeaderBody() =>
-      (ref0(queryMethodSignature) & ref0(projectionDeclaration).optional())
+  Parser queryHeaderBody() => (ref0(queryMethodSignature) &
+              ref0(testValuesDeclaration).optional() &
+              ref0(projectionDeclaration).optional())
           .map((s) {
         var projection = s.whereType<ProjectionDeclaration>().firstOrNull;
-        return QueryHeader(s[0] as MethodDeclaration, projection);
+        var testValues = s.whereType<TestValuesDeclaration>().firstOrNull;
+        return QueryHeader(s[0] as MethodDeclaration, projection, testValues);
       });
 
   Parser queryMethodSignature() => _dartMethodParser;
+
+  Parser testValuesDeclaration() => (string('testValues') &
+              ref1(token, '=') &
+              ((ref1(token, '{') & ref1(token, '}')) |
+                  (ref1(token, '{') &
+                      ref0(testValueLine) &
+                      ref0(testValueLineTail).optional() &
+                      ref1(token, ',').optional() &
+                      ref1(token, '}'))))
+          .map((l) {
+        var lines = (l[2] as List)
+            .map((t) => t is TestValueLine ? t : t)
+            .expand((f) => f is List ? f : [f])
+            .whereType<TestValueLine>()
+            .toList();
+        return TestValuesDeclaration(lines);
+      });
+
+  Parser testValueLineTail() => (ref1(token, ',') &
+              ref0(testValueLine) &
+              ref0(testValueLineTail).optional())
+          .map((l) {
+        var first = l[1] as TestValueLine;
+        var subList = l[2] as List<TestValueLine>?;
+        return [first, ...?subList];
+      });
+
+  Parser testValueLine() => (ref0(identifier) &
+              ref1(token, ':') &
+              _dartLiteralParser.trim().map((s) => (s as Token).value))
+          .map((s) {
+        return TestValueLine(s[0] as Identifier, s[2]);
+      });
 
   Parser projectionDeclaration() => (string('projection') &
               ref0(identifier) &
@@ -207,6 +247,19 @@ class DartAstDefinition extends DartGrammarDefinition {
   }
 }
 
+class DartLiteralDefinition extends DartGrammarDefinition {
+  Parser valueLiteral() => ref1(
+      token,
+      ref0(nullToken).map((s) => null) |
+          ref0(trueToken).map((s) => true) |
+          ref0(falseToken).map((s) => false) |
+          ref0(hexNumberLexicalToken).flatten().map((s) => int.parse(s)) |
+          ref0(numberLexicalToken).flatten().map((s) => num.parse(s)) |
+          ref0(stringLexicalToken)
+              .flatten()
+              .map((s) => s.substring(1, s.length - 1)));
+}
+
 class QueriesFile {
   final List<Directive> directives;
   final List<QueryDeclaration> queries;
@@ -268,8 +321,9 @@ class QueryDeclaration {
 class QueryHeader {
   final MethodDeclaration method;
   final ProjectionDeclaration? projection;
+  final TestValuesDeclaration? testValues;
 
-  QueryHeader(this.method, this.projection);
+  QueryHeader(this.method, this.projection, this.testValues);
 
   @override
   String toString() => 'QueryHeader($method, $projection)';
@@ -367,6 +421,19 @@ class ProjectionModifierAs implements ProjectionModifier {
 
   @override
   String toString() => 'ProjectionModifierAs($type)';
+}
+
+class TestValuesDeclaration {
+  final List<TestValueLine> values;
+
+  TestValuesDeclaration(this.values);
+}
+
+class TestValueLine {
+  final Identifier name;
+  final dynamic value;
+
+  TestValueLine(this.name, this.value);
 }
 
 class Identifier {
