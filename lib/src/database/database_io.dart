@@ -134,17 +134,24 @@ class DatabaseIO implements Database {
     var uniqueParameters = query.parameters.map((p) => p.name).toSet();
     assert((args?.length ?? 0) == uniqueParameters.length,
         '$args vs [$uniqueParameters]');
-    return _connection.query(query.bodyWithDartSubstitutions,
-        substitutionValues: args);
+    return _connection.query(_queryString(query), substitutionValues: args);
   }
 
   @override
   Future<int> execute(String fmtString, {Map<String, dynamic>? args}) async {
     var query = SqlQuery.parse(fmtString);
     assert((args?.length ?? 0) == query.parameters.length);
-    var result = await _connection.execute(query.bodyWithDartSubstitutions,
+    var result = await _connection.execute(_queryString(query),
         substitutionValues: args);
     return result;
+  }
+
+  String _queryString(SqlQuery query) {
+    if (_connection is PostgreSQLExecutionContextWithStandardParameters) {
+      return query.body;
+    } else {
+      return query.bodyWithDartSubstitutions;
+    }
   }
 
   @override
@@ -163,3 +170,5 @@ class DatabaseIO implements Database {
     _connection.cancelTransaction(reason: reason);
   }
 }
+
+class PostgreSQLExecutionContextWithStandardParameters {}
