@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:postgres_pool/postgres_pool.dart';
 import 'package:process_runner/process_runner.dart';
 
@@ -140,7 +141,8 @@ class Postgres {
       String? template,
       String? username,
       String? password}) async {
-    databaseName ??= 'db_${DateTime.now().millisecondsSinceEpoch}';
+    databaseName ??=
+        'db_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(999999)}';
 
     var superUserClient = client();
     if (username != null) {
@@ -305,9 +307,9 @@ alter user $userName with encrypted password '${password.replaceAll("'", r"\'")}
 
     var buffer = StringBuffer()..write('create database $databaseName');
     if (params.isNotEmpty) {
-      buffer.write(' with ');
+      buffer.write(' with');
       for (var param in params.entries) {
-        buffer.write('${param.key} ${param.value} ');
+        buffer.write(' ${param.key} ${param.value}');
       }
     }
 
@@ -319,10 +321,11 @@ alter user $userName with encrypted password '${password.replaceAll("'", r"\'")}
     ifExists ??= false;
     force ??= false;
 
-    var command = 'drop database $databaseName';
+    var command = 'drop database';
     if (ifExists) {
       command += ' if exists';
     }
+    command += ' $databaseName';
     if (force) {
       command += ' with (force)';
     }
