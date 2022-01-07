@@ -54,14 +54,15 @@ class DartGenerator {
     code.writeln('}');
     code.writeln('');
 
-    code.writeln('factory $className.fromJson(Map<String, dynamic> json) {');
+    code.writeln('factory $className.fromJson(Map<String, Object?> json) {');
     code.writeln('return $className(');
     for (var column in columns) {
       var accessor = "json['${column.name.words.toLowerCamel()}']";
       var type = ValueType.fromTypeName(column.type.dartType,
           isNullable: column.isNullable);
 
-      var fromJsonCode = type.fromJsonCode(Value(accessor, ObjectType()));
+      var fromJsonCode =
+          type.fromJsonCode(Value(accessor, ObjectType(isNullable: true)));
 
       code.writeln('${column.name.words.toLowerCamel()}: $fromJsonCode,');
     }
@@ -69,7 +70,7 @@ class DartGenerator {
     code.writeln('}');
     code.writeln('');
 
-    code.writeln(' Map<String, dynamic> toJson() {');
+    code.writeln(' Map<String, Object?> toJson() {');
     code.writeln('return {');
     for (var column in columns) {
       var type = ValueType.fromTypeName(column.type.dartType,

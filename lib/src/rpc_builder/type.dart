@@ -65,7 +65,8 @@ abstract class ValueType {
       case 'Object':
         return ObjectType(isNullable: isNullable);
       case 'dynamic':
-        return ObjectType(isNullable: isNullable);
+        assert(isNullable);
+        return DynamicType();
       case 'String':
         return StringType(isNullable: isNullable);
       case 'DateTime':
@@ -84,7 +85,11 @@ class ObjectType extends ValueType {
 
   @override
   String fromJsonCode(Value value) {
-    return '${value.accessor}${value.type.isNullable && !isNullable ? '!' : ''}';
+    if (value.type is DynamicType) {
+      return '${value.accessor}${value.type.isNullable && !isNullable ? '!' : ''} as $name';
+    } else {
+      return '${value.accessor}${value.type.isNullable && !isNullable ? '!' : ''}';
+    }
   }
 
   @override
@@ -98,6 +103,32 @@ class ObjectType extends ValueType {
   @override
   ValueType copyWith({bool? isNullable}) =>
       ObjectType(isNullable: isNullable ?? this.isNullable);
+}
+
+class DynamicType extends ValueType {
+  DynamicType() : super(isNullable: true);
+
+  @override
+  String toJsonCode(String target) => target;
+
+  @override
+  String fromJsonCode(Value value) {
+    return value.accessor;
+  }
+
+  @override
+  String get nameWithoutNullability => 'dynamic';
+
+  @override
+  String get questionMark => '';
+
+  @override
+  bool equalsWithoutNullability(other) {
+    return other is DynamicType;
+  }
+
+  @override
+  ValueType copyWith({bool? isNullable}) => DynamicType();
 }
 
 abstract class _SimpleType extends ValueType {
@@ -416,7 +447,11 @@ class DateTimeType extends _SimpleType {
       var stringType = StringType(isNullable: isNullable);
       castCode = ' as ${stringType.castToThisFrom(value.type)}';
     }
-    return 'DateTime.${isNullable ? 'tryParse' : 'parse'}(${access(value)}$castCode)';
+    if (isNullable) {
+      return 'DateTime.tryParse(${access(value)}$castCode${value.type.isNullable ? " ?? ''" : ''})';
+    } else {
+      return 'DateTime.parse(${access(value)}$castCode)';
+    }
   }
 
   @override

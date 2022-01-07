@@ -1,5 +1,6 @@
 // GENERATED-CODE: do not edit
-// Code is generated from ./lib/src/database/schema/schema_extractor.queries.sql.sql
+// Code is generated from schema_extractor.queries.sql
+
 import 'package:server_utils/database.dart';
 
 extension SchemaExtractorQueries on Database {

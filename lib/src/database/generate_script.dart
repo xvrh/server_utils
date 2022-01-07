@@ -16,6 +16,7 @@ final _logger = Logger('database_builder');
 
 const _refreshAllQueriesCommand = 'r';
 const _refreshAllCommand = 'a';
+const _migrateCommand = 'm';
 
 Future<void> runDatabaseBuilder(
   Postgres database,
@@ -34,6 +35,7 @@ Future<void> runDatabaseBuilder(
 Available options:
   $_refreshAllQueriesCommand: refresh all query files
   $_refreshAllCommand: recreate database
+  $_migrateCommand: migrate database
 ''');
 
   var builder = _DatabaseBuilder(
@@ -81,6 +83,9 @@ class _DatabaseBuilder {
       } else if (event is _RecreateDatabaseEvent) {
         await _recreateDatabase();
         await _refresh();
+      } else if (event is _MigrateDatabaseEvent) {
+        await _migrateDatabase();
+        await _refresh();
       }
     }
   }
@@ -108,6 +113,9 @@ class _DatabaseBuilder {
       } else if (option.startsWith(_refreshAllCommand)) {
         _logger.info('Refresh all');
         _eventsController.add(_RecreateDatabaseEvent());
+      } else if (option.startsWith(_migrateCommand)) {
+        _logger.info('Migrate database');
+        _eventsController.add(_MigrateDatabaseEvent());
       }
     });
   }
@@ -128,6 +136,14 @@ class _DatabaseBuilder {
 
     stopwatch.reset();
 
+    await _migrateDatabase();
+
+    _logger.info('Recreated database step in ${globalStopwatch.elapsed}');
+  }
+
+  Future<void> _migrateDatabase() async {
+    _logger.fine('Will migrate database');
+    var stopwatch = Stopwatch()..start();
     try {
       var migrator = Migrator(_client, [...migrations]);
       await migrator.migrate();
@@ -136,10 +152,8 @@ class _DatabaseBuilder {
       stopwatch.reset();
       await useEndpoint(_client.endpoint, afterCreate);
       _logger.fine('After create actions in ${stopwatch.elapsed}');
-
-      _logger.info('Recreated database step in ${globalStopwatch.elapsed}');
     } catch (e, s) {
-      _logger.warning('Failed to re-create database: $e\n$s');
+      _logger.warning('Failed to migrate database: $e\n$s');
     }
   }
 
@@ -205,3 +219,5 @@ class _RefreshQueryScriptEvent implements _Event {
 }
 
 class _RefreshAllQueryScriptsEvent implements _Event {}
+
+class _MigrateDatabaseEvent implements _Event {}

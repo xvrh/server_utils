@@ -6,8 +6,6 @@ import 'example_database_schema.dart';
 extension DatabaseCrudExtension on Database {
   PageCrud get page => PageCrud(this);
 
-  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
-
   CountryCrud get country => CountryCrud(this);
 
   TimezoneCrud get timezone => TimezoneCrud(this);
@@ -15,6 +13,8 @@ extension DatabaseCrudExtension on Database {
   AppRoleCrud get appRole => AppRoleCrud(this);
 
   AppUserCrud get appUser => AppUserCrud(this);
+
+  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
 
   MobileDeviceCrud get mobileDevice => MobileDeviceCrud(this);
 }
@@ -29,7 +29,9 @@ class PageCrud {
       //language=sql
       'select * from page where id = :id::integer',
       //language=none
-      args: {'id': id},
+      args: {
+        'id': id,
+      },
       mapper: Page.fromRow,
     );
   }
@@ -71,54 +73,9 @@ class PageCrud {
       //language=sql
       'delete from page where id = :id::integer',
       //language=none
-      args: {'id': id},
-    );
-  }
-}
-
-class AppConfigurationCrud {
-  final Database _database;
-
-  AppConfigurationCrud(this._database);
-
-  Future<AppConfiguration> find(int id) {
-    return _database.single(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {'id': id},
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> insert({
-    int? id /* nextval('app_configuration_id_seq'::regclass) */,
-    bool? enableLogs,
-  }) {
-    return _database.insert(
-      'app_configuration',
-      values: {
-        if (id != null) 'id': id,
-        if (enableLogs != null) 'enable_logs': enableLogs,
+      args: {
+        'id': id,
       },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> updateFields() {
-    throw UnimplementedError();
-  }
-
-  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
-    throw UnimplementedError();
-  }
-
-  Future<int> delete(int id) {
-    return _database.execute(
-      //language=sql
-      'delete from app_configuration where id = :id::integer',
-      //language=none
-      args: {'id': id},
     );
   }
 }
@@ -133,7 +90,9 @@ class CountryCrud {
       //language=sql
       'select * from country where code = :code::character varying',
       //language=none
-      args: {'code': code},
+      args: {
+        'code': code,
+      },
       mapper: Country.fromRow,
     );
   }
@@ -173,7 +132,9 @@ class CountryCrud {
       //language=sql
       'delete from country where code = :code::character varying',
       //language=none
-      args: {'code': code},
+      args: {
+        'code': code,
+      },
     );
   }
 }
@@ -188,7 +149,9 @@ class TimezoneCrud {
       //language=sql
       'select * from timezone where name = :name::text',
       //language=none
-      args: {'name': name},
+      args: {
+        'name': name,
+      },
       mapper: Timezone.fromRow,
     );
   }
@@ -224,7 +187,9 @@ class TimezoneCrud {
       //language=sql
       'delete from timezone where name = :name::text',
       //language=none
-      args: {'name': name},
+      args: {
+        'name': name,
+      },
     );
   }
 }
@@ -239,7 +204,9 @@ class AppRoleCrud {
       //language=sql
       'select * from app_role where code = :code::text',
       //language=none
-      args: {'code': code},
+      args: {
+        'code': code,
+      },
       mapper: AppRole.fromRow,
     );
   }
@@ -275,7 +242,9 @@ class AppRoleCrud {
       //language=sql
       'delete from app_role where code = :code::text',
       //language=none
-      args: {'code': code},
+      args: {
+        'code': code,
+      },
     );
   }
 }
@@ -290,7 +259,9 @@ class AppUserCrud {
       //language=sql
       'select * from app_user where id = :id::integer',
       //language=none
-      args: {'id': id},
+      args: {
+        'id': id,
+      },
       mapper: AppUser.fromRow,
     );
   }
@@ -340,7 +311,60 @@ class AppUserCrud {
       //language=sql
       'delete from app_user where id = :id::integer',
       //language=none
-      args: {'id': id},
+      args: {
+        'id': id,
+      },
+    );
+  }
+}
+
+class AppConfigurationCrud {
+  final Database _database;
+
+  AppConfigurationCrud(this._database);
+
+  Future<AppConfiguration> find(int id) {
+    return _database.single(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> insert({
+    int? id /* nextval('app_configuration_id_seq'::regclass) */,
+    bool? enableLogs,
+  }) {
+    return _database.insert(
+      'app_configuration',
+      values: {
+        if (id != null) 'id': id,
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> updateFields() {
+    throw UnimplementedError();
+  }
+
+  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
+    throw UnimplementedError();
+  }
+
+  Future<int> delete(int id) {
+    return _database.execute(
+      //language=sql
+      'delete from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
     );
   }
 }
@@ -355,7 +379,9 @@ class MobileDeviceCrud {
       //language=sql
       'select * from mobile_device where id = :id::integer',
       //language=none
-      args: {'id': id},
+      args: {
+        'id': id,
+      },
       mapper: MobileDevice.fromRow,
     );
   }
@@ -414,7 +440,9 @@ class MobileDeviceCrud {
       //language=sql
       'delete from mobile_device where id = :id::integer',
       //language=none
-      args: {'id': id},
+      args: {
+        'id': id,
+      },
     );
   }
 }

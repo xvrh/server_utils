@@ -283,6 +283,30 @@ void main() {
   test('DateTime fromJson nullable 2', () {
     var source = DateTimeType(isNullable: true);
     expect(source.fromJsonCode(Value('v', ObjectType(isNullable: true))),
-        'DateTime.tryParse(v as String?)');
+        "DateTime.tryParse(v as String? ?? '')");
+  });
+  test('Object to dynamic', () {
+    var source = DynamicType();
+    expect(source.fromJsonCode(Value('v', ObjectType(isNullable: false))), 'v');
+  });
+  test('Object? to dynamic', () {
+    var source = DynamicType();
+    expect(source.fromJsonCode(Value('v', ObjectType(isNullable: true))), 'v');
+  });
+  test('dynamic to Object!', () {
+    var source = ObjectType();
+    expect(source.fromJsonCode(Value('v', DynamicType())), 'v! as Object');
+  });
+  test('dynamic to Object?', () {
+    var source = ObjectType(isNullable: true);
+    expect(source.fromJsonCode(Value('v', DynamicType())), 'v as Object?');
+  });
+  test('Object? to Object!', () {
+    var source = ObjectType();
+    expect(source.fromJsonCode(Value('v', ObjectType(isNullable: true))), 'v!');
+  });
+  test('Object? to Object?', () {
+    var source = ObjectType(isNullable: true);
+    expect(source.fromJsonCode(Value('v', ObjectType(isNullable: true))), 'v');
   });
 }

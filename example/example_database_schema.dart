@@ -18,7 +18,7 @@ class Page {
     this.pageType,
   });
 
-  static Page fromRow(Map<String, dynamic> row) {
+  factory Page.fromRow(Map<String, dynamic> row) {
     return Page(
       id: row['id']! as int,
       code: row['code'] as String?,
@@ -29,22 +29,29 @@ class Page {
       pageType: row['page_type'] as String?,
     );
   }
-}
 
-class AppConfiguration {
-  final int id;
-  final bool? enableLogs;
-
-  AppConfiguration({
-    required this.id,
-    this.enableLogs,
-  });
-
-  static AppConfiguration fromRow(Map<String, dynamic> row) {
-    return AppConfiguration(
-      id: row['id']! as int,
-      enableLogs: row['enable_logs'] as bool?,
+  factory Page.fromJson(Map<String, Object?> json) {
+    return Page(
+      id: (json['id']! as num).toInt(),
+      code: json['code'] as String?,
+      title: json['title']!,
+      title2: json['title2']!,
+      title3: json['title3'],
+      body: json['body']!,
+      pageType: json['pageType'] as String?,
     );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'code': code,
+      'title': title,
+      'title2': title2,
+      'title3': title3,
+      'body': body,
+      'pageType': pageType,
+    };
   }
 }
 
@@ -65,7 +72,7 @@ class Country {
     required this.phoneCode,
   });
 
-  static Country fromRow(Map<String, dynamic> row) {
+  factory Country.fromRow(Map<String, dynamic> row) {
     return Country(
       code: row['code']! as String,
       codeIso3: row['code_iso3']! as String,
@@ -74,6 +81,28 @@ class Country {
       longitude: row['longitude']! as double,
       phoneCode: row['phone_code']! as int,
     );
+  }
+
+  factory Country.fromJson(Map<String, Object?> json) {
+    return Country(
+      code: json['code']! as String,
+      codeIso3: json['codeIso3']! as String,
+      currency: json['currency']! as String,
+      latitude: (json['latitude']! as num).toDouble(),
+      longitude: (json['longitude']! as num).toDouble(),
+      phoneCode: (json['phoneCode']! as num).toInt(),
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'code': code,
+      'codeIso3': codeIso3,
+      'currency': currency,
+      'latitude': latitude,
+      'longitude': longitude,
+      'phoneCode': phoneCode,
+    };
   }
 }
 
@@ -90,13 +119,31 @@ class Timezone {
     required this.latLong,
   });
 
-  static Timezone fromRow(Map<String, dynamic> row) {
+  factory Timezone.fromRow(Map<String, dynamic> row) {
     return Timezone(
       name: row['name']! as String,
       country: row['country'] as String?,
       aliasFor: row['alias_for'] as String?,
       latLong: row['lat_long']! as String,
     );
+  }
+
+  factory Timezone.fromJson(Map<String, Object?> json) {
+    return Timezone(
+      name: json['name']! as String,
+      country: json['country'] as String?,
+      aliasFor: json['aliasFor'] as String?,
+      latLong: json['latLong']! as String,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'name': name,
+      'country': country,
+      'aliasFor': aliasFor,
+      'latLong': latLong,
+    };
   }
 }
 
@@ -113,13 +160,31 @@ class AppRole {
     required this.description,
   });
 
-  static AppRole fromRow(Map<String, dynamic> row) {
+  factory AppRole.fromRow(Map<String, dynamic> row) {
     return AppRole(
       code: row['code']! as String,
       index: row['index']! as int,
       name: row['name']! as String,
       description: row['description']! as String,
     );
+  }
+
+  factory AppRole.fromJson(Map<String, Object?> json) {
+    return AppRole(
+      code: json['code']! as String,
+      index: (json['index']! as num).toInt(),
+      name: json['name']! as String,
+      description: json['description']! as String,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'code': code,
+      'index': index,
+      'name': name,
+      'description': description,
+    };
   }
 }
 
@@ -150,7 +215,7 @@ class AppUser {
     this.lastName,
   });
 
-  static AppUser fromRow(Map<String, dynamic> row) {
+  factory AppUser.fromRow(Map<String, dynamic> row) {
     return AppUser(
       id: row['id']! as int,
       role: row['role']! as String,
@@ -164,6 +229,69 @@ class AppUser {
       middleName: row['middle_name'] as String?,
       lastName: row['last_name'] as String?,
     );
+  }
+
+  factory AppUser.fromJson(Map<String, Object?> json) {
+    return AppUser(
+      id: (json['id']! as num).toInt(),
+      role: json['role']! as String,
+      email: json['email']! as String,
+      created: DateTime.parse(json['created']! as String),
+      lastSeen: DateTime.tryParse(json['lastSeen'] as String? ?? ''),
+      countryCode: json['countryCode']! as String,
+      configurationId: (json['configurationId']! as num).toInt(),
+      eulaVersion: json['eulaVersion'] as String?,
+      firstName: json['firstName'] as String?,
+      middleName: json['middleName'] as String?,
+      lastName: json['lastName'] as String?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'role': role,
+      'email': email,
+      'created': created.toIso8601String(),
+      'lastSeen': lastSeen?.toIso8601String(),
+      'countryCode': countryCode,
+      'configurationId': configurationId,
+      'eulaVersion': eulaVersion,
+      'firstName': firstName,
+      'middleName': middleName,
+      'lastName': lastName,
+    };
+  }
+}
+
+class AppConfiguration {
+  final int id;
+  final bool? enableLogs;
+
+  AppConfiguration({
+    required this.id,
+    this.enableLogs,
+  });
+
+  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
+    return AppConfiguration(
+      id: row['id']! as int,
+      enableLogs: row['enable_logs'] as bool?,
+    );
+  }
+
+  factory AppConfiguration.fromJson(Map<String, Object?> json) {
+    return AppConfiguration(
+      id: (json['id']! as num).toInt(),
+      enableLogs: json['enableLogs'] as bool?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'enableLogs': enableLogs,
+    };
   }
 }
 
@@ -202,7 +330,7 @@ class MobileDevice {
     required this.configurationId,
   });
 
-  static MobileDevice fromRow(Map<String, dynamic> row) {
+  factory MobileDevice.fromRow(Map<String, dynamic> row) {
     return MobileDevice(
       id: row['id']! as int,
       userId: row['user_id']! as int,
@@ -220,5 +348,46 @@ class MobileDevice {
       appLanguage: row['app_language']! as String,
       configurationId: row['configuration_id']! as int,
     );
+  }
+
+  factory MobileDevice.fromJson(Map<String, Object?> json) {
+    return MobileDevice(
+      id: (json['id']! as num).toInt(),
+      userId: (json['userId']! as num).toInt(),
+      created: DateTime.parse(json['created']! as String),
+      lastSeen: DateTime.parse(json['lastSeen']! as String),
+      deviceIdentifier: json['deviceIdentifier']! as String,
+      notificationToken: json['notificationToken'] as String?,
+      notificationTokenUpdated:
+          DateTime.tryParse(json['notificationTokenUpdated'] as String? ?? ''),
+      osName: json['osName']! as String,
+      osVersion: json['osVersion']! as String,
+      osLocale: json['osLocale']! as String,
+      manufacturer: json['manufacturer']! as String,
+      model: json['model']! as String,
+      appVersion: json['appVersion']! as String,
+      appLanguage: json['appLanguage']! as String,
+      configurationId: (json['configurationId']! as num).toInt(),
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'created': created.toIso8601String(),
+      'lastSeen': lastSeen.toIso8601String(),
+      'deviceIdentifier': deviceIdentifier,
+      'notificationToken': notificationToken,
+      'notificationTokenUpdated': notificationTokenUpdated?.toIso8601String(),
+      'osName': osName,
+      'osVersion': osVersion,
+      'osLocale': osLocale,
+      'manufacturer': manufacturer,
+      'model': model,
+      'appVersion': appVersion,
+      'appLanguage': appLanguage,
+      'configurationId': configurationId,
+    };
   }
 }

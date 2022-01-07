@@ -8,7 +8,7 @@ void main() async {
     ..level = Level.ALL
     ..onRecord.listen(print);
 
-  var server = await exampleDatabaseSuperUser.server();
+  var server = await exampleDatabaseServer.server();
 
   var client = server.client();
   var databases = await client.listDatabases();

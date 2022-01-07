@@ -37,6 +37,7 @@ class QueriesGenerator {
     code.writeln("""
 // GENERATED-CODE: do not edit
 // Code is generated from ${p.basename(filePath)}
+
 import 'package:server_utils/database.dart';""");
 
     for (var import in result.importDirectives) {

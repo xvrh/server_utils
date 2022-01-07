@@ -1,5 +1,6 @@
 // GENERATED-CODE: do not edit
-// Code is generated from ./example/select.queries.sql.sql
+// Code is generated from select.queries.sql
+
 import 'package:server_utils/database.dart';
 import 'example_database_schema.dart';
 

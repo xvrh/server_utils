@@ -2,13 +2,12 @@ import 'package:postgres/postgres.dart';
 import 'package:server_utils/database.dart';
 
 import 'example_database.dart';
-import 'example_database_builder.dart';
 import 'select.queries.dart';
 import 'example_database_crud.dart';
 
 Future<PostgreSQLConnection> createConnection() async {
   var options =
-      exampleDatabaseSuperUser.copyWith(database: exampleDatabaseName).endpoint;
+      exampleDatabaseServer.copyWith(database: exampleDatabaseName).endpoint;
   var connection = connectionFromEndpoint(options);
   await connection.open();
 

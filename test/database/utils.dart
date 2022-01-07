@@ -13,7 +13,7 @@ class DatabaseTestUtils {
 
   DatabaseTestUtils() {
     setUpAll(() async {
-      postgres = exampleDatabaseSuperUser;
+      postgres = exampleDatabaseServer;
     });
 
     setUp(() async {

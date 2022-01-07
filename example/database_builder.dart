@@ -1,18 +1,20 @@
 import 'dart:developer' as dev;
 import 'dart:io';
 import 'package:logging/logging.dart';
-import 'package:server_utils/src/database/generate_script.dart';
+import 'package:postgres/postgres.dart';
+import 'package:server_utils/database.dart';
 import 'package:vm_service/utils.dart';
 import 'package:vm_service/vm_service.dart';
 import 'package:vm_service/vm_service_io.dart';
 import 'package:watcher/watcher.dart';
 import 'package:stream_transform/stream_transform.dart';
 
-import '../example/example_database.dart';
+import 'example_database.dart';
 
 void main() async {
   // Change the level in "afterReload" function
   Logger.root.onRecord.listen(print);
+  await _afterReload();
 
   var observatoryUri = (await dev.Service.getInfo()).serverUri;
   if (observatoryUri != null) {
@@ -28,6 +30,7 @@ void main() async {
         .listen((_) async {
       await serviceClient.reloadSources(mainIsolate.id!);
       await _afterReload();
+
       print('Hot reloaded ${DateTime.now()}');
     });
   } else {
@@ -36,16 +39,33 @@ void main() async {
   }
 
   await runDatabaseBuilder(
-    exampleDatabaseSuperUser,
-    'server_utils_tool',
-    migrations: [],
-    queries: ['lib/**.queries.sql'],
-    afterCreate: (connection) async {},
+    exampleDatabaseServer,
+    exampleDatabaseName,
+    migrations: ['example/test_database'],
+    queries: [
+      'example/**.queries.sql',
+      'lib/**.queries.sql',
+    ],
+    afterCreate: _afterCreate,
+    afterRefresh: _afterRefresh,
   );
 }
 
 Future<void> _afterReload() async {
   Logger.root.level = Level.ALL;
+}
+
+Future<void> _afterCreate(PostgreSQLConnection connection) async {}
+
+Future<void> _afterRefresh(PostgreSQLConnection connection) async {
+  var schema = await SchemaExtractor(DatabaseIO(connection)).schema();
+  var code = DartGenerator();
+  var schemaFile = 'example_database_schema.dart';
+  File('example/$schemaFile')
+      .writeAsStringSync(await code.generateEntities(schema.tables));
+
+  File('example/example_database_crud.dart').writeAsStringSync(
+      await code.generateCrudFile(schema.tables, imports: [schemaFile]));
 }
 
 class StdoutLog extends Log {
