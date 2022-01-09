@@ -6,7 +6,7 @@ import 'package:more/char_matcher.dart';
 import 'package:source_gen/source_gen.dart';
 import '../utils/string.dart';
 import 'annotations.dart';
-import 'type.dart';
+import '../utils/type.dart';
 import 'type_dart.dart';
 import 'utils.dart';
 

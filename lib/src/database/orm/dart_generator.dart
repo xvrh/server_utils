@@ -1,5 +1,5 @@
 import 'package:server_utils/src/database/schema/schema.dart';
-import 'package:server_utils/src/rpc_builder/type.dart';
+import 'package:server_utils/src/utils/type.dart';
 import 'package:server_utils/src/utils/quick_dart_formatter.dart';
 import '../../utils/string.dart';
 

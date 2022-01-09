@@ -5,7 +5,7 @@ import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as p;
 import 'package:source_gen/source_gen.dart';
-import 'package:server_utils/src/rpc_builder/type.dart';
+import 'package:server_utils/src/utils/type.dart';
 import 'annotations.dart';
 import 'type_dart.dart';
 import 'utils.dart';

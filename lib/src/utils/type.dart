@@ -1,5 +1,5 @@
 import 'package:collection/collection.dart';
-import '../utils/string.dart';
+import 'string.dart';
 
 class Value {
   final String accessor;

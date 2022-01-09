@@ -1,4 +1,4 @@
-// From: https://github.com/dart-lang/pub-dev/blob/master/app/test/frontend/dom/dom_test.dart
+// From: https://github.com/dart-lang/pub-dev/blob/master/app/lib/frontend/dom/dom.dart
 // Copyright (c) 2021, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.

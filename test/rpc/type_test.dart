@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:server_utils/src/rpc_builder/type.dart';
+import 'package:server_utils/src/utils/type.dart';
 
 void main() {
   final object = ObjectType(isNullable: false);
