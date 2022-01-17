@@ -1,12 +1,12 @@
-import 'package:postgres/postgres.dart';
-import 'package:server_utils/src/database/orm/queries_parser.dart';
-import 'package:server_utils/src/database/schema/schema.dart';
-import 'package:path/path.dart' as p;
-import 'package:server_utils/src/utils/quick_dart_formatter.dart';
-import '../../utils/string.dart';
-import 'data_type_postgres.dart';
-import 'utils/sql_parser.dart';
 import 'package:collection/collection.dart';
+import 'package:path/path.dart' as p;
+import 'package:postgres/postgres.dart';
+import '../../utils/quick_dart_formatter.dart';
+import '../../utils/string.dart';
+import '../schema/schema.dart';
+import 'data_type_postgres.dart';
+import 'queries_parser.dart';
+import 'utils/sql_parser.dart';
 
 class QueriesGeneratorException implements Exception {
   final String message;

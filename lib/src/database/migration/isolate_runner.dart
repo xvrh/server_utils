@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:isolate';
-
 import 'migration_context.dart';
 
 class IsolateRunner {

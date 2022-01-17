@@ -1,6 +1,5 @@
 import 'package:server_utils/database.dart';
 import 'package:test/test.dart';
-
 import '../utils.dart';
 
 final _testDataPath = 'test/database/migration/data';

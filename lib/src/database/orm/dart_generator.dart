@@ -1,16 +1,22 @@
-import 'package:server_utils/src/database/schema/schema.dart';
-import 'package:server_utils/src/utils/type.dart';
-import 'package:server_utils/src/utils/quick_dart_formatter.dart';
+import 'package:collection/collection.dart';
+import '../../utils/escape_dart_string.dart';
+import '../../utils/quick_dart_formatter.dart';
 import '../../utils/string.dart';
+import '../../utils/type.dart';
+import '../schema/schema.dart';
+import 'enum_extractor.dart';
 
 class DartGenerator {
-  Future<String> generateEntities(List<TableDefinition> tables) async {
+  Future<String> generateEntities(List<TableDefinition> tables,
+      {List<EnumDefinition>? enums}) async {
+    enums ??= [];
     var code = StringBuffer('''
 // GENERATED-FILE
 ''');
 
     for (var table in tables) {
-      code.writeln(generateEntity(table));
+      code.writeln(generateEntity(table,
+          enumDefinition: enums.firstWhereOrNull((e) => e.table == table)));
       code.writeln();
     }
     var resultCode = '$code';
@@ -22,13 +28,37 @@ class DartGenerator {
     return resultCode;
   }
 
-  String generateEntity(TableDefinition table) {
+  String generateEntity(TableDefinition table,
+      {EnumDefinition? enumDefinition}) {
     var code = StringBuffer('');
 
     var className = table.name.words.toUpperCamel();
     var columns = table.columns;
 
     code.writeln('class $className {');
+    if (enumDefinition != null) {
+      var enumPrimaryKey = enumDefinition.primaryKey;
+      for (var enumLine in enumDefinition.rows) {
+        var primaryKeyValue = enumLine[enumPrimaryKey]! as String;
+
+        var arguments = <String>[];
+        for (var entry in enumLine.entries) {
+          arguments.add(
+              '${entry.key.name.words.toLowerCamel()}: ${_toDartLiteral(entry.value)}');
+        }
+        code.writeln(
+            'static final ${primaryKeyValue.words.toLowerCamel()} = $className(${arguments.join(', ')});');
+      }
+      code.writeln('');
+      code.writeln('static final all = [');
+      for (var enumLine in enumDefinition.rows) {
+        var primaryKeyValue = enumLine[enumPrimaryKey]! as String;
+        code.writeln('${primaryKeyValue.words.toLowerCamel()},');
+      }
+      code.writeln('];');
+      code.writeln('');
+    }
+
     for (var column in columns) {
       code.writeln(
           'final ${column.type.dartType}${column.isNullable ? '?' : ''} ${column.name.words.toLowerCamel()};');
@@ -242,4 +272,10 @@ class $className {
     code.writeln('}');
     code.writeln('');
   }
+}
+
+String _toDartLiteral(Object? value) {
+  if (value == null) return 'null';
+  if (value is String) return escapeDartString(value);
+  return '$value';
 }

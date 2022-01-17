@@ -1,5 +1,5 @@
-import 'package:server_utils/database.dart';
 import 'package:faker/faker.dart';
+import 'package:server_utils/database.dart';
 
 Future<void> migrate(MigrationContext context) async {
   var db = context.connection!;

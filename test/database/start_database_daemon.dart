@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:logging/logging.dart';
 import '../../example/example_database.dart';
 

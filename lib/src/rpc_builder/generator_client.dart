@@ -5,7 +5,8 @@ import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as p;
 import 'package:source_gen/source_gen.dart';
-import 'package:server_utils/src/utils/type.dart';
+import '../utils/string.dart';
+import '../utils/type.dart';
 import 'annotations.dart';
 import 'type_dart.dart';
 import 'utils.dart';
@@ -45,12 +46,14 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
           _importsForType(parameter.type, extraImports);
         }
 
+        var endpointName = method.name.words.toLowerHyphen();
         code.writeln(
             '''Future<${futureType(method.returnType)}> ${method.name}(${encodeParameters(method.parameters)}) async {
-          var \$url = Uri.parse(path_helper.url.join(_basePath, '${apiAnnotation.path}', '${method.name}'));''');
+          var \$url = Uri.parse(path_helper.url.join(_basePath, '${apiAnnotation.path}', '$endpointName'));''');
 
         var queryParameters = method.parameters;
         String sendCode;
+        var headersCode = '';
         if (const ['get', 'delete'].contains(actionType)) {
           sendCode = 'await _client.$actionType(\$url)';
         } else {
@@ -66,9 +69,11 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
                   '${typeFromDart(parameter.type).toJsonCode(parameter.name)},\n';
             }
             body += '})';
+
+            headersCode = ", headers: {'content-type': 'application/json'}";
           }
 
-          sendCode = 'await _client.$actionType(\$url$body)';
+          sendCode = 'await _client.$actionType(\$url$body$headersCode)';
         }
 
         if (queryParameters.isNotEmpty) {

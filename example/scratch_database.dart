@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:server_utils/database.dart';
 import 'package:logging/logging.dart';
+import 'package:server_utils/database.dart';
 
 void main() async {
   await runZonedGuarded(() async {

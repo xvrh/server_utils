@@ -6,6 +6,8 @@ import 'example_database_schema.dart';
 extension DatabaseCrudExtension on Database {
   PageCrud get page => PageCrud(this);
 
+  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
+
   CountryCrud get country => CountryCrud(this);
 
   TimezoneCrud get timezone => TimezoneCrud(this);
@@ -13,8 +15,6 @@ extension DatabaseCrudExtension on Database {
   AppRoleCrud get appRole => AppRoleCrud(this);
 
   AppUserCrud get appUser => AppUserCrud(this);
-
-  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
 
   MobileDeviceCrud get mobileDevice => MobileDeviceCrud(this);
 }
@@ -72,6 +72,57 @@ class PageCrud {
     return _database.execute(
       //language=sql
       'delete from page where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+    );
+  }
+}
+
+class AppConfigurationCrud {
+  final Database _database;
+
+  AppConfigurationCrud(this._database);
+
+  Future<AppConfiguration> find(int id) {
+    return _database.single(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> insert({
+    int? id /* nextval('app_configuration_id_seq'::regclass) */,
+    bool? enableLogs,
+  }) {
+    return _database.insert(
+      'app_configuration',
+      values: {
+        if (id != null) 'id': id,
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> updateFields() {
+    throw UnimplementedError();
+  }
+
+  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
+    throw UnimplementedError();
+  }
+
+  Future<int> delete(int id) {
+    return _database.execute(
+      //language=sql
+      'delete from app_configuration where id = :id::integer',
       //language=none
       args: {
         'id': id,
@@ -310,57 +361,6 @@ class AppUserCrud {
     return _database.execute(
       //language=sql
       'delete from app_user where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-    );
-  }
-}
-
-class AppConfigurationCrud {
-  final Database _database;
-
-  AppConfigurationCrud(this._database);
-
-  Future<AppConfiguration> find(int id) {
-    return _database.single(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> insert({
-    int? id /* nextval('app_configuration_id_seq'::regclass) */,
-    bool? enableLogs,
-  }) {
-    return _database.insert(
-      'app_configuration',
-      values: {
-        if (id != null) 'id': id,
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> updateFields() {
-    throw UnimplementedError();
-  }
-
-  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
-    throw UnimplementedError();
-  }
-
-  Future<int> delete(int id) {
-    return _database.execute(
-      //language=sql
-      'delete from app_configuration where id = :id::integer',
       //language=none
       args: {
         'id': id,

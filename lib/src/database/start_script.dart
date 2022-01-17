@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
-import 'postgres.dart';
 import 'package:logging/logging.dart';
+import 'postgres.dart';
 
 void startDatabaseServer(Postgres postgres) async {
   if (!stdin.hasTerminal) {

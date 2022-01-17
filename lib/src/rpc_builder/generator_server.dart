@@ -5,8 +5,8 @@ import 'package:build/build.dart';
 import 'package:more/char_matcher.dart';
 import 'package:source_gen/source_gen.dart';
 import '../utils/string.dart';
-import 'annotations.dart';
 import '../utils/type.dart';
+import 'annotations.dart';
 import 'type_dart.dart';
 import 'utils.dart';
 
@@ -82,8 +82,9 @@ Handler $factoryVariableName($className api) {
 
         methodContent.writeln(')');
 
+        var endpointName = method.name.words.toLowerHyphen();
         code.writeln('''
-router.$actionType('${method.name}', (request) ${(needBody || method.returnType.isDartAsyncFuture) ? 'async' : ''} {
+router.$actionType('$endpointName', (request) ${(needBody || method.returnType.isDartAsyncFuture) ? 'async' : ''} {
         ''');
         if (needBody) {
           code.writeln('var body = await request.body;');

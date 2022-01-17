@@ -1,7 +1,6 @@
 import 'package:server_utils/database.dart';
 import 'package:server_utils/src/database/orm/queries_generator.dart';
 import 'package:test/test.dart';
-
 import '../utils.dart';
 
 void main() {

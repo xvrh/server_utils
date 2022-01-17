@@ -1,5 +1,5 @@
-import 'package:test/test.dart';
 import 'package:server_utils/src/utils/type.dart';
+import 'package:test/test.dart';
 
 void main() {
   final object = ObjectType(isNullable: false);

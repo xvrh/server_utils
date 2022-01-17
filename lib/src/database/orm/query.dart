@@ -1,5 +1,5 @@
-import 'package:server_utils/src/database/database.dart';
-import 'package:server_utils/src/database/page.dart';
+import '../database.dart';
+import '../page.dart';
 
 class Query<TReturn> {
   final Database database;

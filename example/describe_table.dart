@@ -1,7 +1,6 @@
 import 'package:postgres/postgres.dart';
 import 'package:server_utils/database.dart';
 import 'package:server_utils/src/database/schema/schema_extractor.queries.dart';
-
 import 'example_database.dart';
 
 Future<PostgreSQLConnection> createConnection() async {

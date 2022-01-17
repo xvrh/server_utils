@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:glob/glob.dart';
 import 'package:glob/list_local_fs.dart';
-import 'package:postgres/postgres.dart';
-import 'package:server_utils/database.dart';
 import 'package:logging/logging.dart';
-import 'package:watcher/watcher.dart';
 import 'package:path/path.dart' as p;
-
+import 'package:postgres/postgres.dart';
+import 'package:watcher/watcher.dart';
+import '../../database.dart';
 import 'orm/queries_generator.dart';
 import 'utils.dart';
 
@@ -26,11 +24,11 @@ Future<void> runDatabaseBuilder(
   required Future<void> Function(PostgreSQLConnection) afterCreate,
   Future<void> Function(PostgreSQLConnection)? afterRefresh,
 }) async {
-  // if (!stdin.hasTerminal) {
-  //   print('Run this script using the standard shell instead of IntelliJ. '
-  //       'ie: dart tool/database_builder.dart');
-  // }
-  // stdin.lineMode = false;
+  if (!stdin.hasTerminal) {
+    print('Run this script using the standard shell instead of IntelliJ. '
+        'ie: dart ${p.relative(Platform.script.toFilePath())}');
+  }
+  stdin.lineMode = false;
   print('''
 Available options:
   $_refreshAllQueriesCommand: refresh all query files

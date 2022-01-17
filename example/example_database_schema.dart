@@ -55,6 +55,37 @@ class Page {
   }
 }
 
+class AppConfiguration {
+  final int id;
+  final bool? enableLogs;
+
+  AppConfiguration({
+    required this.id,
+    this.enableLogs,
+  });
+
+  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
+    return AppConfiguration(
+      id: row['id']! as int,
+      enableLogs: row['enable_logs'] as bool?,
+    );
+  }
+
+  factory AppConfiguration.fromJson(Map<String, Object?> json) {
+    return AppConfiguration(
+      id: (json['id']! as num).toInt(),
+      enableLogs: json['enableLogs'] as bool?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'enableLogs': enableLogs,
+    };
+  }
+}
+
 class Country {
   final String code;
   final String codeIso3;
@@ -148,6 +179,19 @@ class Timezone {
 }
 
 class AppRole {
+  static final admin = AppRole(
+    code: 'ADMIN',
+    index: 100,
+    name: 'Admin',
+    description: '',
+  );
+  static final user = AppRole(
+    code: 'USER',
+    index: 0,
+    name: 'User',
+    description: '',
+  );
+
   final String code;
   final int index;
   final String name;
@@ -260,37 +304,6 @@ class AppUser {
       'firstName': firstName,
       'middleName': middleName,
       'lastName': lastName,
-    };
-  }
-}
-
-class AppConfiguration {
-  final int id;
-  final bool? enableLogs;
-
-  AppConfiguration({
-    required this.id,
-    this.enableLogs,
-  });
-
-  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
-    return AppConfiguration(
-      id: row['id']! as int,
-      enableLogs: row['enable_logs'] as bool?,
-    );
-  }
-
-  factory AppConfiguration.fromJson(Map<String, Object?> json) {
-    return AppConfiguration(
-      id: (json['id']! as num).toInt(),
-      enableLogs: json['enableLogs'] as bool?,
-    );
-  }
-
-  Map<String, Object?> toJson() {
-    return {
-      'id': id,
-      'enableLogs': enableLogs,
     };
   }
 }

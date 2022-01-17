@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'annotations.dart';
-import 'exceptions.dart';
 import 'exception_wrapper.dart';
+import 'exceptions.dart';
 
 Response rpcErrorHandler(
     Api api, Request request, exception, StackTrace stackTrace) {

@@ -1,7 +1,7 @@
-import 'package:petitparser/petitparser.dart';
 import 'package:collection/collection.dart';
-import 'package:server_utils/src/database/orm/utils/sql_parser.dart';
+import 'package:petitparser/petitparser.dart';
 import 'utils/dart_parser.dart';
+import 'utils/sql_parser.dart';
 
 Result<QueriesFile> parseQueries(String content) {
   final definition = QueriesGrammarDefinition();

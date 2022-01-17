@@ -1,11 +1,10 @@
 import 'dart:io';
-
+import 'package:package_config/package_config.dart';
+import '../postgres.dart';
+import '../utils.dart';
 import 'isolate_runner.dart';
 import 'migration_context.dart';
 import 'script.dart';
-import '../utils.dart';
-import '../postgres.dart';
-import 'package:package_config/package_config.dart';
 
 class Migrator {
   static const _migrationTable = '_migration_history';

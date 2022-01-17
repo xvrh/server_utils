@@ -1,8 +1,7 @@
-import 'schema.dart';
-
-import '../database.dart';
-import 'schema_extractor.queries.dart';
 import 'package:collection/collection.dart';
+import '../database.dart';
+import 'schema.dart';
+import 'schema_extractor.queries.dart';
 
 class SchemaExtractor {
   final Database database;

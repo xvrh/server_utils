@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:isolate';
-import 'package:path/path.dart' as p;
 import 'package:collection/collection.dart';
+import 'package:path/path.dart' as p;
 
 Future<List<Script>> scriptsFromPaths(List<String> paths) async {
   var results = <Script>[];

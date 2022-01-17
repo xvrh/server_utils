@@ -1,7 +1,7 @@
-import '../schema/schema.dart';
 import 'package:postgres/postgres.dart';
 // ignore: implementation_imports
 import 'package:postgres/src/binary_codec.dart';
+import '../schema/schema.dart';
 
 final dataTypePostgres = <DataType, PostgreSQLDataType>{
   DataType.integer: PostgreSQLDataType.integer,

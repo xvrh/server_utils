@@ -2,15 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'package:postgres_pool/postgres_pool.dart';
-import 'package:process_runner/process_runner.dart';
-
-import 'local_database.dart';
-import 'utils.dart';
-import 'package:logging/logging.dart';
-import 'package:path/path.dart' as path;
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
+import 'package:logging/logging.dart';
+import 'package:path/path.dart' as path;
+import 'package:postgres_pool/postgres_pool.dart';
+import 'package:process_runner/process_runner.dart';
+import 'local_database.dart';
+import 'utils.dart';
 
 final Logger _logger = Logger('postgres');
 

@@ -1,7 +1,7 @@
 import 'package:petitparser/petitparser.dart';
+import 'package:server_utils/src/database/orm/queries_parser.dart';
 import 'package:server_utils/src/database/orm/utils/sql_parser.dart';
 import 'package:test/test.dart';
-import 'package:server_utils/src/database/orm/queries_parser.dart';
 
 void main() {
   test('Complete parser', () {
