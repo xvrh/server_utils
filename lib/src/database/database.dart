@@ -78,4 +78,45 @@ extension DatabaseExtension on Database {
       args: values,
     );
   }
+
+  Future<T> update<T>(
+    String tableName, {
+    required Map<String, Object> where,
+    required Map<String, Object> set,
+    List<String>? clear,
+    required Mapper<T> mapper,
+  }) {
+    if (tableName.contains('"')) {
+      throw Exception('Table name is invalid ($tableName)');
+    }
+    if (where.keys.any((k) => k.contains('"'))) {
+      throw Exception(
+          'One column has an invalid name (${where.keys.join(',')})');
+    }
+    if (set.keys.any((k) => k.contains('"'))) {
+      throw Exception('One column has an invalid name (${set.keys.join(',')})');
+    }
+    var updates = <String>[];
+    var wheres = <String>[];
+    var values = <String, Object>{};
+    for (var e in set.entries) {
+      updates.add('"${e.key}" = :${e.key}');
+      values[e.key] = e.value;
+    }
+    if (clear != null) {
+      for (var e in clear) {
+        updates.add('"$e" = null');
+      }
+    }
+    for (var e in where.entries) {
+      wheres.add('"${e.key}" = :${e.key}');
+      values[e.key] = e.value;
+    }
+
+    return single(
+      'update "$tableName" set ${updates.join(', ')} where ${wheres.join(' and ')} returning *',
+      mapper: mapper,
+      args: values,
+    );
+  }
 }

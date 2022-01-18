@@ -179,18 +179,15 @@ class Timezone {
 }
 
 class AppRole {
-  static final admin = AppRole(
-    code: 'ADMIN',
-    index: 100,
-    name: 'Admin',
-    description: '',
-  );
-  static final user = AppRole(
-    code: 'USER',
-    index: 0,
-    name: 'User',
-    description: '',
-  );
+  static final admin =
+      AppRole(code: 'ADMIN', index: 100, name: 'Admin', description: '');
+  static final user =
+      AppRole(code: 'USER', index: 0, name: 'User', description: '');
+
+  static final all = [
+    admin,
+    user,
+  ];
 
   final String code;
   final int index;

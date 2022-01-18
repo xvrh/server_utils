@@ -60,8 +60,38 @@ class PageCrud {
     );
   }
 
-  Future<Page> updateFields() {
-    throw UnimplementedError();
+  Future<Page> update(
+    int id, {
+    String? code,
+    bool? clearCode,
+    Object? title,
+    Object? title2,
+    Object? title3,
+    bool? clearTitle3,
+    Object? body,
+    String? pageType,
+    bool? clearPageType,
+  }) {
+    return _database.update(
+      'page',
+      where: {
+        'id': id,
+      },
+      set: {
+        if (code != null) 'code': code,
+        if (title != null) 'title': title,
+        if (title2 != null) 'title2': title2,
+        if (title3 != null) 'title3': title3,
+        if (body != null) 'body': body,
+        if (pageType != null) 'page_type': pageType,
+      },
+      clear: [
+        if (clearCode ?? false) 'code',
+        if (clearTitle3 ?? false) 'title3',
+        if (clearPageType ?? false) 'page_type',
+      ],
+      mapper: Page.fromRow,
+    );
   }
 
   Future<Page> updateEntity(Page entity) {
@@ -111,8 +141,24 @@ class AppConfigurationCrud {
     );
   }
 
-  Future<AppConfiguration> updateFields() {
-    throw UnimplementedError();
+  Future<AppConfiguration> update(
+    int id, {
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return _database.update(
+      'app_configuration',
+      where: {
+        'id': id,
+      },
+      set: {
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      clear: [
+        if (clearEnableLogs ?? false) 'enable_logs',
+      ],
+      mapper: AppConfiguration.fromRow,
+    );
   }
 
   Future<AppConfiguration> updateEntity(AppConfiguration entity) {
@@ -170,8 +216,28 @@ class CountryCrud {
     );
   }
 
-  Future<Country> updateFields() {
-    throw UnimplementedError();
+  Future<Country> update(
+    String code, {
+    String? codeIso3,
+    String? currency,
+    double? latitude,
+    double? longitude,
+    int? phoneCode,
+  }) {
+    return _database.update(
+      'country',
+      where: {
+        'code': code,
+      },
+      set: {
+        if (codeIso3 != null) 'code_iso3': codeIso3,
+        if (currency != null) 'currency': currency,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (phoneCode != null) 'phone_code': phoneCode,
+      },
+      mapper: Country.fromRow,
+    );
   }
 
   Future<Country> updateEntity(Country entity) {
@@ -225,8 +291,30 @@ class TimezoneCrud {
     );
   }
 
-  Future<Timezone> updateFields() {
-    throw UnimplementedError();
+  Future<Timezone> update(
+    String name, {
+    String? country,
+    bool? clearCountry,
+    String? aliasFor,
+    bool? clearAliasFor,
+    String? latLong,
+  }) {
+    return _database.update(
+      'timezone',
+      where: {
+        'name': name,
+      },
+      set: {
+        if (country != null) 'country': country,
+        if (aliasFor != null) 'alias_for': aliasFor,
+        if (latLong != null) 'lat_long': latLong,
+      },
+      clear: [
+        if (clearCountry ?? false) 'country',
+        if (clearAliasFor ?? false) 'alias_for',
+      ],
+      mapper: Timezone.fromRow,
+    );
   }
 
   Future<Timezone> updateEntity(Timezone entity) {
@@ -280,8 +368,24 @@ class AppRoleCrud {
     );
   }
 
-  Future<AppRole> updateFields() {
-    throw UnimplementedError();
+  Future<AppRole> update(
+    String code, {
+    int? index,
+    String? name,
+    String? description,
+  }) {
+    return _database.update(
+      'app_role',
+      where: {
+        'code': code,
+      },
+      set: {
+        if (index != null) 'index': index,
+        if (name != null) 'name': name,
+        if (description != null) 'description': description,
+      },
+      mapper: AppRole.fromRow,
+    );
   }
 
   Future<AppRole> updateEntity(AppRole entity) {
@@ -349,8 +453,50 @@ class AppUserCrud {
     );
   }
 
-  Future<AppUser> updateFields() {
-    throw UnimplementedError();
+  Future<AppUser> update(
+    int id, {
+    String? role,
+    String? email,
+    DateTime? created,
+    DateTime? lastSeen,
+    bool? clearLastSeen,
+    String? countryCode,
+    int? configurationId,
+    String? eulaVersion,
+    bool? clearEulaVersion,
+    String? firstName,
+    bool? clearFirstName,
+    String? middleName,
+    bool? clearMiddleName,
+    String? lastName,
+    bool? clearLastName,
+  }) {
+    return _database.update(
+      'app_user',
+      where: {
+        'id': id,
+      },
+      set: {
+        if (role != null) 'role': role,
+        if (email != null) 'email': email,
+        if (created != null) 'created': created,
+        if (lastSeen != null) 'last_seen': lastSeen,
+        if (countryCode != null) 'country_code': countryCode,
+        if (configurationId != null) 'configuration_id': configurationId,
+        if (eulaVersion != null) 'eula_version': eulaVersion,
+        if (firstName != null) 'first_name': firstName,
+        if (middleName != null) 'middle_name': middleName,
+        if (lastName != null) 'last_name': lastName,
+      },
+      clear: [
+        if (clearLastSeen ?? false) 'last_seen',
+        if (clearEulaVersion ?? false) 'eula_version',
+        if (clearFirstName ?? false) 'first_name',
+        if (clearMiddleName ?? false) 'middle_name',
+        if (clearLastName ?? false) 'last_name',
+      ],
+      mapper: AppUser.fromRow,
+    );
   }
 
   Future<AppUser> updateEntity(AppUser entity) {
@@ -427,8 +573,54 @@ class MobileDeviceCrud {
     );
   }
 
-  Future<MobileDevice> updateFields() {
-    throw UnimplementedError();
+  Future<MobileDevice> update(
+    int id, {
+    int? userId,
+    DateTime? created,
+    DateTime? lastSeen,
+    String? deviceIdentifier,
+    String? notificationToken,
+    bool? clearNotificationToken,
+    DateTime? notificationTokenUpdated,
+    bool? clearNotificationTokenUpdated,
+    String? osName,
+    String? osVersion,
+    String? osLocale,
+    String? manufacturer,
+    String? model,
+    String? appVersion,
+    String? appLanguage,
+    int? configurationId,
+  }) {
+    return _database.update(
+      'mobile_device',
+      where: {
+        'id': id,
+      },
+      set: {
+        if (userId != null) 'user_id': userId,
+        if (created != null) 'created': created,
+        if (lastSeen != null) 'last_seen': lastSeen,
+        if (deviceIdentifier != null) 'device_identifier': deviceIdentifier,
+        if (notificationToken != null) 'notification_token': notificationToken,
+        if (notificationTokenUpdated != null)
+          'notification_token_updated': notificationTokenUpdated,
+        if (osName != null) 'os_name': osName,
+        if (osVersion != null) 'os_version': osVersion,
+        if (osLocale != null) 'os_locale': osLocale,
+        if (manufacturer != null) 'manufacturer': manufacturer,
+        if (model != null) 'model': model,
+        if (appVersion != null) 'app_version': appVersion,
+        if (appLanguage != null) 'app_language': appLanguage,
+        if (configurationId != null) 'configuration_id': configurationId,
+      },
+      clear: [
+        if (clearNotificationToken ?? false) 'notification_token',
+        if (clearNotificationTokenUpdated ?? false)
+          'notification_token_updated',
+      ],
+      mapper: MobileDevice.fromRow,
+    );
   }
 
   Future<MobileDevice> updateEntity(MobileDevice entity) {

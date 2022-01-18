@@ -167,7 +167,9 @@ class $className {
 
     _findCode(code, table, primaryKeys);
     _insertCode(code, table);
-    _updateCode(code, table);
+    if (columns.where((c) => !c.isPrimaryKey).isNotEmpty) {
+      _updateCode(code, table);
+    }
     _deleteCode(code, table, primaryKeys);
 
     code.writeln('}');
@@ -241,8 +243,45 @@ class $className {
   void _updateCode(StringBuffer code, TableDefinition table) {
     var entityName = table.name.words.toUpperCamel();
 
-    code.writeln('Future<$entityName> updateFields() {');
-    code.writeln('throw UnimplementedError();');
+    code.write('Future<$entityName> update(');
+    for (var primaryKey in table.columns.where((c) => c.isPrimaryKey)) {
+      code.write(
+          '${primaryKey.type.dartType} ${primaryKey.name.words.toLowerCamel()},');
+    }
+    code.write('{');
+    var clears = <ColumnDefinition>[];
+    for (var column in table.columns.where((c) => !c.isPrimaryKey)) {
+      code.write(
+          '${column.type.dartType}? ${column.name.words.toLowerCamel()},');
+      if (column.isNullable) {
+        clears.add(column);
+        code.write('bool? clear${column.name.words.toUpperCamel()},');
+      }
+    }
+    code.writeln('}) {');
+    code.writeln("return _database.update('${table.name}',");
+    code.writeln('where: {');
+    for (var primaryKey in table.columns.where((c) => c.isPrimaryKey)) {
+      code.write(
+          "'${primaryKey.name}': ${primaryKey.name.words.toLowerCamel()},");
+    }
+    code.writeln('},');
+    code.writeln('set: {');
+    for (var column in table.columns.where((c) => !c.isPrimaryKey)) {
+      var variable = column.name.words.toLowerCamel();
+      code.write("if ($variable != null) '${column.name}': $variable,");
+    }
+    code.writeln('},');
+    if (clears.isNotEmpty) {
+      code.writeln('clear: [');
+      for (var column in clears) {
+        code.write(
+            "if (clear${column.name.words.toUpperCamel()} ?? false)'${column.name}',");
+      }
+      code.writeln('],');
+    }
+    code.writeln('mapper: $entityName.fromRow,');
+    code.writeln(');');
     code.writeln('}');
     code.writeln('');
     code.writeln('Future<$entityName> updateEntity($entityName entity) {');

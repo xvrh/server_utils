@@ -1,7 +1,7 @@
 // GENERATED-CODE: do not edit
 // Code is generated from schema_extractor.queries.sql
 
-import '../../../database.dart';
+import 'package:server_utils/database.dart';
 
 extension SchemaExtractorQueries on Database {
   Future<List<String>> tablesForSchema({String schemaName = 'public'}) {

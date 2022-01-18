@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shelf/shelf.dart';
+import 'package:shelf_router/shelf_router.dart';
 import 'annotations.dart';
 import 'exception_wrapper.dart';
 import 'exceptions.dart';
@@ -20,6 +22,7 @@ Response rpcErrorHandler(
           message: '$exception',
         ),
       ),
+      headers: {HttpHeaders.contentTypeHeader: 'application/json'},
     );
   } else {
     return Response.internalServerError(
@@ -32,30 +35,19 @@ Response rpcErrorHandler(
           message: '$exception',
         ),
       ),
+      headers: {HttpHeaders.contentTypeHeader: 'application/json'},
     );
   }
 }
 
-/*
-final Middleware globalRpcErrorMiddleware =
-    createMiddleware(errorHandler: (e, s) async {
-  return Response.internalServerError(
-    body: jsonEncode(
-      RpcExceptionWrapper(
-        api: '',
-        url: '',
-        stackTrace: '$s',
-        method: '',
-        message: '$e',
-      ),
-    ),
-  );
-});*/
-
 Handler globalRpcErrorMiddleware(Handler innerHandler) {
   return (request) async {
     try {
-      return await innerHandler(request);
+      var response = await innerHandler(request);
+      if (response == Router.routeNotFound) {
+        throw Exception('Route not found');
+      }
+      return response;
     } catch (e, s) {
       return Response.internalServerError(
         body: jsonEncode(
@@ -67,20 +59,8 @@ Handler globalRpcErrorMiddleware(Handler innerHandler) {
             message: '$e',
           ),
         ),
+        headers: {HttpHeaders.contentTypeHeader: 'application/json'},
       );
     }
   };
 }
-
-/*
-    return (request) async {
-      try {
-        var response = await callback(_RequestWrapper(request));
-
-        return Response.ok(jsonEncode(response),
-            headers: {HttpHeaders.contentTypeHeader: 'application/json'});
-      } catch (e, stackTrace) {
-        return rpcErrorHandler(apiInfo, request, e, stackTrace);
-      }
-    };
- */
