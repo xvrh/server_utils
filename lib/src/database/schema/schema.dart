@@ -126,6 +126,7 @@ class DataType<T> {
   );
   static const timestampWithoutTimeZone = DataType<DateTime>._(
     'timestamp without time zone',
+    aliases: ['timestamp'],
     dartType: 'DateTime',
   );
   static const date = DataType<DateTime>._(
