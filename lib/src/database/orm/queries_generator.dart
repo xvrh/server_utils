@@ -1,9 +1,9 @@
 import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 import 'package:postgres/postgres.dart';
+import '../../../database_builder.dart';
 import '../../utils/quick_dart_formatter.dart';
 import '../../utils/string.dart';
-import '../schema/schema.dart';
 import 'data_type_postgres.dart';
 import 'queries_parser.dart';
 import 'utils/sql_parser.dart';
@@ -132,42 +132,10 @@ class $className {
   }
 
   String _projectionCode(
-      ProjectionDeclaration projection, List<ComputedColumnInfo> columns) {
-    var code = StringBuffer('');
-
-    var className = projection.name.name;
-
-    //TODO(xha): share the code with the table generation.
-    // Needs: fromRow(), toRow(), fromJson, toJson, toString, copyWith
-    code.writeln('class $className {');
-    for (var column in columns) {
-      //TODO(xha): describe the table to know if it's nullable or not.
-
-      code.writeln(
-          'final ${column.type.dartType}${column.isNullable ? '?' : ''} ${column.name.words.toLowerCamel()};');
-    }
-
-    code.writeln('');
-    code.writeln('$className({');
-    for (var column in columns) {
-      code.writeln(
-          '${column.isNullable ? '' : 'required '}this.${column.name.words.toLowerCamel()},');
-    }
-    code.writeln('});');
-    code.writeln('');
-
-    code.writeln('static $className fromRow(Map<String, dynamic> row) {');
-    code.writeln('return $className(');
-    for (var column in columns) {
-      code.writeln('${column.name.words.toLowerCamel()}: '
-          "row['${column.name}']${column.isNullable ? '' : '!'} "
-          "as ${column.type.dartType}${column.isNullable ? '?' : ''},");
-    }
-    code.writeln(');');
-    code.writeln('}');
-
-    code.writeln('}');
-    return '$code';
+      ProjectionDeclaration projection, List<ColumnDefinition> columns) {
+    var dartGenerator = DartGenerator();
+    return dartGenerator.generateClassFromColumns(
+        projection.name.name, columns);
   }
 }
 
@@ -293,21 +261,10 @@ class ColumnInfo {
   ColumnInfo(this.columnName, this.tableName, this.type);
 }
 
-class ComputedColumnInfo {
-  final ColumnInfo _info;
-  final bool isNullable;
-
-  ComputedColumnInfo(this._info, {required this.isNullable});
-
-  String get name => _info.columnName;
-  String get tableName => _info.tableName;
-  DataType get type => _info.type;
-}
-
-List<ComputedColumnInfo> computedColumns(
+List<ColumnDefinition> computedColumns(
     DatabaseSchema schema, List<ColumnInfo> columns,
     {ProjectionDeclaration? projection}) {
-  var results = <ComputedColumnInfo>[];
+  var results = <ColumnDefinition>[];
 
   for (var column in columns) {
     var tableColumn = schema[column.tableName]?[column.columnName];
@@ -317,7 +274,8 @@ List<ComputedColumnInfo> computedColumns(
         projection?.defaultLine?.nullable ??
         true;
 
-    results.add(ComputedColumnInfo(column, isNullable: isNullable));
+    results.add(ColumnDefinition(column.columnName,
+        type: column.type, isNullable: isNullable));
   }
 
   return results;
