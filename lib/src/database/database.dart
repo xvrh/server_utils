@@ -73,7 +73,7 @@ extension DatabaseExtension on Database {
     return single(
       'insert into "$tableName" '
       '(${keys.map((j) => '"$j"').join(', ')}) '
-      'values (${keys.map((k) => '@$k').join(',')}) returning *',
+      'values (${keys.map((k) => ':$k').join(',')}) returning *',
       mapper: mapper,
       args: values,
     );
