@@ -62,17 +62,17 @@ Future<void> _afterRefresh(PostgreSQLConnection connection) async {
   var database = DatabaseIO(connection);
   var schema = await SchemaExtractor(database).schema();
   var enumExtractor = EnumExtractor(database, schema);
-  var code = DartGenerator();
-  var schemaFile = 'example_database_schema.dart';
-  File('example/$schemaFile').writeAsStringSync(await code.generateEntities(
-    schema.tables,
+  var code = DartGenerator(
+    tables: schema.withConfig({}),
     enums: [
       await enumExtractor.extractTable('app_role'),
     ],
-  ));
+  );
+  var schemaFile = 'example_database_schema.dart';
+  File('example/$schemaFile').writeAsStringSync(await code.generateEntities());
 
-  File('example/example_database_crud.dart').writeAsStringSync(
-      await code.generateCrudFile(schema.tables, imports: [schemaFile]));
+  File('example/example_database_crud.dart')
+      .writeAsStringSync(await code.generateCrudFile(imports: [schemaFile]));
 }
 
 class StdoutLog extends Log {

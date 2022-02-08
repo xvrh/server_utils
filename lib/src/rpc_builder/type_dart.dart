@@ -1,6 +1,6 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
-import 'package:analyzer/dart/element/type.dart';
+import 'package:analyzer/dart/element/type.dart' hide DynamicType;
 import '../utils/type.dart';
 import 'utils.dart';
 
@@ -32,6 +32,10 @@ ValueType typeFromDart(DartType type) {
     return StringType(isNullable: isNullable);
   } else if (isDateTime(type)) {
     return DateTimeType(isNullable: isNullable);
+  } else if (type.isDartCoreObject) {
+    return ObjectType(isNullable: isNullable);
+  } else if (type.isDynamic) {
+    return DynamicType();
   } else {
     var element = type.element;
     if (element is ClassElement) {

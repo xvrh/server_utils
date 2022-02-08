@@ -39,10 +39,10 @@ void main() async {
     print(belgium);
 
     var newPage =
-        await db.page.insert(body: {'fr': 'The body ${DateTime.now()}'});
+        await db.cmsPage.insert(body: {'fr': 'The body ${DateTime.now()}'});
     print('New page ${newPage.id}');
 
-    print((await db.page.find(newPage.id)).body);
+    print((await db.cmsPage.find(newPage.id)).body);
 
     print(await db.country.delete('ZZ'));
   });

@@ -1,4 +1,4 @@
-create table page
+create table cms_page
 (
     id            serial primary key,
     url           text        not null,
@@ -7,7 +7,7 @@ create table page
     price         numeric     not null default 0
 );
 
-insert into page (url, birth_date, price)
+insert into cms_page (url, birth_date, price)
 values ('the-url', '2019-03-30', 50.3);
 
 create table person

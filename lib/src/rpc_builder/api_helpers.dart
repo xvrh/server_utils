@@ -83,7 +83,7 @@ class _ParameterWrapper {
 
   T _ensureNotNull<T>(T? value) {
     if (value == null) {
-      throw InvalidInputException(
+      throw InvalidInputRpcException(
           "$parameterName with value $_rawValue can't be converted to type $T");
     }
     return value;

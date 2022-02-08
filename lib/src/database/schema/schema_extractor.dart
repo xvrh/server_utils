@@ -16,7 +16,9 @@ class SchemaExtractor {
     var tableNames = await database.tablesForSchema(schemaName: schemaName);
     var allColumns = await database.columnsForSchema(schemaName: schemaName);
     var primaryKeys =
-        await database.constraintsForSchema(schemaName: schemaName);
+        await database.primaryKeysForSchema(schemaName: schemaName);
+    var foreignKeys =
+        await database.foreignKeysForSchema(schemaName: schemaName);
     var domains = await database.domainsForSchema(schemaName: schemaName);
 
     var results = <TableDefinition>[];
@@ -27,6 +29,8 @@ class SchemaExtractor {
 
       for (var column in allColumns.where((c) => c.tableName == tableName)) {
         var isPrimaryKey = primaryKeys.any((c) =>
+            c.tableName == tableName && c.columnName == column.columnName);
+        var foreignKey = foreignKeys.firstWhereOrNull((c) =>
             c.tableName == tableName && c.columnName == column.columnName);
 
         var domain =
@@ -43,6 +47,7 @@ class SchemaExtractor {
           isPrimaryKey: isPrimaryKey,
           defaultValue: column.columnDefault ?? domain?.defaultValue,
           domain: domain?.name,
+          reference: foreignKey?.foreignTableName,
         );
         columnList.add(field);
       }

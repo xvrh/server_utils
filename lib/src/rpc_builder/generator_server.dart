@@ -33,7 +33,7 @@ class RpcRouterGenerator extends GeneratorForAnnotation<Api> {
     var factoryVariableName = '_\$${className}Handler';
 
     code.writeln('''
-final $infoVariableName = Api<$className>.info(path: '/$trimmedPath/', name: '$className', factory: $factoryVariableName);    
+const $infoVariableName = Api<$className>.info(path: '/$trimmedPath/', name: '$className', factory: $factoryVariableName);    
 
 Handler $factoryVariableName($className api) {
   var router = createRpcRouter($infoVariableName);

@@ -150,21 +150,21 @@ class NewsApi {
   List<MoveType?> echoEnum(MoveType type1, {MoveType? type2}) => [type1, type2];
 
   @Get()
-  Page<News> getPage() {
-    return Page<News>(3)..content = [News(2), News(3)];
+  CmsPage<News> getPage() {
+    return CmsPage<News>(3)..content = [News(2), News(3)];
   }
 
   @Get()
-  Map<String, Page<News>> getPagesMap() {
+  Map<String, CmsPage<News>> getPagesMap() {
     return {
-      'a': Page<News>(3)..content = [News(2), News(3)]
+      'a': CmsPage<News>(3)..content = [News(2), News(3)]
     };
   }
 
   @Get()
-  List<Page<News>> getPagesList() {
+  List<CmsPage<News>> getPagesList() {
     return [
-      Page<News>(3)..content = [News(2), News(3)]
+      CmsPage<News>(3)..content = [News(2), News(3)]
     ];
   }
 
@@ -173,11 +173,11 @@ class NewsApi {
 
   @Post()
   void throwANotFoundException() =>
-      throw NotFoundException.resource('A resource');
+      throw NotFoundRpcException.resource('A resource');
 
   @Post()
   void throwAInvalidInputException() =>
-      InvalidInputException.check(false, 'Invalid input');
+      InvalidInputRpcException.check(false, 'Invalid input');
 
   @Post()
   void throwOtherException({required int d1}) =>
@@ -214,20 +214,20 @@ class News {
 }
 
 @JsonSerializable()
-class Page<TContent> {
+class CmsPage<TContent> {
   final int size;
 
   @JsonKey(ignore: true)
   late List<TContent> content;
 
-  Page(this.size);
+  CmsPage(this.size);
 
-  factory Page.fromJson(Map<String, dynamic> json,
+  factory CmsPage.fromJson(Map<String, dynamic> json,
           {required TContent Function(dynamic) contentReviver}) =>
-      _$PageFromJson<TContent>(json)
+      _$CmsPageFromJson<TContent>(json)
         ..content = (json['content'] as List).map(contentReviver).toList();
 
-  Map<String, dynamic> toJson() => _$PageToJson(this)..['content'] = content;
+  Map<String, dynamic> toJson() => _$CmsPageToJson(this)..['content'] = content;
 }
 
 enum MoveType { inside, after, before }

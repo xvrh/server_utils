@@ -12,7 +12,7 @@ extension SelectQueries on Database {
       r'''
 select *
 from app_user
-where id = :id::int;
+where id = :id::int
 ''',
       arguments: {
         'id': id,
@@ -28,7 +28,7 @@ where id = :id::int;
       r'''
 select *
 from app_user
-where email = :email::text;
+where email = :email::text
 ''',
       arguments: {
         'email': email,
@@ -44,7 +44,7 @@ where email = :email::text;
       r'''
 select *
 from app_user
-where country_code = :country::text;
+where country_code = :country::text
 ''',
       arguments: {
         'country': country,
@@ -58,7 +58,7 @@ where country_code = :country::text;
         //language=sql
         r'''
 select first_name
-from app_user;
+from app_user
 ''', arguments: {}).list;
   }
 
@@ -68,7 +68,7 @@ from app_user;
       //language=sql
       r'''
 select *
-from app_user;
+from app_user
 ''',
       arguments: {},
       mapper: AppUser.fromRow,
@@ -85,7 +85,7 @@ update app_user
 set first_name = coalesce(:firstName, first_name),
     last_name  = coalesce(:lastName, last_name)
 where id = :userId::int
-returning *;
+returning *
 ''',
       arguments: {
         'userId': userId,
@@ -102,7 +102,7 @@ returning *;
         r'''
 delete
 from app_user
-where id = :userId::int;
+where id = :userId::int
 ''', arguments: {
       'userId': userId,
     }).affectedRows;
@@ -115,7 +115,7 @@ where id = :userId::int;
       r'''
 select user_id, notification_token, lower(manufacturer) as manufacturer, device_identifier
 from mobile_device
-where id = :deviceId;
+where id = :deviceId
 ''',
       arguments: {
         'deviceId': deviceId,
@@ -131,7 +131,7 @@ where id = :deviceId;
       r'''
 select *
 from mobile_device
-where notification_token_updated < :refDate::date;
+where notification_token_updated < :refDate::date
 ''',
       arguments: {
         'refDate': refDate,
@@ -146,7 +146,7 @@ where notification_token_updated < :refDate::date;
         r'''
 delete
 from mobile_device
-where notification_token_updated < :date;
+where notification_token_updated < :date
 ''', arguments: {
       'date': date,
     }).affectedRows;
@@ -166,12 +166,30 @@ class MobileDeviceToken {
     required this.deviceIdentifier,
   });
 
-  static MobileDeviceToken fromRow(Map<String, dynamic> row) {
+  factory MobileDeviceToken.fromRow(Map<String, dynamic> row) {
     return MobileDeviceToken(
       userId: row['user_id']! as int,
       notificationToken: row['notification_token'] as String?,
       manufacturer: row['manufacturer']! as String,
       deviceIdentifier: row['device_identifier']! as String,
     );
+  }
+
+  factory MobileDeviceToken.fromJson(Map<String, Object?> json) {
+    return MobileDeviceToken(
+      userId: (json['userId']! as num).toInt(),
+      notificationToken: json['notificationToken'] as String?,
+      manufacturer: json['manufacturer']! as String,
+      deviceIdentifier: json['deviceIdentifier']! as String,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'userId': userId,
+      'notificationToken': notificationToken,
+      'manufacturer': manufacturer,
+      'deviceIdentifier': deviceIdentifier,
+    };
   }
 }

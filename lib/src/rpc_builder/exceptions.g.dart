@@ -6,13 +6,11 @@ part of 'exceptions.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-RpcException _$RpcExceptionFromJson(Map<String, dynamic> json) {
-  return RpcException(
-    json['status'] as int,
-    json['message'] as String,
-    data: json['data'] as Map<String, dynamic>?,
-  );
-}
+RpcException _$RpcExceptionFromJson(Map<String, dynamic> json) => RpcException(
+      json['status'] as int,
+      json['message'] as String,
+      data: json['data'] as Map<String, dynamic>?,
+    );
 
 Map<String, dynamic> _$RpcExceptionToJson(RpcException instance) =>
     <String, dynamic>{
@@ -21,26 +19,26 @@ Map<String, dynamic> _$RpcExceptionToJson(RpcException instance) =>
       'data': instance.data,
     };
 
-NotFoundException _$NotFoundExceptionFromJson(Map<String, dynamic> json) {
-  return NotFoundException(
-    json['message'] as String,
-  );
-}
+NotFoundRpcException _$NotFoundRpcExceptionFromJson(
+        Map<String, dynamic> json) =>
+    NotFoundRpcException(
+      json['message'] as String,
+    );
 
-Map<String, dynamic> _$NotFoundExceptionToJson(NotFoundException instance) =>
+Map<String, dynamic> _$NotFoundRpcExceptionToJson(
+        NotFoundRpcException instance) =>
     <String, dynamic>{
       'message': instance.message,
     };
 
-InvalidInputException _$InvalidInputExceptionFromJson(
-    Map<String, dynamic> json) {
-  return InvalidInputException(
-    json['message'] as String,
-  );
-}
+InvalidInputRpcException _$InvalidInputRpcExceptionFromJson(
+        Map<String, dynamic> json) =>
+    InvalidInputRpcException(
+      json['message'] as String,
+    );
 
-Map<String, dynamic> _$InvalidInputExceptionToJson(
-        InvalidInputException instance) =>
+Map<String, dynamic> _$InvalidInputRpcExceptionToJson(
+        InvalidInputRpcException instance) =>
     <String, dynamic>{
       'message': instance.message,
     };

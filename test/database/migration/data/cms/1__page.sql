@@ -1,4 +1,4 @@
-create table page
+create table cms_page
 (
     id                        serial primary key,
     url                       text not null,
@@ -6,7 +6,7 @@ create table page
     description_/*#language*/ text
 );
 
-insert into page (url /*,title_en?*//*,title_fr*/)
+insert into cms_page (url /*,title_en?*//*,title_fr*/)
 values ('the-slug/3'/*,'English title' *//*'Le titre français'*/);
 
 insert into page (url,

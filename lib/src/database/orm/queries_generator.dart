@@ -78,7 +78,12 @@ class $className {
             '${errorHeader}The test values ($testValues) and sql parameters ($sqlParameters) has a mismatch');
       }
 
-      var queryResult = await evaluator.runQuery(query.query, query.header);
+      List<ColumnInfo> queryResult;
+      try {
+        queryResult = await evaluator.runQuery(query.query, query.header);
+      } catch (e) {
+        throw QueriesGeneratorException('[${query.header.method.name}]: $e');
+      }
 
       var projection = query.header.projection;
       var columns =
@@ -226,6 +231,9 @@ class PostgresQueryEvaluator implements QueryEvaluator {
           case 'int':
             defaultValue = 0;
             break;
+          case 'double':
+            defaultValue = 0.0;
+            break;
           case 'bool':
             defaultValue = false;
             break;
@@ -275,7 +283,9 @@ List<ColumnDefinition> computedColumns(
         true;
 
     results.add(ColumnDefinition(column.columnName,
-        type: column.type, isNullable: isNullable));
+        type: column.type,
+        isNullable: isNullable,
+        reference: tableColumn?.reference));
   }
 
   return results;

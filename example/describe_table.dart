@@ -23,9 +23,9 @@ Future runDatabase(Function(Database) callback) async {
 
 void main() async {
   await runDatabase((connection) async {
-    var columns = await connection.describeTable(tableName: 'page');
+    var columns = await connection.describeTables();
     print('Result $columns');
-    for (var col in columns) {
+    for (var col in columns.where((c) => c.tableName == 'cms_page')) {
       print(
           '${col.number} ${col.name} ${col.type} (${col.typeId}) null: ${col.notNull}');
     }

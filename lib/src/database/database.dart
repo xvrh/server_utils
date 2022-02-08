@@ -47,7 +47,7 @@ abstract class Database {
 
   Future<Page<T>> queryPage<T>(String sqlQuery,
       {Map<String, dynamic> args,
-      required PageRequest pageRequest,
+      required PageRequest<T> pageRequest,
       required Mapper<T> mapper});
 
   Future<int> execute(String fmtString, {Map<String, dynamic> args});

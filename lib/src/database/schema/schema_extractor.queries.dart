@@ -1,7 +1,7 @@
 // GENERATED-CODE: do not edit
 // Code is generated from schema_extractor.queries.sql
 
-import '../../../database.dart';
+import 'package:server_utils/database.dart';
 
 extension SchemaExtractorQueries on Database {
   Future<List<String>> tablesForSchema({String schemaName = 'public'}) {
@@ -10,7 +10,7 @@ extension SchemaExtractorQueries on Database {
         r'''
 select table_name::text
 from information_schema.tables
-where table_schema = :schemaName::text;
+where table_schema = :schemaName::text
 ''', arguments: {
       'schemaName': schemaName,
     }).list;
@@ -33,7 +33,7 @@ select table_name,
            end as is_nullable
 from information_schema.columns
 where table_schema = :schemaName::text
-order by ordinal_position;
+order by ordinal_position
 ''',
       arguments: {
         'schemaName': schemaName,
@@ -42,9 +42,9 @@ order by ordinal_position;
     ).list;
   }
 
-  Future<List<Constraint>> constraintsForSchema(
+  Future<List<PrimaryKey>> primaryKeysForSchema(
       {String schemaName = 'public'}) {
-    return Query<Constraint>(
+    return Query<PrimaryKey>(
       this,
       //language=sql
       r'''
@@ -67,22 +67,54 @@ where t.table_schema = :schemaName::text
 order by t.table_catalog,
          t.table_name,
          kcu.constraint_name,
-         kcu.ordinal_position;
+         kcu.ordinal_position
 ''',
       arguments: {
         'schemaName': schemaName,
       },
-      mapper: Constraint.fromRow,
+      mapper: PrimaryKey.fromRow,
     ).list;
   }
 
-  Future<List<ColumnDescription>> describeTable(
-      {String schemaName = 'public', required String tableName}) {
+  Future<List<ForeignKey>> foreignKeysForSchema(
+      {String schemaName = 'public'}) {
+    return Query<ForeignKey>(
+      this,
+      //language=sql
+      r'''
+SELECT
+    tc.table_schema,
+    tc.constraint_name,
+    tc.table_name,
+    kcu.column_name,
+    ccu.table_schema AS foreign_table_schema,
+    ccu.table_name AS foreign_table_name,
+    ccu.column_name AS foreign_column_name
+FROM
+    information_schema.table_constraints AS tc
+        JOIN information_schema.key_column_usage AS kcu
+             ON tc.constraint_name = kcu.constraint_name
+                 AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu
+             ON ccu.constraint_name = tc.constraint_name
+                 AND ccu.table_schema = tc.table_schema
+WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = :schemaName
+''',
+      arguments: {
+        'schemaName': schemaName,
+      },
+      mapper: ForeignKey.fromRow,
+    ).list;
+  }
+
+  Future<List<ColumnDescription>> describeTables(
+      {String schemaName = 'public'}) {
     return Query<ColumnDescription>(
       this,
       //language=sql
       r'''
-select f.attnum                                        as number,
+select c.relname::text                                 as table_name,
+       f.attnum                                        as number,
        f.attname                                       as name,
        f.attnum,
        f.attnotnull                                    as "not_null",
@@ -91,7 +123,7 @@ select f.attnum                                        as number,
        case
            when p.contype = 'p' then true
            else false
-           end                                         as primary_key,
+           end                                         as is_primary_key,
        case
            when p.contype = 'u' then true
            else false
@@ -114,13 +146,11 @@ from pg_attribute f
          left join pg_class as g on p.confrelid = g.oid
 where c.relkind = 'r'::char
   and n.nspname = :schemaName::text
-  and c.relname = :tableName::text
   and f.attnum > 0
-order by number;
+order by table_name, number
 ''',
       arguments: {
         'schemaName': schemaName,
-        'tableName': tableName,
       },
       mapper: ColumnDescription.fromRow,
     ).list;
@@ -128,7 +158,7 @@ order by number;
 
   Future<List<DomainDescription>> domainsForSchema(
       {String schemaName = 'public'}) {
-    return Query<DomainDescription>(
+    return Query(
       this,
       //language=sql
       r'''
@@ -165,7 +195,7 @@ class Column {
     required this.isNullable,
   });
 
-  static Column fromRow(Map<String, dynamic> row) {
+  factory Column.fromRow(Map<String, dynamic> row) {
     return Column(
       tableName: row['table_name']! as String,
       columnName: row['column_name']! as String,
@@ -176,72 +206,209 @@ class Column {
       isNullable: row['is_nullable']! as bool,
     );
   }
+
+  factory Column.fromJson(Map<String, Object?> json) {
+    return Column(
+      tableName: json['tableName']! as String,
+      columnName: json['columnName']! as String,
+      columnDefault: json['columnDefault'] as String?,
+      dataType: json['dataType']! as String,
+      characterMaximumLength: (json['characterMaximumLength'] as num?)?.toInt(),
+      domainName: json['domainName'] as String?,
+      isNullable: json['isNullable']! as bool,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'tableName': tableName,
+      'columnName': columnName,
+      'columnDefault': columnDefault,
+      'dataType': dataType,
+      'characterMaximumLength': characterMaximumLength,
+      'domainName': domainName,
+      'isNullable': isNullable,
+    };
+  }
 }
 
-class Constraint {
+class PrimaryKey {
   final String tableName;
   final String? constraintName;
   final String? columnName;
   final int? ordinalPosition;
 
-  Constraint({
+  PrimaryKey({
     required this.tableName,
     this.constraintName,
     this.columnName,
     this.ordinalPosition,
   });
 
-  static Constraint fromRow(Map<String, dynamic> row) {
-    return Constraint(
+  factory PrimaryKey.fromRow(Map<String, dynamic> row) {
+    return PrimaryKey(
       tableName: row['table_name']! as String,
       constraintName: row['constraint_name'] as String?,
       columnName: row['column_name'] as String?,
       ordinalPosition: row['ordinal_position'] as int?,
     );
   }
+
+  factory PrimaryKey.fromJson(Map<String, Object?> json) {
+    return PrimaryKey(
+      tableName: json['tableName']! as String,
+      constraintName: json['constraintName'] as String?,
+      columnName: json['columnName'] as String?,
+      ordinalPosition: (json['ordinalPosition'] as num?)?.toInt(),
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'tableName': tableName,
+      'constraintName': constraintName,
+      'columnName': columnName,
+      'ordinalPosition': ordinalPosition,
+    };
+  }
+}
+
+class ForeignKey {
+  final String tableSchema;
+  final String constraintName;
+  final String tableName;
+  final String columnName;
+  final String foreignTableSchema;
+  final String foreignTableName;
+  final String foreignColumnName;
+
+  ForeignKey({
+    required this.tableSchema,
+    required this.constraintName,
+    required this.tableName,
+    required this.columnName,
+    required this.foreignTableSchema,
+    required this.foreignTableName,
+    required this.foreignColumnName,
+  });
+
+  factory ForeignKey.fromRow(Map<String, dynamic> row) {
+    return ForeignKey(
+      tableSchema: row['table_schema']! as String,
+      constraintName: row['constraint_name']! as String,
+      tableName: row['table_name']! as String,
+      columnName: row['column_name']! as String,
+      foreignTableSchema: row['foreign_table_schema']! as String,
+      foreignTableName: row['foreign_table_name']! as String,
+      foreignColumnName: row['foreign_column_name']! as String,
+    );
+  }
+
+  factory ForeignKey.fromJson(Map<String, Object?> json) {
+    return ForeignKey(
+      tableSchema: json['tableSchema']! as String,
+      constraintName: json['constraintName']! as String,
+      tableName: json['tableName']! as String,
+      columnName: json['columnName']! as String,
+      foreignTableSchema: json['foreignTableSchema']! as String,
+      foreignTableName: json['foreignTableName']! as String,
+      foreignColumnName: json['foreignColumnName']! as String,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'tableSchema': tableSchema,
+      'constraintName': constraintName,
+      'tableName': tableName,
+      'columnName': columnName,
+      'foreignTableSchema': foreignTableSchema,
+      'foreignTableName': foreignTableName,
+      'foreignColumnName': foreignColumnName,
+    };
+  }
 }
 
 class ColumnDescription {
+  final String tableName;
   final int number;
   final String name;
   final int attnum;
   final bool notNull;
   final int typeId;
   final String type;
-  final bool primaryKey;
+  final bool isPrimaryKey;
   final bool uniqueKey;
   final String? foreignKey;
   final List<int>? foreignKeyFieldnum;
   final String? defaultInfo;
 
   ColumnDescription({
+    required this.tableName,
     required this.number,
     required this.name,
     required this.attnum,
     required this.notNull,
     required this.typeId,
     required this.type,
-    required this.primaryKey,
+    required this.isPrimaryKey,
     required this.uniqueKey,
     this.foreignKey,
     this.foreignKeyFieldnum,
     this.defaultInfo,
   });
 
-  static ColumnDescription fromRow(Map<String, dynamic> row) {
+  factory ColumnDescription.fromRow(Map<String, dynamic> row) {
     return ColumnDescription(
+      tableName: row['table_name']! as String,
       number: row['number']! as int,
       name: row['name']! as String,
       attnum: row['attnum']! as int,
       notNull: row['not_null']! as bool,
       typeId: row['type_id']! as int,
       type: row['type']! as String,
-      primaryKey: row['primary_key']! as bool,
+      isPrimaryKey: row['is_primary_key']! as bool,
       uniqueKey: row['unique_key']! as bool,
       foreignKey: row['foreign_key'] as String?,
       foreignKeyFieldnum: row['foreign_key_fieldnum'] as List<int>?,
       defaultInfo: row['default_info'] as String?,
     );
+  }
+
+  factory ColumnDescription.fromJson(Map<String, Object?> json) {
+    return ColumnDescription(
+      tableName: json['tableName']! as String,
+      number: (json['number']! as num).toInt(),
+      name: json['name']! as String,
+      attnum: (json['attnum']! as num).toInt(),
+      notNull: json['notNull']! as bool,
+      typeId: (json['typeId']! as num).toInt(),
+      type: json['type']! as String,
+      isPrimaryKey: json['isPrimaryKey']! as bool,
+      uniqueKey: json['uniqueKey']! as bool,
+      foreignKey: json['foreignKey'] as String?,
+      foreignKeyFieldnum: (json['foreignKeyFieldnum'] as List<Object?>?)
+          ?.map((i) => (i! as num).toInt())
+          .toList(),
+      defaultInfo: json['defaultInfo'] as String?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'tableName': tableName,
+      'number': number,
+      'name': name,
+      'attnum': attnum,
+      'notNull': notNull,
+      'typeId': typeId,
+      'type': type,
+      'isPrimaryKey': isPrimaryKey,
+      'uniqueKey': uniqueKey,
+      'foreignKey': foreignKey,
+      'foreignKeyFieldnum': foreignKeyFieldnum,
+      'defaultInfo': defaultInfo,
+    };
   }
 }
 
@@ -258,12 +425,30 @@ class DomainDescription {
     this.defaultValue,
   });
 
-  static DomainDescription fromRow(Map<String, dynamic> row) {
+  factory DomainDescription.fromRow(Map<String, dynamic> row) {
     return DomainDescription(
       oid: row['oid']! as int,
       name: row['name']! as String,
       notNull: row['not_null']! as bool,
       defaultValue: row['default_value'] as String?,
     );
+  }
+
+  factory DomainDescription.fromJson(Map<String, Object?> json) {
+    return DomainDescription(
+      oid: (json['oid']! as num).toInt(),
+      name: json['name']! as String,
+      notNull: json['notNull']! as bool,
+      defaultValue: json['defaultValue'] as String?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'oid': oid,
+      'name': name,
+      'notNull': notNull,
+      'defaultValue': defaultValue,
+    };
   }
 }

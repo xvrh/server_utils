@@ -309,4 +309,21 @@ void main() {
     var source = ObjectType(isNullable: true);
     expect(source.fromJsonCode(Value('v', ObjectType(isNullable: true))), 'v');
   });
+  test('Accessor simple identifier', () {
+    expect(Value('accessor', ObjectType()).isSimpleIdentifier, true);
+    expect(Value('_accessor', ObjectType()).isSimpleIdentifier, true);
+    expect(Value(r'_$accessor', ObjectType()).isSimpleIdentifier, true);
+    expect(Value(r'value["json"]', ObjectType()).isSimpleIdentifier, false);
+  });
+  test('ComplexType fromJson', () {
+    expect(
+        Value('accessor', ObjectType(isNullable: true))
+            .fromJsonCode(ComplexType('SomeObject', isNullable: true)),
+        'accessor != null ? SomeObject.fromJson(accessor as Map<String, Object?>) : null');
+
+    expect(
+        Value('accessor["json"]', ObjectType(isNullable: true))
+            .fromJsonCode(ComplexType('SomeObject', isNullable: true)),
+        'accessor["json"] != null ? SomeObject.fromJson(accessor["json"]! as Map<String, Object?>) : null');
+  });
 }

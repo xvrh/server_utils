@@ -161,7 +161,7 @@ DECLARE
   END
   ARRAY[[1,2],[3,4]];''';
     var result = SqlQuery.parse(query);
-    expect(result.body, query);
+    expect(result.body, query.substring(0, query.length - 1));
     expect(result.parameters[0].name, 'id');
     expect(result.parameters[0].type, isNull);
     expect(result.parameters[1].name, 'id2');
@@ -173,7 +173,14 @@ DECLARE
   test('Parse query without ;', () {
     var query = 'select * from table';
     var result = SqlQuery.parse(query);
-    expect(result.body, query);
+    expect(result.body, 'select * from table');
+    expect(result.parameters, isEmpty);
+  });
+
+  test('Parse query with ;', () {
+    var query = 'select * from table;/*bla */';
+    var result = SqlQuery.parse(query);
+    expect(result.body, 'select * from table');
     expect(result.parameters, isEmpty);
   });
 
@@ -189,6 +196,6 @@ select * from machin where id = :id;
     var file = result.value;
     var query = file.queries.first;
     expect(query.query.bodyWithDartSubstitutions,
-        'select * from machin where id = @id;');
+        'select * from machin where id = @id');
   });
 }

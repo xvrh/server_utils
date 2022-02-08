@@ -6,17 +6,16 @@ part of 'exception_wrapper.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-RpcExceptionWrapper _$RpcExceptionWrapperFromJson(Map<String, dynamic> json) {
-  return RpcExceptionWrapper(
-    url: json['url'] as String,
-    api: json['api'] as String,
-    method: json['method'] as String,
-    rpcExceptionType: json['rpcExceptionType'] as String?,
-    rpcExceptionJson: json['rpcExceptionJson'] as Map<String, dynamic>?,
-    message: json['message'] as String,
-    stackTrace: json['stackTrace'] as String,
-  );
-}
+RpcExceptionWrapper _$RpcExceptionWrapperFromJson(Map<String, dynamic> json) =>
+    RpcExceptionWrapper(
+      url: json['url'] as String,
+      api: json['api'] as String,
+      method: json['method'] as String,
+      rpcExceptionType: json['rpcExceptionType'] as String?,
+      rpcExceptionJson: json['rpcExceptionJson'] as Map<String, dynamic>?,
+      message: json['message'] as String,
+      stackTrace: json['stackTrace'] as String,
+    );
 
 Map<String, dynamic> _$RpcExceptionWrapperToJson(
         RpcExceptionWrapper instance) =>

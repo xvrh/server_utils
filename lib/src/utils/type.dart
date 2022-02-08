@@ -11,6 +11,10 @@ class Value {
 
   String fromJsonCode(ValueType newType) => newType.fromJsonCode(this);
 
+  static final _identifierRegExp =
+      RegExp(r'^[a-z_\$][a-z0-9_\$]*$', caseSensitive: false);
+  bool get isSimpleIdentifier => _identifierRegExp.hasMatch(accessor);
+
   Value get asNonNull => Value(accessor, type.copyWith(isNullable: false));
 }
 
@@ -71,6 +75,8 @@ abstract class ValueType {
         return StringType(isNullable: isNullable);
       case 'DateTime':
         return DateTimeType(isNullable: isNullable);
+      case 'List<int>':
+        return ListType(IntType(isNullable: false), isNullable: isNullable);
       default:
         throw UnimplementedError('$dartType is not yet recognized');
     }
@@ -259,7 +265,8 @@ class ComplexType extends ValueType {
       reviverCode = ', ${revivers.join(', ')},';
     }
     if (isNullable && value.type.isNullable) {
-      return '${value.accessor} != null ? $nameWithoutNullability.fromJson(${jsonMap.fromJsonCode(value.asNonNull)}$reviverCode) : null';
+      var insideValue = value.isSimpleIdentifier ? value.asNonNull : value;
+      return '${value.accessor} != null ? $nameWithoutNullability.fromJson(${jsonMap.fromJsonCode(insideValue)}$reviverCode) : null';
     }
 
     var accessor = jsonMap.fromJsonCode(value);

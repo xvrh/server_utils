@@ -9,7 +9,8 @@ class Api<T> {
       : name = '',
         factory = null;
 
-  Api.info({required this.path, required this.name, required this.factory});
+  const Api.info(
+      {required this.path, required this.name, required this.factory});
 
   Handler handler(T api) {
     return factory!(api);

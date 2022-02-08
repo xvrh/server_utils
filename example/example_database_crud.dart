@@ -4,7 +4,7 @@ import 'package:server_utils/database.dart';
 import 'example_database_schema.dart';
 
 extension DatabaseCrudExtension on Database {
-  PageCrud get page => PageCrud(this);
+  CmsPageCrud get cmsPage => CmsPageCrud(this);
 
   AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
 
@@ -19,25 +19,25 @@ extension DatabaseCrudExtension on Database {
   MobileDeviceCrud get mobileDevice => MobileDeviceCrud(this);
 }
 
-class PageCrud {
+class CmsPageCrud {
   final Database _database;
 
-  PageCrud(this._database);
+  CmsPageCrud(this._database);
 
-  Future<Page> find(int id) {
+  Future<CmsPage> find(int id) {
     return _database.single(
       //language=sql
-      'select * from page where id = :id::integer',
+      'select * from cms_page where id = :id::integer',
       //language=none
       args: {
         'id': id,
       },
-      mapper: Page.fromRow,
+      mapper: CmsPage.fromRow,
     );
   }
 
-  Future<Page> insert({
-    int? id /* nextval('page_id_seq'::regclass) */,
+  Future<CmsPage> insert({
+    int? id /* nextval('cms_page_id_seq'::regclass) */,
     String? code,
     Object? title /* '{}'::jsonb */,
     Object? title2 /* '{}'::jsonb */,
@@ -46,7 +46,7 @@ class PageCrud {
     String? pageType,
   }) {
     return _database.insert(
-      'page',
+      'cms_page',
       values: {
         if (id != null) 'id': id,
         if (code != null) 'code': code,
@@ -56,11 +56,11 @@ class PageCrud {
         if (body != null) 'body': body,
         if (pageType != null) 'page_type': pageType,
       },
-      mapper: Page.fromRow,
+      mapper: CmsPage.fromRow,
     );
   }
 
-  Future<Page> update(
+  Future<CmsPage> update(
     int id, {
     String? code,
     bool? clearCode,
@@ -73,7 +73,7 @@ class PageCrud {
     bool? clearPageType,
   }) {
     return _database.update(
-      'page',
+      'cms_page',
       where: {
         'id': id,
       },
@@ -90,18 +90,18 @@ class PageCrud {
         if (clearTitle3 ?? false) 'title3',
         if (clearPageType ?? false) 'page_type',
       ],
-      mapper: Page.fromRow,
+      mapper: CmsPage.fromRow,
     );
   }
 
-  Future<Page> updateEntity(Page entity) {
+  Future<CmsPage> updateEntity(CmsPage entity) {
     throw UnimplementedError();
   }
 
   Future<int> delete(int id) {
     return _database.execute(
       //language=sql
-      'delete from page where id = :id::integer',
+      'delete from cms_page where id = :id::integer',
       //language=none
       args: {
         'id': id,

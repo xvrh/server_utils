@@ -11,19 +11,23 @@ import 'dart:convert';
 import 'package:http/http.dart';
 import 'package:path/path.dart' as path_helper;
 import 'package:server_utils/rpc_client.dart';
-import 'api.dart' show News, MoveType, Page;
+import 'api.dart' show News, MoveType, CmsPage;
 
-class NewsApi {
+export 'api.dart' show News, MoveType, CmsPage;
+
+// ignore_for_file: implementation_imports
+
+class NewsClient {
   final Client _client;
   final String _basePath;
 
-  NewsApi(this._client, {required String basePath}) : _basePath = basePath;
+  NewsClient(this._client, {required String basePath}) : _basePath = basePath;
 
   void close() => _client.close();
 
   Future<String> simpleString() async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'simpleString'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'simple-string'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -43,8 +47,8 @@ class NewsApi {
 
   Future<String> greetingWithNamed(String name,
       {String? prefix, String? suffix}) async {
-    var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'greetingWithNamed'));
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'greeting-with-named'));
     $url = $url.replace(queryParameters: {
       'name': name,
       if (prefix != null) 'prefix': prefix,
@@ -58,7 +62,7 @@ class NewsApi {
 
   Future<String> greetingWithRequired({required int count}) async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'greetingWithRequired'));
+        path_helper.url.join(_basePath, 'news', 'greeting-with-required'));
     $url = $url.replace(queryParameters: {
       'count': count.toString(),
     });
@@ -81,7 +85,7 @@ class NewsApi {
       required String requiredString,
       DateTime? aDate,
       required DateTime requiredDate}) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'allTypes'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'all-types'));
     $url = $url.replace(queryParameters: {
       if (aInt != null) 'aInt': aInt.toString(),
       'requiredInt': requiredInt.toString(),
@@ -104,7 +108,7 @@ class NewsApi {
 
   Future<String> getList(
       List<int> ints, List<bool> bools, List<String> strings) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'getList'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'get-list'));
     $url = $url.replace(queryParameters: {
       'ints': jsonEncode(ints),
       'bools': jsonEncode(bools),
@@ -119,7 +123,7 @@ class NewsApi {
   Future<String> getListNullableValue(
       List<int?> ints, List<bool?> bools, List<String?> strings) async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'getListNullableValue'));
+        path_helper.url.join(_basePath, 'news', 'get-list-nullable-value'));
     $url = $url.replace(queryParameters: {
       'ints': jsonEncode(ints),
       'bools': jsonEncode(bools),
@@ -134,7 +138,7 @@ class NewsApi {
   Future<String> getListNullable(
       List<int?>? ints, List<bool?>? bools, List<String?>? strings) async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'getListNullable'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'get-list-nullable'));
     $url = $url.replace(queryParameters: {
       if (ints != null) 'ints': jsonEncode(ints),
       if (bools != null) 'bools': jsonEncode(bools),
@@ -148,7 +152,7 @@ class NewsApi {
 
   Future<String> getMap(Map<String, int> ints, Map<String, bool> bools,
       Map<String, String> strings) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'getMap'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'get-map'));
     $url = $url.replace(queryParameters: {
       'ints': jsonEncode(ints),
       'bools': jsonEncode(bools),
@@ -162,13 +166,14 @@ class NewsApi {
 
   Future<String> postList(
       List<int> ints, List<bool> bools, List<String> strings) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'postList'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'post-list'));
     var $response = await _client.post($url,
         body: jsonEncode({
           'ints': ints,
           'bools': bools,
           'strings': strings,
-        }));
+        }),
+        headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return $decodedResponse! as String;
@@ -176,20 +181,21 @@ class NewsApi {
 
   Future<String> postMap(Map<String, int> ints, Map<String, bool> bools,
       Map<String, String> strings) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'postMap'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'post-map'));
     var $response = await _client.post($url,
         body: jsonEncode({
           'ints': ints,
           'bools': bools,
           'strings': strings,
-        }));
+        }),
+        headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return $decodedResponse! as String;
   }
 
   Future<List<News>> lastNews({int? count}) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'lastNews'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'last-news'));
     $url = $url.replace(queryParameters: {
       if (count != null) 'count': count.toString(),
     });
@@ -206,7 +212,8 @@ class NewsApi {
     var $response = await _client.post($url,
         body: jsonEncode({
           'news': news.toJson(),
-        }));
+        }),
+        headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return News.fromJson($decodedResponse! as Map<String, Object?>);
@@ -214,11 +221,12 @@ class NewsApi {
 
   Future<List<News>> sendReceiveNewsPost(List<News> news) async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'sendReceiveNewsPost'));
+        path_helper.url.join(_basePath, 'news', 'send-receive-news-post'));
     var $response = await _client.post($url,
         body: jsonEncode({
           'news': news.map((i) => i.toJson()).toList(),
-        }));
+        }),
+        headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return ($decodedResponse! as List<Object?>)
@@ -228,7 +236,7 @@ class NewsApi {
 
   Future<List<News>> sendReceiveNewsGet(List<News> news) async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'sendReceiveNewsGet'));
+        path_helper.url.join(_basePath, 'news', 'send-receive-news-get'));
     $url = $url.replace(queryParameters: {
       'news': jsonEncode(news.map((i) => i.toJson()).toList()),
     });
@@ -243,11 +251,12 @@ class NewsApi {
   Future<Map<String, News>> sendReceiveMapNewsPost(
       Map<String, News> news) async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'sendReceiveMapNewsPost'));
+        path_helper.url.join(_basePath, 'news', 'send-receive-map-news-post'));
     var $response = await _client.post($url,
         body: jsonEncode({
           'news': news.map((k, v) => MapEntry(k, v.toJson())),
-        }));
+        }),
+        headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return ($decodedResponse! as Map<String, Object?>)
@@ -257,7 +266,7 @@ class NewsApi {
   Future<Map<String, News>> sendReceiveMapNewsGet(
       Map<String, News> news) async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'sendReceiveMapNewsGet'));
+        path_helper.url.join(_basePath, 'news', 'send-receive-map-news-get'));
     $url = $url.replace(queryParameters: {
       'news': jsonEncode(news.map((k, v) => MapEntry(k, v.toJson()))),
     });
@@ -270,7 +279,7 @@ class NewsApi {
 
   Future<List<String>> getListString() async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'getListString'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'get-list-string'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -280,8 +289,8 @@ class NewsApi {
   }
 
   Future<List<String>> getListStringPost() async {
-    var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'getListStringPost'));
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'get-list-string-post'));
     var $response = await _client.post($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -292,7 +301,7 @@ class NewsApi {
 
   Future<List<bool>> getListBool() async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'getListBool'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'get-list-bool'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -300,8 +309,8 @@ class NewsApi {
   }
 
   Future<List<bool>> getListBoolPost() async {
-    var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'getListBoolPost'));
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'get-list-bool-post'));
     var $response = await _client.post($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -309,16 +318,18 @@ class NewsApi {
   }
 
   Future<void> aVoid(int id) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'aVoid'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'a-void'));
     var $response = await _client.post($url,
         body: jsonEncode({
           'id': id,
-        }));
+        }),
+        headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
   }
 
   Future<bool> returnBool() async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'returnBool'));
+    var $url =
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'return-bool'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -326,7 +337,7 @@ class NewsApi {
   }
 
   Future<num> returnNum() async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'returnNum'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'return-num'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -335,7 +346,7 @@ class NewsApi {
 
   Future<double> returnDouble() async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'returnDouble'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'return-double'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -343,7 +354,7 @@ class NewsApi {
   }
 
   Future<int> returnInt() async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'returnInt'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'return-int'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -352,7 +363,7 @@ class NewsApi {
 
   Future<DateTime> returnDateTime() async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'returnDateTime'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'return-date-time'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -361,7 +372,7 @@ class NewsApi {
 
   Future<List<DateTime>> returnListDateTime() async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'returnListDateTime'));
+        path_helper.url.join(_basePath, 'news', 'return-list-date-time'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -371,8 +382,8 @@ class NewsApi {
   }
 
   Future<List<DateTime>> returnFutureListDateTime() async {
-    var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'returnFutureListDateTime'));
+    var $url = Uri.parse(path_helper.url
+        .join(_basePath, 'news', 'return-future-list-date-time'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
@@ -382,7 +393,7 @@ class NewsApi {
   }
 
   Future<List<MoveType?>> echoEnum(MoveType type1, {MoveType? type2}) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'echoEnum'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'echo-enum'));
     $url = $url.replace(queryParameters: {
       'type1': type1.toString(),
       if (type2 != null) 'type2': type2.toString(),
@@ -395,39 +406,39 @@ class NewsApi {
         .toList();
   }
 
-  Future<Page<News>> getPage() async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'getPage'));
+  Future<CmsPage<News>> getPage() async {
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'get-page'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
-    return Page<News>.fromJson(
+    return CmsPage<News>.fromJson(
       $decodedResponse! as Map<String, Object?>,
       contentReviver: (d) => News.fromJson(d! as Map<String, Object?>),
     );
   }
 
-  Future<Map<String, Page<News>>> getPagesMap() async {
+  Future<Map<String, CmsPage<News>>> getPagesMap() async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'getPagesMap'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'get-pages-map'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return ($decodedResponse! as Map<String, Object?>).map((k, v) => MapEntry(
         k,
-        Page<News>.fromJson(
+        CmsPage<News>.fromJson(
           v! as Map<String, Object?>,
           contentReviver: (d) => News.fromJson(d! as Map<String, Object?>),
         )));
   }
 
-  Future<List<Page<News>>> getPagesList() async {
+  Future<List<CmsPage<News>>> getPagesList() async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'getPagesList'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'get-pages-list'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return ($decodedResponse! as List<Object?>)
-        .map((i) => Page<News>.fromJson(
+        .map((i) => CmsPage<News>.fromJson(
               i! as Map<String, Object?>,
               contentReviver: (d) => News.fromJson(d! as Map<String, Object?>),
             ))
@@ -435,38 +446,39 @@ class NewsApi {
   }
 
   Future<void> throwAnException() async {
-    var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'throwAnException'));
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'throw-an-exception'));
     var $response = await _client.get($url);
     checkResponseSuccess($url, $response);
   }
 
   Future<void> throwANotFoundException() async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'throwANotFoundException'));
+        path_helper.url.join(_basePath, 'news', 'throwa-not-found-exception'));
     var $response = await _client.post($url);
     checkResponseSuccess($url, $response);
   }
 
   Future<void> throwAInvalidInputException() async {
-    var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'throwAInvalidInputException'));
+    var $url = Uri.parse(path_helper.url
+        .join(_basePath, 'news', 'throwa-invalid-input-exception'));
     var $response = await _client.post($url);
     checkResponseSuccess($url, $response);
   }
 
   Future<void> throwOtherException({required int d1}) async {
     var $url = Uri.parse(
-        path_helper.url.join(_basePath, 'news', 'throwOtherException'));
+        path_helper.url.join(_basePath, 'news', 'throw-other-exception'));
     var $response = await _client.post($url,
         body: jsonEncode({
           'd1': d1,
-        }));
+        }),
+        headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
   }
 
   Future<List<int?>> echoList(List<int?> list) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'echoList'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'echo-list'));
     $url = $url.replace(queryParameters: {
       'list': jsonEncode(list),
     });
@@ -479,7 +491,7 @@ class NewsApi {
   }
 
   Future<Map<String?, int?>> echoMap(Map<String?, int?> map) async {
-    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'echoMap'));
+    var $url = Uri.parse(path_helper.url.join(_basePath, 'news', 'echo-map'));
     $url = $url.replace(queryParameters: {
       'map': jsonEncode(map),
     });
@@ -491,8 +503,8 @@ class NewsApi {
   }
 
   Future<List<int?>?> echoListNullable(List<int?>? list) async {
-    var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'echoListNullable'));
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'echo-list-nullable'));
     $url = $url.replace(queryParameters: {
       if (list != null) 'list': jsonEncode(list),
     });
@@ -506,7 +518,7 @@ class NewsApi {
 
   Future<Map<String?, int?>?> echoMapNullable(Map<String?, int?>? map) async {
     var $url =
-        Uri.parse(path_helper.url.join(_basePath, 'news', 'echoMapNullable'));
+        Uri.parse(path_helper.url.join(_basePath, 'news', 'echo-map-nullable'));
     $url = $url.replace(queryParameters: {
       if (map != null) 'map': jsonEncode(map),
     });

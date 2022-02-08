@@ -30,6 +30,7 @@ class ColumnDefinition {
   final String? domain;
   final bool isNullable, isPrimaryKey;
   final String? defaultValue;
+  final String? reference;
 
   const ColumnDefinition(
     this.name, {
@@ -38,6 +39,7 @@ class ColumnDefinition {
     bool? isPrimaryKey,
     this.defaultValue,
     this.domain,
+    this.reference,
   })  : isNullable = isNullable ?? true,
         isPrimaryKey = isPrimaryKey ?? false;
 

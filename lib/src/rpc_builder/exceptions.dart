@@ -32,10 +32,10 @@ class RpcException implements Exception {
   String toString() => '$status: $message';
 
   static final knownExceptions = <KnownException>{
-    KnownException<NotFoundException>('NotFoundException',
-        fromJson: NotFoundException.fromJson),
-    KnownException<InvalidInputException>('InvalidInputException',
-        fromJson: InvalidInputException.fromJson),
+    KnownException<NotFoundRpcException>('NotFoundRpcException',
+        fromJson: NotFoundRpcException.fromJson),
+    KnownException<InvalidInputRpcException>('InvalidInputRpcException',
+        fromJson: InvalidInputRpcException.fromJson),
   };
 
   static RpcException deserialize(String? typeName, Map<String, Object?> json) {
@@ -54,41 +54,41 @@ class RpcException implements Exception {
 
 /// Thrown when resource does not exist.
 @JsonSerializable()
-class NotFoundException extends RpcException {
-  NotFoundException(String message) : super(404, message);
-  NotFoundException.resource(String resource)
+class NotFoundRpcException extends RpcException {
+  NotFoundRpcException(String message) : super(404, message);
+  NotFoundRpcException.resource(String resource)
       : super(404, 'Could not find `$resource`.');
 
-  static NotFoundException fromJson(Map<String, dynamic> json) =>
-      _$NotFoundExceptionFromJson(json);
+  static NotFoundRpcException fromJson(Map<String, dynamic> json) =>
+      _$NotFoundRpcExceptionFromJson(json);
 
   @override
-  Map<String, dynamic> toJson() => _$NotFoundExceptionToJson(this);
+  Map<String, dynamic> toJson() => _$NotFoundRpcExceptionToJson(this);
 }
 
 /// Thrown when request input is invalid, bad payload, wrong querystring, etc.
 @JsonSerializable()
-class InvalidInputException extends RpcException {
-  InvalidInputException(String message) : super(400, message);
+class InvalidInputRpcException extends RpcException {
+  InvalidInputRpcException(String message) : super(400, message);
 
-  static InvalidInputException fromJson(Map<String, dynamic> json) =>
-      _$InvalidInputExceptionFromJson(json);
+  static InvalidInputRpcException fromJson(Map<String, dynamic> json) =>
+      _$InvalidInputRpcExceptionFromJson(json);
 
   @override
-  Map<String, dynamic> toJson() => _$InvalidInputExceptionToJson(this);
+  Map<String, dynamic> toJson() => _$InvalidInputRpcExceptionToJson(this);
 
   /// Check [condition] and throw [InvalidInputException] with [message] if
   /// [condition] is `false`.
   static void check(bool condition, String message) {
     if (!condition) {
-      throw InvalidInputException(message);
+      throw InvalidInputRpcException(message);
     }
   }
 
   /// A variant of [check] with lazy message construction.
   static void _check(bool condition, String Function() message) {
     if (!condition) {
-      throw InvalidInputException(message());
+      throw InvalidInputRpcException(message());
     }
   }
 

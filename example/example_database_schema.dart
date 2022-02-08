@@ -1,5 +1,5 @@
 // GENERATED-FILE
-class Page {
+class CmsPage {
   final int id;
   final String? code;
   final Object title;
@@ -8,7 +8,7 @@ class Page {
   final Object body;
   final String? pageType;
 
-  Page({
+  CmsPage({
     required this.id,
     this.code,
     required this.title,
@@ -18,8 +18,8 @@ class Page {
     this.pageType,
   });
 
-  factory Page.fromRow(Map<String, dynamic> row) {
-    return Page(
+  factory CmsPage.fromRow(Map<String, dynamic> row) {
+    return CmsPage(
       id: row['id']! as int,
       code: row['code'] as String?,
       title: row['title']! as Object,
@@ -30,8 +30,8 @@ class Page {
     );
   }
 
-  factory Page.fromJson(Map<String, Object?> json) {
-    return Page(
+  factory CmsPage.fromJson(Map<String, Object?> json) {
+    return CmsPage(
       id: (json['id']! as num).toInt(),
       code: json['code'] as String?,
       title: json['title']!,
@@ -179,12 +179,12 @@ class Timezone {
 }
 
 class AppRole {
-  static final admin =
-      AppRole(code: 'ADMIN', index: 100, name: 'Admin', description: '');
-  static final user =
-      AppRole(code: 'USER', index: 0, name: 'User', description: '');
+  static const admin =
+      AppRole._(code: 'ADMIN', index: 100, name: 'Admin', description: '');
+  static const user =
+      AppRole._(code: 'USER', index: 0, name: 'User', description: '');
 
-  static final all = [
+  static const values = [
     admin,
     user,
   ];
@@ -194,44 +194,47 @@ class AppRole {
   final String name;
   final String description;
 
-  AppRole({
+  const AppRole._({
     required this.code,
     required this.index,
     required this.name,
     required this.description,
   });
 
-  factory AppRole.fromRow(Map<String, dynamic> row) {
-    return AppRole(
-      code: row['code']! as String,
-      index: row['index']! as int,
-      name: row['name']! as String,
-      description: row['description']! as String,
-    );
-  }
+  factory AppRole(String code) => values.firstWhere((e) => e.code == code);
 
-  factory AppRole.fromJson(Map<String, Object?> json) {
-    return AppRole(
-      code: json['code']! as String,
-      index: (json['index']! as num).toInt(),
-      name: json['name']! as String,
-      description: json['description']! as String,
-    );
-  }
+  static AppRole fromRow(Map<String, dynamic> row) =>
+      values.firstWhere((e) => e.code == row['code']! as String,
+          orElse: () => AppRole._(
+              code: row['code']! as String,
+              index: row['index']! as int,
+              name: row['name']! as String,
+              description: row['description']! as String));
 
-  Map<String, Object?> toJson() {
-    return {
-      'code': code,
-      'index': index,
-      'name': name,
-      'description': description,
-    };
-  }
+  static AppRole fromJson(Map<String, Object?> json) =>
+      values.firstWhere((e) => e.code == json['code']! as String,
+          orElse: () => AppRole._(
+              code: json['code']! as String,
+              index: (json['index']! as num).toInt(),
+              name: json['name']! as String,
+              description: json['description']! as String));
+
+  Map<String, Object?> toJson() => {
+        'code': code,
+        'index': index,
+        'name': name,
+        'description': description,
+      };
+
+  bool get isUnknown => values.every((v) => v.code != code);
+
+  @override
+  String toString() => code;
 }
 
 class AppUser {
   final int id;
-  final String role;
+  final AppRole role;
   final String email;
   final DateTime created;
   final DateTime? lastSeen;
@@ -259,7 +262,7 @@ class AppUser {
   factory AppUser.fromRow(Map<String, dynamic> row) {
     return AppUser(
       id: row['id']! as int,
-      role: row['role']! as String,
+      role: AppRole(row['role']! as String),
       email: row['email']! as String,
       created: row['created']! as DateTime,
       lastSeen: row['last_seen'] as DateTime?,
@@ -275,7 +278,7 @@ class AppUser {
   factory AppUser.fromJson(Map<String, Object?> json) {
     return AppUser(
       id: (json['id']! as num).toInt(),
-      role: json['role']! as String,
+      role: AppRole.fromJson(json['role']! as Map<String, Object?>),
       email: json['email']! as String,
       created: DateTime.parse(json['created']! as String),
       lastSeen: DateTime.tryParse(json['lastSeen'] as String? ?? ''),
@@ -291,7 +294,7 @@ class AppUser {
   Map<String, Object?> toJson() {
     return {
       'id': id,
-      'role': role,
+      'role': role.toJson(),
       'email': email,
       'created': created.toIso8601String(),
       'lastSeen': lastSeen?.toIso8601String(),

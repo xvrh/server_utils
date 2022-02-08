@@ -106,12 +106,16 @@ class DatabaseIO implements Database {
   @override
   Future<Page<T>> queryPage<T>(String sqlQuery,
       {Map<String, dynamic>? args,
-      required PageRequest pageRequest,
+      required PageRequest<T> pageRequest,
       required Mapper<T> mapper}) async {
     var pageSize = pageRequest.pageSize;
+    if (pageRequest.sort.name.contains('"')) {
+      throw Exception('Invalid pageRequest.sort ${pageRequest.sort}');
+    }
+    var parsedQuery = SqlQuery.parse(sqlQuery);
     var pagedQuery = '''
-      select * from ($sqlQuery) as p
-      order by ${pageRequest.sort.field} ${sortDirectionToString(pageRequest.sort.direction)} 
+      select * from (${parsedQuery.body}) as p
+      order by "${pageRequest.sort.name}" ${pageRequest.sortAscending ? 'asc' : 'desc'} 
       limit $pageSize offset ${pageRequest.offset}''';
     var results = await query(pagedQuery, args: args, mapper: mapper);
 
@@ -123,8 +127,8 @@ class DatabaseIO implements Database {
       totalLength = pageRequest.offset + results.length;
     }
 
-    return Page(pageRequest: pageRequest, totalLength: totalLength)
-      ..entities.addAll(results);
+    return Page(
+        pageRequest: pageRequest, totalLength: totalLength, entities: results);
   }
 
   Future<PostgreSQLResult> _query(String fmtString,
@@ -139,7 +143,9 @@ class DatabaseIO implements Database {
   @override
   Future<int> execute(String fmtString, {Map<String, dynamic>? args}) async {
     var query = SqlQuery.parse(fmtString);
-    assert((args?.length ?? 0) == query.parameters.length);
+    var uniqueParameters = query.parameters.map((p) => p.name).toSet();
+    assert((args?.length ?? 0) == uniqueParameters.length,
+        '$args vs [$uniqueParameters]');
     var result = await _connection.execute(_queryString(query),
         substitutionValues: args);
     return result;

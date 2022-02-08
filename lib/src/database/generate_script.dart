@@ -23,12 +23,15 @@ Future<void> runDatabaseBuilder(
   required List<String> queries,
   required Future<void> Function(PostgreSQLConnection) afterCreate,
   Future<void> Function(PostgreSQLConnection)? afterRefresh,
+  bool forceTerminal = true,
 }) async {
-  if (!stdin.hasTerminal) {
-    print('Run this script using the standard shell instead of IntelliJ. '
-        'ie: dart ${p.relative(Platform.script.toFilePath())}');
+  if (forceTerminal) {
+    if (!stdin.hasTerminal) {
+      print('Run this script using the standard shell instead of IntelliJ. '
+          'ie: dart ${p.relative(Platform.script.toFilePath())}');
+    }
+    stdin.lineMode = false;
   }
-  stdin.lineMode = false;
   print('''
 Available options:
   $_refreshAllQueriesCommand: refresh all query files

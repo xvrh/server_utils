@@ -1,3 +1,3 @@
 
-insert into page (code)
+insert into cms_page (code)
 values ('Contact');

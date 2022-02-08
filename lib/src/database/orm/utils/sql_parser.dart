@@ -13,10 +13,13 @@ class SqlGrammarDefinition extends GrammarDefinition {
   @override
   Parser<SqlQuery> start() => ref0(query).end().cast<SqlQuery>();
 
-  Parser query() =>
-      (ref0(innerQuery).star() & ref1(token, ';').optional()).token().map((l) {
-        return SqlQuery(l.input.trimRight(),
-            (l.value[0] as List).whereType<SqlParameter>().toList(),
+  Parser query() => (ref0(queryBody) & ref1(token, ';').optional()).map((l) {
+        return l[0];
+      });
+
+  Parser queryBody() => (ref0(innerQuery).star()).token().map((l) {
+        return SqlQuery(
+            l.input.trimRight(), l.value.whereType<SqlParameter>().toList(),
             position: l.start);
       });
 

@@ -1,27 +1,35 @@
 import 'dart:collection';
 import 'dart:math';
-import 'package:json_annotation/json_annotation.dart';
 
-part 'page.g.dart';
-
-@JsonSerializable()
 class Page<TEntities>
     with IterableMixin<TEntities>
     implements Iterable<TEntities> {
-  @JsonKey(ignore: true)
-  final List<TEntities> entities = [];
-
+  final List<TEntities> entities;
   final int totalLength;
-  final PageRequest pageRequest;
+  final PageRequest<TEntities> pageRequest;
 
-  Page({required this.totalLength, required this.pageRequest});
+  Page({
+    required this.totalLength,
+    required this.pageRequest,
+    required this.entities,
+  });
 
   factory Page.fromJson(Map<String, dynamic> json,
           {required TEntities Function(dynamic) entitiesReviver}) =>
-      _$PageFromJson<TEntities>(json)
-        ..entities.addAll((json['entities'] as List).map(entitiesReviver));
+      Page<TEntities>(
+        totalLength: json['totalLength'] as int,
+        pageRequest: PageRequest<TEntities>.fromJson(
+          json['pageRequest'] as Map<String, dynamic>,
+          tableReviver: entitiesReviver,
+        ),
+        entities: (json['entities'] as List).map(entitiesReviver).toList(),
+      );
 
-  Map<String, dynamic> toJson() => _$PageToJson(this)..['entities'] = entities;
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'totalLength': totalLength,
+        'pageRequest': pageRequest.toJson(),
+        'entities': entities,
+      };
 
   @override
   int get length => entities.length;
@@ -30,26 +38,25 @@ class Page<TEntities>
 
   int get pageCount => (totalLength / pageRequest.pageSize).ceil();
 
+  int get index => pageRequest.pageIndex;
+
   int get offset => pageRequest.offset;
 
   bool get hasNextPage =>
       pageRequest.offset + pageRequest.pageSize < totalLength;
 
-  bool get hasPreviousPage => pageRequest.pageIndex > 0;
+  bool get hasPreviousPage => index > 0;
 
-  PageRequest get nextPageRequest =>
+  PageRequest<TEntities> get nextPage =>
       hasNextPage ? pageRequest.next : pageRequest;
 
-  PageRequest get previousPageRequest =>
+  PageRequest<TEntities> get previousPage =>
       hasPreviousPage ? pageRequest.previous : pageRequest;
 
-  PageRequest get firstPageRequest => PageRequest(
-      pageIndex: 0, pageSize: pageRequest.pageSize, sort: pageRequest.sort);
+  PageRequest<TEntities> get firstPage => pageRequest.first;
 
-  PageRequest get lastPageRequest => PageRequest(
-      pageIndex: pageCount - 1,
-      pageSize: pageRequest.pageSize,
-      sort: pageRequest.sort);
+  PageRequest<TEntities> get lastPage =>
+      pageRequest.copyWith(pageIndex: pageCount - 1);
 
   @override
   String toString() => 'Page(totalLength: $totalLength, '
@@ -60,71 +67,107 @@ class Page<TEntities>
   Iterator<TEntities> get iterator => entities.iterator;
 }
 
-@JsonSerializable()
-class PageRequest {
-  final int pageSize;
+class PageRequest<TTable> {
   final int pageIndex;
-  final Sort sort;
+  final int pageSize;
+  final Column<TTable> sort;
+  final bool sortAscending;
 
-  PageRequest({int? pageIndex, int? pageSize, required this.sort})
+  PageRequest(
+      {int? pageIndex, int? pageSize, required this.sort, bool? sortAscending})
       : pageIndex = pageIndex ?? 0,
-        pageSize = pageSize ?? 10 {
+        pageSize = pageSize ?? 10,
+        sortAscending = sortAscending ?? true {
     assert(this.pageIndex >= 0);
   }
 
-  factory PageRequest.fromJson(Map<String, dynamic> json) =>
-      _$PageRequestFromJson(json);
+  factory PageRequest.fromJson(Map<String, dynamic> json,
+      {required TTable Function(Map?) tableReviver}) {
+    return PageRequest<TTable>(
+      pageIndex: json['pageIndex'] as int?,
+      pageSize: json['pageSize'] as int?,
+      sort: Column<TTable>(json['sort']! as String),
+      sortAscending: json['sortAscending'] as bool?,
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$PageRequestToJson(this);
+  Map<String, dynamic> toJson() => {
+        'pageIndex': pageIndex,
+        'pageSize': pageSize,
+        'sort': sort.name,
+        'sortAscending': sortAscending,
+      };
 
   int get offset => pageIndex * pageSize;
 
-  PageRequest get next => PageRequest(pageIndex: pageIndex + 1, sort: sort);
+  PageRequest<TTable> get next => copyWith(pageIndex: pageIndex + 1);
 
-  PageRequest get previous =>
-      PageRequest(pageIndex: max(pageIndex - 1, 0), sort: sort);
+  PageRequest<TTable> get previous =>
+      copyWith(pageIndex: max(pageIndex - 1, 0));
+
+  PageRequest<TTable> get first => copyWith(
+      pageIndex: 0,
+      pageSize: pageSize,
+      sort: sort,
+      sortAscending: sortAscending);
+
+  PageRequest<TTable> copyWith(
+      {int? pageIndex,
+      int? pageSize,
+      Column<TTable>? sort,
+      bool? sortAscending}) {
+    return PageRequest(
+      pageIndex: pageIndex ?? this.pageIndex,
+      pageSize: pageSize ?? this.pageSize,
+      sort: sort ?? this.sort,
+      sortAscending: sortAscending ?? this.sortAscending,
+    );
+  }
 
   @override
   bool operator ==(other) =>
       other is PageRequest &&
-      other.pageSize == pageSize &&
       other.pageIndex == pageIndex &&
-      other.sort == sort;
+      other.pageSize == pageSize &&
+      other.sort.name == sort.name &&
+      other.sortAscending == sortAscending;
 
   @override
-  int get hashCode => pageIndex ^ pageSize ^ sort.hashCode;
+  int get hashCode =>
+      Object.hash(pageIndex, pageSize, sort.name, sortAscending);
 
   @override
   String toString() =>
       'PageRequest(pageIndex: $pageIndex, pageSize: $pageSize, sort: $sort)';
 }
 
-@JsonSerializable()
-class Sort {
-  final String field;
-  final SortDirection direction;
-
-  Sort(this.field, {SortDirection? direction})
-      : direction = direction ?? SortDirection.asc;
-
-  factory Sort.desc(String field) => Sort(field, direction: SortDirection.desc);
-
-  factory Sort.fromJson(Map<String, dynamic> json) => _$SortFromJson(json);
-
-  Map<String, dynamic> toJson() => _$SortToJson(this);
-
-  @override
-  bool operator ==(other) =>
-      other is Sort && other.field == field && other.direction == direction;
-
-  @override
-  int get hashCode => field.hashCode ^ direction.hashCode;
-
-  @override
-  String toString() => '$field ${sortDirectionToString(direction)}';
+extension PageRequestExtension<T> on PageRequest<T>? {
+  PageRequest<T> withDefaults(
+      {required int pageSize,
+      int? maxPageSize,
+      required Column<T> sort,
+      bool? sortAscending}) {
+    maxPageSize ??= 1000;
+    return PageRequest(
+      pageSize: this?.pageSize.clamp(1, maxPageSize) ?? pageSize,
+      pageIndex: this?.pageIndex,
+      sort: this?.sort ?? sort,
+      sortAscending: this?.sortAscending ?? sortAscending,
+    );
+  }
 }
 
-enum SortDirection { asc, desc }
+class Column<TEntity> {
+  final String name;
 
-String sortDirectionToString(SortDirection direction) =>
-    direction == SortDirection.asc ? 'asc' : 'desc';
+  Column(this.name);
+
+  @override
+  bool operator ==(other) => other is Column<TEntity> && other.name == name;
+
+  @override
+  int get hashCode => name.hashCode;
+
+  @override
+  String toString() => 'Column<$TEntity>($name)';
+}

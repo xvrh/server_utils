@@ -9,5 +9,5 @@ values ('info@xaha.dev', 'BE', 'ADMIN', 'M. X');
 insert into app_user (email, country_code, role)
 values ('info@email.dev', 'FR', 'USER');
 
-insert into page (code)
+insert into cms_page (code)
 values ('Home');

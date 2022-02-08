@@ -9,7 +9,7 @@ import 'api.g.client.dart' as client_lib;
 
 void main() {
   late HttpServer server;
-  late client_lib.NewsApi client;
+  late client_lib.NewsClient client;
 
   setUpAll(() async {
     var router = Router();
@@ -22,7 +22,7 @@ void main() {
   });
 
   setUp(() {
-    client = client_lib.NewsApi(Client(),
+    client = client_lib.NewsClient(Client(),
         basePath: '${'http'}://${server.address.host}:${server.port}');
   });
 
@@ -190,10 +190,10 @@ void main() {
     expect(
         () => client.throwANotFoundException(),
         throwsA(predicate((e) =>
-            e is NotFoundException && e.message.contains('A resource'))));
+            e is NotFoundRpcException && e.message.contains('A resource'))));
 
     expect(() => client.throwAInvalidInputException(),
-        throwsA(predicate((e) => e is InvalidInputException)));
+        throwsA(predicate((e) => e is InvalidInputRpcException)));
 
     expect(() => client.throwOtherException(d1: 8),
         throwsA(predicate((e) => e is RpcException && e.data['d1'] == 8)));

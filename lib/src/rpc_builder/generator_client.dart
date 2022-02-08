@@ -2,16 +2,14 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
-import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as p;
 import 'package:source_gen/source_gen.dart';
+import '../utils/code_style.dart';
 import '../utils/string.dart';
 import '../utils/type.dart';
 import 'annotations.dart';
 import 'type_dart.dart';
 import 'utils.dart';
-
-final _dartFormatter = DartFormatter();
 
 class RpcClientGenerator extends GeneratorForAnnotation<Api> {
   const RpcClientGenerator();
@@ -26,6 +24,12 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
     }
     var classElement = element;
     var className = classElement.name;
+    String? currentPackage;
+    String? thisFileRelativePath;
+    if (element.source.uri.scheme == 'package') {
+      currentPackage = element.source.uri.pathSegments[0];
+      thisFileRelativePath = element.source.uri.pathSegments.skip(1).join('/');
+    }
     className = className.replaceAll(RegExp(r'Api$'), 'Client');
 
     var apiAnnotation = readApiAnnotation(annotation);
@@ -97,7 +101,8 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
                 isEnum(parameter.type)) {
               encodedParameter = '${parameter.name}.toString()';
             } else {
-              var parameterType = typeFromDart(parameter.type);
+              var parameterType =
+                  typeFromDart(parameter.type).copyWith(isNullable: false);
               encodedParameter =
                   'jsonEncode(${parameterType.toJsonCode(parameter.name)})';
             }
@@ -154,6 +159,8 @@ import 'package:server_utils/rpc_client.dart';
 ${groupedImports.join('\n')}
 
 ${groupedExports.join('\n')}
+
+// ignore_for_file: implementation_imports
  
 class $className {
   final Client _client;
@@ -167,7 +174,12 @@ $code
 }
 ''';
 
-    return _dartFormatter.format(fileCode);
+    if (currentPackage != null && thisFileRelativePath != null) {
+      fileCode = fixCodeStyle(fileCode,
+          packageName: currentPackage, libPath: thisFileRelativePath);
+    }
+
+    return fileCode;
   }
 }
 

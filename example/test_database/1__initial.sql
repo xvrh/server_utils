@@ -1,6 +1,6 @@
 create domain translated_text jsonb not null default $${}$$;
 
-create table page
+create table cms_page
 (
     id        serial primary key,
     code      text  null,

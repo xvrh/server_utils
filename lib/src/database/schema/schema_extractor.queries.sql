@@ -29,8 +29,8 @@ where table_schema = :schemaName::text
 order by ordinal_position;
 
 /******************************
-List<Constraint> constraintsForSchema({String schemaName = 'public'})
-projection Constraint (
+List<PrimaryKey> primaryKeysForSchema({String schemaName = 'public'})
+projection PrimaryKey (
   * null,
   table_name not null
 )
@@ -57,7 +57,31 @@ order by t.table_catalog,
          kcu.ordinal_position;
 
 /******************************
-List<ColumnDescription> describeTable({String schemaName = 'public', required String tableName})
+List<ForeignKey> foreignKeysForSchema({String schemaName = 'public'})
+projection ForeignKey (
+  * not null,
+)
+*******************************/
+SELECT
+    tc.table_schema,
+    tc.constraint_name,
+    tc.table_name,
+    kcu.column_name,
+    ccu.table_schema AS foreign_table_schema,
+    ccu.table_name AS foreign_table_name,
+    ccu.column_name AS foreign_column_name
+FROM
+    information_schema.table_constraints AS tc
+        JOIN information_schema.key_column_usage AS kcu
+             ON tc.constraint_name = kcu.constraint_name
+                 AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu
+             ON ccu.constraint_name = tc.constraint_name
+                 AND ccu.table_schema = tc.table_schema
+WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = :schemaName;
+
+/******************************
+List<ColumnDescription> describeTables({String schemaName = 'public'})
 projection ColumnDescription (
   * not null,
   foreign_key null,
@@ -65,7 +89,8 @@ projection ColumnDescription (
   default_info null,
 )
 *******************************/
-select f.attnum                                        as number,
+select c.relname::text                                 as table_name,
+       f.attnum                                        as number,
        f.attname                                       as name,
        f.attnum,
        f.attnotnull                                    as "not_null",
@@ -74,7 +99,7 @@ select f.attnum                                        as number,
        case
            when p.contype = 'p' then true
            else false
-           end                                         as primary_key,
+           end                                         as is_primary_key,
        case
            when p.contype = 'u' then true
            else false
@@ -97,9 +122,8 @@ from pg_attribute f
          left join pg_class as g on p.confrelid = g.oid
 where c.relkind = 'r'::char
   and n.nspname = :schemaName::text
-  and c.relname = :tableName::text
   and f.attnum > 0
-order by number;
+order by table_name, number;
 
 /******************************
 List<DomainDescription> domainsForSchema({String schemaName = 'public'})

@@ -1,4 +1,6 @@
 export 'src/database/database.dart' show Database, DatabaseExtension;
+export 'src/database/page.dart'
+    show PageRequest, Page, Column, PageRequestExtension;
 export 'src/database/database_io.dart'
     show DatabaseIO, PostgreSQLExecutionContextWithStandardParameters;
 export 'src/database/local_database.dart' show LocalDatabase;

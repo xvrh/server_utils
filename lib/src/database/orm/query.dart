@@ -36,7 +36,7 @@ class Query<TReturn> {
     return database.query(sql, mapper: mapper, args: arguments);
   }
 
-  Future<Page<TReturn>> page(PageRequest page) {
+  Future<Page<TReturn>> page(PageRequest<TReturn> page) {
     return database.queryPage(sql,
         mapper: mapper, args: arguments, pageRequest: page);
   }
