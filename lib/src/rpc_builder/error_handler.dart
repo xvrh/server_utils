@@ -5,9 +5,14 @@ import 'package:shelf_router/shelf_router.dart';
 import 'annotations.dart';
 import 'exception_wrapper.dart';
 import 'exceptions.dart';
+import 'package:logging/logging.dart';
+
+final _logger = Logger('rpc');
 
 Response rpcErrorHandler(
     Api api, Request request, exception, StackTrace stackTrace) {
+  _logger.info(
+      'Api error ${request.requestedUri}: $exception', exception, stackTrace);
   return _exceptionToResponse(request, exception, stackTrace, api: api);
 }
 
@@ -20,6 +25,7 @@ Handler globalRpcErrorMiddleware(Handler innerHandler) {
       }
       return response;
     } catch (e, s) {
+      _logger.info('Api error ${request.requestedUri}: $e', e, s);
       return _exceptionToResponse(request, e, s, api: null);
     }
   };
