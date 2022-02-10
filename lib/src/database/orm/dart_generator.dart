@@ -514,7 +514,8 @@ class $className {
     code.writeln('  //language=none');
     code.writeln('args: {');
     for (var p in primaryKeys) {
-      code.writeln("'${p.name}': ${p.name.words.toLowerCamel()},");
+      code.writeln(
+          "'${p.name.words.toLowerCamel()}': ${p.name.words.toLowerCamel()},");
     }
     code.writeln('},');
     code.writeln(');');
