@@ -16,8 +16,8 @@ where table_schema = :schemaName::text
     }).list;
   }
 
-  Future<List<Column>> columnsForSchema({String schemaName = 'public'}) {
-    return Query<Column>(
+  Future<List<ColumnData>> columnsForSchema({String schemaName = 'public'}) {
+    return Query<ColumnData>(
       this,
       //language=sql
       r'''
@@ -38,7 +38,7 @@ order by ordinal_position
       arguments: {
         'schemaName': schemaName,
       },
-      mapper: Column.fromRow,
+      mapper: ColumnData.fromRow,
     ).list;
   }
 
@@ -158,7 +158,7 @@ order by table_name, number
 
   Future<List<DomainDescription>> domainsForSchema(
       {String schemaName = 'public'}) {
-    return Query(
+    return Query<DomainDescription>(
       this,
       //language=sql
       r'''
@@ -176,7 +176,9 @@ where typtype = 'd'
   }
 }
 
-class Column {
+class ColumnData {
+  static final columns = _ColumnDataColumns();
+
   final String tableName;
   final String columnName;
   final String? columnDefault;
@@ -185,7 +187,7 @@ class Column {
   final String? domainName;
   final bool isNullable;
 
-  Column({
+  ColumnData({
     required this.tableName,
     required this.columnName,
     this.columnDefault,
@@ -195,8 +197,8 @@ class Column {
     required this.isNullable,
   });
 
-  factory Column.fromRow(Map<String, dynamic> row) {
-    return Column(
+  factory ColumnData.fromRow(Map<String, dynamic> row) {
+    return ColumnData(
       tableName: row['table_name']! as String,
       columnName: row['column_name']! as String,
       columnDefault: row['column_default'] as String?,
@@ -207,8 +209,8 @@ class Column {
     );
   }
 
-  factory Column.fromJson(Map<String, Object?> json) {
-    return Column(
+  factory ColumnData.fromJson(Map<String, Object?> json) {
+    return ColumnData(
       tableName: json['tableName']! as String,
       columnName: json['columnName']! as String,
       columnDefault: json['columnDefault'] as String?,
@@ -230,9 +232,58 @@ class Column {
       'isNullable': isNullable,
     };
   }
+
+  ColumnData copyWith({
+    String? tableName,
+    String? columnName,
+    String? columnDefault,
+    bool? clearColumnDefault,
+    String? dataType,
+    int? characterMaximumLength,
+    bool? clearCharacterMaximumLength,
+    String? domainName,
+    bool? clearDomainName,
+    bool? isNullable,
+  }) {
+    return ColumnData(
+      tableName: tableName ?? this.tableName,
+      columnName: columnName ?? this.columnName,
+      columnDefault: (clearColumnDefault ?? false)
+          ? null
+          : columnDefault ?? this.columnDefault,
+      dataType: dataType ?? this.dataType,
+      characterMaximumLength: (clearCharacterMaximumLength ?? false)
+          ? null
+          : characterMaximumLength ?? this.characterMaximumLength,
+      domainName:
+          (clearDomainName ?? false) ? null : domainName ?? this.domainName,
+      isNullable: isNullable ?? this.isNullable,
+    );
+  }
+}
+
+class _ColumnDataColumns {
+  final tableName = Column<ColumnData>('table_name');
+  final columnName = Column<ColumnData>('column_name');
+  final columnDefault = Column<ColumnData>('column_default');
+  final dataType = Column<ColumnData>('data_type');
+  final characterMaximumLength = Column<ColumnData>('character_maximum_length');
+  final domainName = Column<ColumnData>('domain_name');
+  final isNullable = Column<ColumnData>('is_nullable');
+  late final list = [
+    tableName,
+    columnName,
+    columnDefault,
+    dataType,
+    characterMaximumLength,
+    domainName,
+    isNullable
+  ];
 }
 
 class PrimaryKey {
+  static final columns = _PrimaryKeyColumns();
+
   final String tableName;
   final String? constraintName;
   final String? columnName;
@@ -271,9 +322,41 @@ class PrimaryKey {
       'ordinalPosition': ordinalPosition,
     };
   }
+
+  PrimaryKey copyWith({
+    String? tableName,
+    String? constraintName,
+    bool? clearConstraintName,
+    String? columnName,
+    bool? clearColumnName,
+    int? ordinalPosition,
+    bool? clearOrdinalPosition,
+  }) {
+    return PrimaryKey(
+      tableName: tableName ?? this.tableName,
+      constraintName: (clearConstraintName ?? false)
+          ? null
+          : constraintName ?? this.constraintName,
+      columnName:
+          (clearColumnName ?? false) ? null : columnName ?? this.columnName,
+      ordinalPosition: (clearOrdinalPosition ?? false)
+          ? null
+          : ordinalPosition ?? this.ordinalPosition,
+    );
+  }
+}
+
+class _PrimaryKeyColumns {
+  final tableName = Column<PrimaryKey>('table_name');
+  final constraintName = Column<PrimaryKey>('constraint_name');
+  final columnName = Column<PrimaryKey>('column_name');
+  final ordinalPosition = Column<PrimaryKey>('ordinal_position');
+  late final list = [tableName, constraintName, columnName, ordinalPosition];
 }
 
 class ForeignKey {
+  static final columns = _ForeignKeyColumns();
+
   final String tableSchema;
   final String constraintName;
   final String tableName;
@@ -327,9 +410,50 @@ class ForeignKey {
       'foreignColumnName': foreignColumnName,
     };
   }
+
+  ForeignKey copyWith({
+    String? tableSchema,
+    String? constraintName,
+    String? tableName,
+    String? columnName,
+    String? foreignTableSchema,
+    String? foreignTableName,
+    String? foreignColumnName,
+  }) {
+    return ForeignKey(
+      tableSchema: tableSchema ?? this.tableSchema,
+      constraintName: constraintName ?? this.constraintName,
+      tableName: tableName ?? this.tableName,
+      columnName: columnName ?? this.columnName,
+      foreignTableSchema: foreignTableSchema ?? this.foreignTableSchema,
+      foreignTableName: foreignTableName ?? this.foreignTableName,
+      foreignColumnName: foreignColumnName ?? this.foreignColumnName,
+    );
+  }
+}
+
+class _ForeignKeyColumns {
+  final tableSchema = Column<ForeignKey>('table_schema');
+  final constraintName = Column<ForeignKey>('constraint_name');
+  final tableName = Column<ForeignKey>('table_name');
+  final columnName = Column<ForeignKey>('column_name');
+  final foreignTableSchema = Column<ForeignKey>('foreign_table_schema');
+  final foreignTableName = Column<ForeignKey>('foreign_table_name');
+  final foreignColumnName = Column<ForeignKey>('foreign_column_name');
+  late final list = [
+    tableSchema,
+    constraintName,
+    tableName,
+    columnName,
+    foreignTableSchema,
+    foreignTableName,
+    foreignColumnName
+  ];
 }
 
 class ColumnDescription {
+  static final columns = _ColumnDescriptionColumns();
+
   final String tableName;
   final int number;
   final String name;
@@ -410,9 +534,77 @@ class ColumnDescription {
       'defaultInfo': defaultInfo,
     };
   }
+
+  ColumnDescription copyWith({
+    String? tableName,
+    int? number,
+    String? name,
+    int? attnum,
+    bool? notNull,
+    int? typeId,
+    String? type,
+    bool? isPrimaryKey,
+    bool? uniqueKey,
+    String? foreignKey,
+    bool? clearForeignKey,
+    List<int>? foreignKeyFieldnum,
+    bool? clearForeignKeyFieldnum,
+    String? defaultInfo,
+    bool? clearDefaultInfo,
+  }) {
+    return ColumnDescription(
+      tableName: tableName ?? this.tableName,
+      number: number ?? this.number,
+      name: name ?? this.name,
+      attnum: attnum ?? this.attnum,
+      notNull: notNull ?? this.notNull,
+      typeId: typeId ?? this.typeId,
+      type: type ?? this.type,
+      isPrimaryKey: isPrimaryKey ?? this.isPrimaryKey,
+      uniqueKey: uniqueKey ?? this.uniqueKey,
+      foreignKey:
+          (clearForeignKey ?? false) ? null : foreignKey ?? this.foreignKey,
+      foreignKeyFieldnum: (clearForeignKeyFieldnum ?? false)
+          ? null
+          : foreignKeyFieldnum ?? this.foreignKeyFieldnum,
+      defaultInfo:
+          (clearDefaultInfo ?? false) ? null : defaultInfo ?? this.defaultInfo,
+    );
+  }
+}
+
+class _ColumnDescriptionColumns {
+  final tableName = Column<ColumnDescription>('table_name');
+  final number = Column<ColumnDescription>('number');
+  final name = Column<ColumnDescription>('name');
+  final attnum = Column<ColumnDescription>('attnum');
+  final notNull = Column<ColumnDescription>('not_null');
+  final typeId = Column<ColumnDescription>('type_id');
+  final type = Column<ColumnDescription>('type');
+  final isPrimaryKey = Column<ColumnDescription>('is_primary_key');
+  final uniqueKey = Column<ColumnDescription>('unique_key');
+  final foreignKey = Column<ColumnDescription>('foreign_key');
+  final foreignKeyFieldnum = Column<ColumnDescription>('foreign_key_fieldnum');
+  final defaultInfo = Column<ColumnDescription>('default_info');
+  late final list = [
+    tableName,
+    number,
+    name,
+    attnum,
+    notNull,
+    typeId,
+    type,
+    isPrimaryKey,
+    uniqueKey,
+    foreignKey,
+    foreignKeyFieldnum,
+    defaultInfo
+  ];
 }
 
 class DomainDescription {
+  static final columns = _DomainDescriptionColumns();
+
   final int oid;
   final String name;
   final bool notNull;
@@ -451,4 +643,29 @@ class DomainDescription {
       'defaultValue': defaultValue,
     };
   }
+
+  DomainDescription copyWith({
+    int? oid,
+    String? name,
+    bool? notNull,
+    String? defaultValue,
+    bool? clearDefaultValue,
+  }) {
+    return DomainDescription(
+      oid: oid ?? this.oid,
+      name: name ?? this.name,
+      notNull: notNull ?? this.notNull,
+      defaultValue: (clearDefaultValue ?? false)
+          ? null
+          : defaultValue ?? this.defaultValue,
+    );
+  }
+}
+
+class _DomainDescriptionColumns {
+  final oid = Column<DomainDescription>('oid');
+  final name = Column<DomainDescription>('name');
+  final notNull = Column<DomainDescription>('not_null');
+  final defaultValue = Column<DomainDescription>('default_value');
+  late final list = [oid, name, notNull, defaultValue];
 }

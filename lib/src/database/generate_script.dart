@@ -146,7 +146,7 @@ class _DatabaseBuilder {
     _logger.fine('Will migrate database');
     var stopwatch = Stopwatch()..start();
     try {
-      var migrator = Migrator(_client, [...migrations]);
+      var migrator = Migrator.fromClient(_client, [...migrations]);
       await migrator.migrate();
       _logger.fine('Apply migrations in ${stopwatch.elapsed}');
 

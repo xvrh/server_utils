@@ -2,7 +2,7 @@ import 'package:faker/faker.dart';
 import 'package:server_utils/database.dart';
 
 Future<void> migrate(MigrationContext context) async {
-  var db = context.connection!;
+  var db = context.connection;
 
   for (var i = 0; i < 100; i++) {
     await db.execute(

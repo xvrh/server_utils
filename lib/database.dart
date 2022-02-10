@@ -4,7 +4,7 @@ export 'src/database/page.dart'
 export 'src/database/database_io.dart'
     show DatabaseIO, PostgreSQLExecutionContextWithStandardParameters;
 export 'src/database/local_database.dart' show LocalDatabase;
-export 'src/database/migration/migration_context.dart' show MigrationContext;
+export 'src/database/migration/migration_client.dart' show MigrationContext;
 export 'src/database/migration/migrator.dart' show Migrator;
 export 'src/database/orm/query.dart' show Query;
 export 'src/database/postgres.dart'

@@ -31,8 +31,8 @@ void main() {
 
   test('Generate file', () async {
     var database = testUtils.database;
-    var migrator =
-        Migrator(database.client, ['test/database/orm/data/country']);
+    var migrator = Migrator.fromClient(
+        database.client, ['test/database/orm/data/country']);
     await migrator.migrate();
 
     var queries = '''

@@ -9,7 +9,7 @@ void main() {
 
   test('Can apply migration from folder', () async {
     var database = testUtils.database;
-    var migrator = Migrator(database.client, ['$_testDataPath/1']);
+    var migrator = Migrator.fromClient(database.client, ['$_testDataPath/1']);
 
     await migrator.migrate();
 
@@ -22,8 +22,8 @@ void main() {
 
   test('Can create northwind database', () async {
     var database = testUtils.database;
-    var migrator = Migrator(database.client,
-        ['package:server_utils/src/database/test_data/northwind']);
+    var migrator = Migrator.fromClient(
+        database.client, ['test/database/migration/data/northwind']);
 
     await migrator.migrate();
 
@@ -37,13 +37,14 @@ void main() {
 
   test('Continue migration from existing database', () async {
     var database = testUtils.database;
-    await Migrator(database.client, ['$_testDataPath/2/1']).migrate();
+    await Migrator.fromClient(database.client, ['$_testDataPath/2/1'])
+        .migrate();
     await database.use((db) async {
       var result = await db.queryDynamic('select count(*) c from film');
       expect(result[0]['c'], greaterThan(0));
     });
 
-    await Migrator(database.client, ['$_testDataPath/2']).migrate();
+    await Migrator.fromClient(database.client, ['$_testDataPath/2']).migrate();
 
     await database.use((db) async {
       var result = await db.scalar<int>('select count(*) from film');

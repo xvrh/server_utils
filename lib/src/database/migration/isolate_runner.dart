@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'migration_context.dart';
+import 'migration_client.dart';
 
 class IsolateRunner {
   final Isolate isolate;
@@ -18,8 +18,7 @@ class IsolateRunner {
 
   static Future<IsolateRunner> start(List<String> allFiles,
       {required String method,
-      required MigrationContext migrationContext}) async {
-    assert(migrationContext.connection == null);
+      required MigrationContextCode migrationContext}) async {
     var mainPort = ReceivePort();
 
     var allImports = <String, String>{};
@@ -36,21 +35,19 @@ class IsolateRunner {
     var isolateSource = '''
 import 'dart:isolate';
 import 'package:server_utils/migration.dart' show MigrationContext;
+${migrationContext.import}
 $importBuffers
 
 final methods = <String, Function(MigrationContext)>{
 $methodMap
 };
-''';
-    //language=dart
-    isolateSource += '''
 
-main(args, Map message) async {
-  SendPort port = message['port'];
+void main(args, Map message) async {
+  var port = message['port']! as SendPort;
   var receivePort = ReceivePort();
   port.send(receivePort.sendPort);
   
-  var migrationContext = await MigrationContext.openFromJson(message['migrationContext']);
+  var migrationContext = ${migrationContext.creationCode};
   try {
     await for (var message in receivePort) {
       var file = message['file']!;
@@ -59,7 +56,7 @@ main(args, Map message) async {
       port.send('ok');
     }
   } finally {
-    migrationContext.connection?.close();
+    await migrationContext.close();
     receivePort.close();
   }
 }   
@@ -68,7 +65,6 @@ main(args, Map message) async {
     var isolate = await Isolate.spawnUri(
         Uri.dataFromString(isolateSource, mimeType: 'application/dart'), [], {
       'port': mainPort.sendPort,
-      'migrationContext': migrationContext.toJson(),
     });
 
     var receiveStream = mainPort.asBroadcastStream();

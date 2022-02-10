@@ -6,8 +6,8 @@ from information_schema.tables
 where table_schema = :schemaName::text;
 
 /******************************
-List<Column> columnsForSchema({String schemaName = 'public'})
-projection Column (
+List<ColumnData> columnsForSchema({String schemaName = 'public'})
+projection ColumnData (
   * not null,
   column_default null,
   character_maximum_length null,

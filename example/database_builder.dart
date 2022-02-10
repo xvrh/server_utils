@@ -45,7 +45,6 @@ void main() async {
     migrations: ['example/test_database'],
     queries: [
       'example/**.queries.sql',
-      'lib/**.queries.sql',
     ],
     afterCreate: _afterCreate,
     afterRefresh: _afterRefresh,
