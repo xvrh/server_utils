@@ -195,7 +195,7 @@ void _importsForType(DartType type, List<_Import> imports) {
       type.element!.name != 'Future') {
     var element = type.element;
     if (element is ClassElement) {
-      var uri = element.source.uri;
+      var uri = element.library.source.uri;
       imports.add(_Import(uri, element.name));
     }
   }

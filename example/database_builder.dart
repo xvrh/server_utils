@@ -45,6 +45,7 @@ void main() async {
     migrations: ['example/test_database'],
     queries: [
       'example/**.queries.sql',
+      'example/**.queries.dart',
     ],
     afterCreate: _afterCreate,
     afterRefresh: _afterRefresh,

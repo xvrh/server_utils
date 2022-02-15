@@ -2,7 +2,11 @@ import 'dart:io';
 import 'package:logging/logging.dart';
 import 'package:postgres/postgres.dart';
 import 'package:server_utils/database_builder.dart';
-import '../example/example_database.dart';
+
+final databaseServer =
+    Postgres(Postgres.createDataPath('local_database'), port: 8888);
+
+const databaseName = 'tool_database';
 
 void main() async {
   Logger.root
@@ -10,10 +14,10 @@ void main() async {
     ..level = Level.ALL;
 
   await runDatabaseBuilder(
-    exampleDatabaseServer,
-    exampleDatabaseName,
+    databaseServer,
+    databaseName,
     migrations: [],
-    queries: ['lib/**.queries.sql'],
+    queries: ['lib/**.queries.dart'],
     afterCreate: _afterCreate,
     afterRefresh: _afterRefresh,
   );

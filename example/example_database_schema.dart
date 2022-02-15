@@ -1,5 +1,9 @@
 // GENERATED-FILE
+import 'package:server_utils/database.dart';
+
 class CmsPage {
+  static final columns = _CmsPageColumns();
+
   final int id;
   final String? code;
   final Object title;
@@ -53,40 +57,45 @@ class CmsPage {
       'pageType': pageType,
     };
   }
+
+  CmsPage copyWith({
+    int? id,
+    String? code,
+    bool? clearCode,
+    Object? title,
+    Object? title2,
+    Object? title3,
+    bool? clearTitle3,
+    Object? body,
+    String? pageType,
+    bool? clearPageType,
+  }) {
+    return CmsPage(
+      id: id ?? this.id,
+      code: (clearCode ?? false) ? null : code ?? this.code,
+      title: title ?? this.title,
+      title2: title2 ?? this.title2,
+      title3: (clearTitle3 ?? false) ? null : title3 ?? this.title3,
+      body: body ?? this.body,
+      pageType: (clearPageType ?? false) ? null : pageType ?? this.pageType,
+    );
+  }
 }
 
-class AppConfiguration {
-  final int id;
-  final bool? enableLogs;
-
-  AppConfiguration({
-    required this.id,
-    this.enableLogs,
-  });
-
-  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
-    return AppConfiguration(
-      id: row['id']! as int,
-      enableLogs: row['enable_logs'] as bool?,
-    );
-  }
-
-  factory AppConfiguration.fromJson(Map<String, Object?> json) {
-    return AppConfiguration(
-      id: (json['id']! as num).toInt(),
-      enableLogs: json['enableLogs'] as bool?,
-    );
-  }
-
-  Map<String, Object?> toJson() {
-    return {
-      'id': id,
-      'enableLogs': enableLogs,
-    };
-  }
+class _CmsPageColumns {
+  final id = Column<CmsPage>('id');
+  final code = Column<CmsPage>('code');
+  final title = Column<CmsPage>('title');
+  final title2 = Column<CmsPage>('title2');
+  final title3 = Column<CmsPage>('title3');
+  final body = Column<CmsPage>('body');
+  final pageType = Column<CmsPage>('page_type');
+  late final list = [id, code, title, title2, title3, body, pageType];
 }
 
 class Country {
+  static final columns = _CountryColumns();
+
   final String code;
   final String codeIso3;
   final String currency;
@@ -135,9 +144,39 @@ class Country {
       'phoneCode': phoneCode,
     };
   }
+
+  Country copyWith({
+    String? code,
+    String? codeIso3,
+    String? currency,
+    double? latitude,
+    double? longitude,
+    int? phoneCode,
+  }) {
+    return Country(
+      code: code ?? this.code,
+      codeIso3: codeIso3 ?? this.codeIso3,
+      currency: currency ?? this.currency,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      phoneCode: phoneCode ?? this.phoneCode,
+    );
+  }
+}
+
+class _CountryColumns {
+  final code = Column<Country>('code');
+  final codeIso3 = Column<Country>('code_iso3');
+  final currency = Column<Country>('currency');
+  final latitude = Column<Country>('latitude');
+  final longitude = Column<Country>('longitude');
+  final phoneCode = Column<Country>('phone_code');
+  late final list = [code, codeIso3, currency, latitude, longitude, phoneCode];
 }
 
 class Timezone {
+  static final columns = _TimezoneColumns();
+
   final String name;
   final String? country;
   final String? aliasFor;
@@ -176,6 +215,30 @@ class Timezone {
       'latLong': latLong,
     };
   }
+
+  Timezone copyWith({
+    String? name,
+    String? country,
+    bool? clearCountry,
+    String? aliasFor,
+    bool? clearAliasFor,
+    String? latLong,
+  }) {
+    return Timezone(
+      name: name ?? this.name,
+      country: (clearCountry ?? false) ? null : country ?? this.country,
+      aliasFor: (clearAliasFor ?? false) ? null : aliasFor ?? this.aliasFor,
+      latLong: latLong ?? this.latLong,
+    );
+  }
+}
+
+class _TimezoneColumns {
+  final name = Column<Timezone>('name');
+  final country = Column<Timezone>('country');
+  final aliasFor = Column<Timezone>('alias_for');
+  final latLong = Column<Timezone>('lat_long');
+  late final list = [name, country, aliasFor, latLong];
 }
 
 class AppRole {
@@ -233,6 +296,8 @@ class AppRole {
 }
 
 class AppUser {
+  static final columns = _AppUserColumns();
+
   final int id;
   final AppRole role;
   final String email;
@@ -306,9 +371,124 @@ class AppUser {
       'lastName': lastName,
     };
   }
+
+  AppUser copyWith({
+    int? id,
+    AppRole? role,
+    String? email,
+    DateTime? created,
+    DateTime? lastSeen,
+    bool? clearLastSeen,
+    String? countryCode,
+    int? configurationId,
+    String? eulaVersion,
+    bool? clearEulaVersion,
+    String? firstName,
+    bool? clearFirstName,
+    String? middleName,
+    bool? clearMiddleName,
+    String? lastName,
+    bool? clearLastName,
+  }) {
+    return AppUser(
+      id: id ?? this.id,
+      role: role ?? this.role,
+      email: email ?? this.email,
+      created: created ?? this.created,
+      lastSeen: (clearLastSeen ?? false) ? null : lastSeen ?? this.lastSeen,
+      countryCode: countryCode ?? this.countryCode,
+      configurationId: configurationId ?? this.configurationId,
+      eulaVersion:
+          (clearEulaVersion ?? false) ? null : eulaVersion ?? this.eulaVersion,
+      firstName: (clearFirstName ?? false) ? null : firstName ?? this.firstName,
+      middleName:
+          (clearMiddleName ?? false) ? null : middleName ?? this.middleName,
+      lastName: (clearLastName ?? false) ? null : lastName ?? this.lastName,
+    );
+  }
+}
+
+class _AppUserColumns {
+  final id = Column<AppUser>('id');
+  final role = Column<AppUser>('role');
+  final email = Column<AppUser>('email');
+  final created = Column<AppUser>('created');
+  final lastSeen = Column<AppUser>('last_seen');
+  final countryCode = Column<AppUser>('country_code');
+  final configurationId = Column<AppUser>('configuration_id');
+  final eulaVersion = Column<AppUser>('eula_version');
+  final firstName = Column<AppUser>('first_name');
+  final middleName = Column<AppUser>('middle_name');
+  final lastName = Column<AppUser>('last_name');
+  late final list = [
+    id,
+    role,
+    email,
+    created,
+    lastSeen,
+    countryCode,
+    configurationId,
+    eulaVersion,
+    firstName,
+    middleName,
+    lastName
+  ];
+}
+
+class AppConfiguration {
+  static final columns = _AppConfigurationColumns();
+
+  final int id;
+  final bool? enableLogs;
+
+  AppConfiguration({
+    required this.id,
+    this.enableLogs,
+  });
+
+  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
+    return AppConfiguration(
+      id: row['id']! as int,
+      enableLogs: row['enable_logs'] as bool?,
+    );
+  }
+
+  factory AppConfiguration.fromJson(Map<String, Object?> json) {
+    return AppConfiguration(
+      id: (json['id']! as num).toInt(),
+      enableLogs: json['enableLogs'] as bool?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'enableLogs': enableLogs,
+    };
+  }
+
+  AppConfiguration copyWith({
+    int? id,
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return AppConfiguration(
+      id: id ?? this.id,
+      enableLogs:
+          (clearEnableLogs ?? false) ? null : enableLogs ?? this.enableLogs,
+    );
+  }
+}
+
+class _AppConfigurationColumns {
+  final id = Column<AppConfiguration>('id');
+  final enableLogs = Column<AppConfiguration>('enable_logs');
+  late final list = [id, enableLogs];
 }
 
 class MobileDevice {
+  static final columns = _MobileDeviceColumns();
+
   final int id;
   final int userId;
   final DateTime created;
@@ -403,4 +583,82 @@ class MobileDevice {
       'configurationId': configurationId,
     };
   }
+
+  MobileDevice copyWith({
+    int? id,
+    int? userId,
+    DateTime? created,
+    DateTime? lastSeen,
+    String? deviceIdentifier,
+    String? notificationToken,
+    bool? clearNotificationToken,
+    DateTime? notificationTokenUpdated,
+    bool? clearNotificationTokenUpdated,
+    String? osName,
+    String? osVersion,
+    String? osLocale,
+    String? manufacturer,
+    String? model,
+    String? appVersion,
+    String? appLanguage,
+    int? configurationId,
+  }) {
+    return MobileDevice(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      created: created ?? this.created,
+      lastSeen: lastSeen ?? this.lastSeen,
+      deviceIdentifier: deviceIdentifier ?? this.deviceIdentifier,
+      notificationToken: (clearNotificationToken ?? false)
+          ? null
+          : notificationToken ?? this.notificationToken,
+      notificationTokenUpdated: (clearNotificationTokenUpdated ?? false)
+          ? null
+          : notificationTokenUpdated ?? this.notificationTokenUpdated,
+      osName: osName ?? this.osName,
+      osVersion: osVersion ?? this.osVersion,
+      osLocale: osLocale ?? this.osLocale,
+      manufacturer: manufacturer ?? this.manufacturer,
+      model: model ?? this.model,
+      appVersion: appVersion ?? this.appVersion,
+      appLanguage: appLanguage ?? this.appLanguage,
+      configurationId: configurationId ?? this.configurationId,
+    );
+  }
+}
+
+class _MobileDeviceColumns {
+  final id = Column<MobileDevice>('id');
+  final userId = Column<MobileDevice>('user_id');
+  final created = Column<MobileDevice>('created');
+  final lastSeen = Column<MobileDevice>('last_seen');
+  final deviceIdentifier = Column<MobileDevice>('device_identifier');
+  final notificationToken = Column<MobileDevice>('notification_token');
+  final notificationTokenUpdated =
+      Column<MobileDevice>('notification_token_updated');
+  final osName = Column<MobileDevice>('os_name');
+  final osVersion = Column<MobileDevice>('os_version');
+  final osLocale = Column<MobileDevice>('os_locale');
+  final manufacturer = Column<MobileDevice>('manufacturer');
+  final model = Column<MobileDevice>('model');
+  final appVersion = Column<MobileDevice>('app_version');
+  final appLanguage = Column<MobileDevice>('app_language');
+  final configurationId = Column<MobileDevice>('configuration_id');
+  late final list = [
+    id,
+    userId,
+    created,
+    lastSeen,
+    deviceIdentifier,
+    notificationToken,
+    notificationTokenUpdated,
+    osName,
+    osVersion,
+    osLocale,
+    manufacturer,
+    model,
+    appVersion,
+    appLanguage,
+    configurationId
+  ];
 }

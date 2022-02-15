@@ -14,3 +14,4 @@ export 'src/database/schema/schema.dart'
     show DatabaseSchema, TableDefinition, ColumnDefinition;
 export 'src/database/schema/schema_extractor.dart' show SchemaExtractor;
 export 'src/database/utils.dart' show connectionFromEndpoint;
+export 'src/database/orm/queries_decorators.dart' show QueriesDecorator, Col;

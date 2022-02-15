@@ -8,6 +8,8 @@ import 'package:postgres/postgres.dart';
 import 'package:watcher/watcher.dart';
 import '../../database.dart';
 import 'orm/queries_generator.dart';
+import 'orm/queries_generator_v2.dart' as v2;
+import 'package:pool/pool.dart';
 import 'utils.dart';
 
 final _logger = Logger('database_builder');
@@ -139,7 +141,7 @@ class _DatabaseBuilder {
 
     await _migrateDatabase();
 
-    _logger.info('Recreated database step in ${globalStopwatch.elapsed}');
+    _logger.info('Recreated database in ${globalStopwatch.elapsed}');
   }
 
   Future<void> _migrateDatabase() async {
@@ -161,11 +163,14 @@ class _DatabaseBuilder {
   Future<void> _refresh() async {
     await useEndpoint(_client.endpoint, (connection) async {
       var generator = await _queryGenerator(connection);
+      var pool = Pool(10);
       for (var queryGlob in queries) {
         for (var file in Glob(queryGlob).listSync().whereType<File>()) {
-          await _generateQueryFile(generator, file);
+          unawaited(
+              pool.withResource(() => _generateQueryFile(generator, file)));
         }
       }
+      await pool.close();
     });
 
     var afterRefresh = this.afterRefresh;
@@ -194,9 +199,21 @@ class _DatabaseBuilder {
 
   Future<void> _generateQueryFile(QueriesGenerator generator, File file) async {
     try {
-      var result = await generator.generate(file.readAsStringSync(),
-          filePath: file.path);
-      File(p.setExtension(file.path, '.dart')).writeAsStringSync(result);
+      String result;
+      if (file.path.endsWith('.dart')) {
+        var connection =
+            (generator.evaluator as PostgresQueryEvaluator).connection;
+        var gen = v2.QueriesGenerator(
+            generator.schema, v2.PostgresQueryEvaluator(connection));
+        result =
+            await gen.generate(file.readAsStringSync(), filePath: file.path);
+        File(p.setExtension(file.path, '.gen.dart')).writeAsStringSync(result);
+      } else {
+        result = await generator.generate(file.readAsStringSync(),
+            filePath: file.path);
+        File(p.setExtension(file.path, '.dart')).writeAsStringSync(result);
+      }
+
       _logger.fine('Generated query ${file.path}');
     } catch (e, s) {
       _logger.warning('Failed to generate SQL queries file '

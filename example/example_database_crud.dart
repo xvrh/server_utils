@@ -6,8 +6,6 @@ import 'example_database_schema.dart';
 extension DatabaseCrudExtension on Database {
   CmsPageCrud get cmsPage => CmsPageCrud(this);
 
-  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
-
   CountryCrud get country => CountryCrud(this);
 
   TimezoneCrud get timezone => TimezoneCrud(this);
@@ -15,6 +13,8 @@ extension DatabaseCrudExtension on Database {
   AppRoleCrud get appRole => AppRoleCrud(this);
 
   AppUserCrud get appUser => AppUserCrud(this);
+
+  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
 
   MobileDeviceCrud get mobileDevice => MobileDeviceCrud(this);
 }
@@ -26,6 +26,18 @@ class CmsPageCrud {
 
   Future<CmsPage> find(int id) {
     return _database.single(
+      //language=sql
+      'select * from cms_page where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: CmsPage.fromRow,
+    );
+  }
+
+  Future<CmsPage?> findOrNull(int id) {
+    return _database.singleOrNull(
       //language=sql
       'select * from cms_page where id = :id::integer',
       //language=none
@@ -95,80 +107,24 @@ class CmsPageCrud {
   }
 
   Future<CmsPage> updateEntity(CmsPage entity) {
-    throw UnimplementedError();
+    return update(
+      entity.id,
+      code: entity.code,
+      clearCode: entity.code == null,
+      title: entity.title,
+      title2: entity.title2,
+      title3: entity.title3,
+      clearTitle3: entity.title3 == null,
+      body: entity.body,
+      pageType: entity.pageType,
+      clearPageType: entity.pageType == null,
+    );
   }
 
   Future<int> delete(int id) {
     return _database.execute(
       //language=sql
       'delete from cms_page where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-    );
-  }
-}
-
-class AppConfigurationCrud {
-  final Database _database;
-
-  AppConfigurationCrud(this._database);
-
-  Future<AppConfiguration> find(int id) {
-    return _database.single(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> insert({
-    int? id /* nextval('app_configuration_id_seq'::regclass) */,
-    bool? enableLogs,
-  }) {
-    return _database.insert(
-      'app_configuration',
-      values: {
-        if (id != null) 'id': id,
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> update(
-    int id, {
-    bool? enableLogs,
-    bool? clearEnableLogs,
-  }) {
-    return _database.update(
-      'app_configuration',
-      where: {
-        'id': id,
-      },
-      set: {
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      clear: [
-        if (clearEnableLogs ?? false) 'enable_logs',
-      ],
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
-    throw UnimplementedError();
-  }
-
-  Future<int> delete(int id) {
-    return _database.execute(
-      //language=sql
-      'delete from app_configuration where id = :id::integer',
       //language=none
       args: {
         'id': id,
@@ -184,6 +140,18 @@ class CountryCrud {
 
   Future<Country> find(String code) {
     return _database.single(
+      //language=sql
+      'select * from country where code = :code::character varying',
+      //language=none
+      args: {
+        'code': code,
+      },
+      mapper: Country.fromRow,
+    );
+  }
+
+  Future<Country?> findOrNull(String code) {
+    return _database.singleOrNull(
       //language=sql
       'select * from country where code = :code::character varying',
       //language=none
@@ -241,7 +209,14 @@ class CountryCrud {
   }
 
   Future<Country> updateEntity(Country entity) {
-    throw UnimplementedError();
+    return update(
+      entity.code,
+      codeIso3: entity.codeIso3,
+      currency: entity.currency,
+      latitude: entity.latitude,
+      longitude: entity.longitude,
+      phoneCode: entity.phoneCode,
+    );
   }
 
   Future<int> delete(String code) {
@@ -263,6 +238,18 @@ class TimezoneCrud {
 
   Future<Timezone> find(String name) {
     return _database.single(
+      //language=sql
+      'select * from timezone where name = :name::text',
+      //language=none
+      args: {
+        'name': name,
+      },
+      mapper: Timezone.fromRow,
+    );
+  }
+
+  Future<Timezone?> findOrNull(String name) {
+    return _database.singleOrNull(
       //language=sql
       'select * from timezone where name = :name::text',
       //language=none
@@ -318,7 +305,14 @@ class TimezoneCrud {
   }
 
   Future<Timezone> updateEntity(Timezone entity) {
-    throw UnimplementedError();
+    return update(
+      entity.name,
+      country: entity.country,
+      clearCountry: entity.country == null,
+      aliasFor: entity.aliasFor,
+      clearAliasFor: entity.aliasFor == null,
+      latLong: entity.latLong,
+    );
   }
 
   Future<int> delete(String name) {
@@ -340,6 +334,18 @@ class AppRoleCrud {
 
   Future<AppRole> find(String code) {
     return _database.single(
+      //language=sql
+      'select * from app_role where code = :code::text',
+      //language=none
+      args: {
+        'code': code,
+      },
+      mapper: AppRole.fromRow,
+    );
+  }
+
+  Future<AppRole?> findOrNull(String code) {
+    return _database.singleOrNull(
       //language=sql
       'select * from app_role where code = :code::text',
       //language=none
@@ -389,7 +395,12 @@ class AppRoleCrud {
   }
 
   Future<AppRole> updateEntity(AppRole entity) {
-    throw UnimplementedError();
+    return update(
+      entity.code,
+      index: entity.index,
+      name: entity.name,
+      description: entity.description,
+    );
   }
 
   Future<int> delete(String code) {
@@ -411,6 +422,18 @@ class AppUserCrud {
 
   Future<AppUser> find(int id) {
     return _database.single(
+      //language=sql
+      'select * from app_user where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppUser.fromRow,
+    );
+  }
+
+  Future<AppUser?> findOrNull(int id) {
+    return _database.singleOrNull(
       //language=sql
       'select * from app_user where id = :id::integer',
       //language=none
@@ -500,13 +523,113 @@ class AppUserCrud {
   }
 
   Future<AppUser> updateEntity(AppUser entity) {
-    throw UnimplementedError();
+    return update(
+      entity.id,
+      role: entity.role.code,
+      email: entity.email,
+      created: entity.created,
+      lastSeen: entity.lastSeen,
+      clearLastSeen: entity.lastSeen == null,
+      countryCode: entity.countryCode,
+      configurationId: entity.configurationId,
+      eulaVersion: entity.eulaVersion,
+      clearEulaVersion: entity.eulaVersion == null,
+      firstName: entity.firstName,
+      clearFirstName: entity.firstName == null,
+      middleName: entity.middleName,
+      clearMiddleName: entity.middleName == null,
+      lastName: entity.lastName,
+      clearLastName: entity.lastName == null,
+    );
   }
 
   Future<int> delete(int id) {
     return _database.execute(
       //language=sql
       'delete from app_user where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+    );
+  }
+}
+
+class AppConfigurationCrud {
+  final Database _database;
+
+  AppConfigurationCrud(this._database);
+
+  Future<AppConfiguration> find(int id) {
+    return _database.single(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration?> findOrNull(int id) {
+    return _database.singleOrNull(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> insert({
+    int? id /* nextval('app_configuration_id_seq'::regclass) */,
+    bool? enableLogs,
+  }) {
+    return _database.insert(
+      'app_configuration',
+      values: {
+        if (id != null) 'id': id,
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> update(
+    int id, {
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return _database.update(
+      'app_configuration',
+      where: {
+        'id': id,
+      },
+      set: {
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      clear: [
+        if (clearEnableLogs ?? false) 'enable_logs',
+      ],
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
+    return update(
+      entity.id,
+      enableLogs: entity.enableLogs,
+      clearEnableLogs: entity.enableLogs == null,
+    );
+  }
+
+  Future<int> delete(int id) {
+    return _database.execute(
+      //language=sql
+      'delete from app_configuration where id = :id::integer',
       //language=none
       args: {
         'id': id,
@@ -522,6 +645,18 @@ class MobileDeviceCrud {
 
   Future<MobileDevice> find(int id) {
     return _database.single(
+      //language=sql
+      'select * from mobile_device where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: MobileDevice.fromRow,
+    );
+  }
+
+  Future<MobileDevice?> findOrNull(int id) {
+    return _database.singleOrNull(
       //language=sql
       'select * from mobile_device where id = :id::integer',
       //language=none
@@ -624,7 +759,25 @@ class MobileDeviceCrud {
   }
 
   Future<MobileDevice> updateEntity(MobileDevice entity) {
-    throw UnimplementedError();
+    return update(
+      entity.id,
+      userId: entity.userId,
+      created: entity.created,
+      lastSeen: entity.lastSeen,
+      deviceIdentifier: entity.deviceIdentifier,
+      notificationToken: entity.notificationToken,
+      clearNotificationToken: entity.notificationToken == null,
+      notificationTokenUpdated: entity.notificationTokenUpdated,
+      clearNotificationTokenUpdated: entity.notificationTokenUpdated == null,
+      osName: entity.osName,
+      osVersion: entity.osVersion,
+      osLocale: entity.osLocale,
+      manufacturer: entity.manufacturer,
+      model: entity.model,
+      appVersion: entity.appVersion,
+      appLanguage: entity.appLanguage,
+      configurationId: entity.configurationId,
+    );
   }
 
   Future<int> delete(int id) {
