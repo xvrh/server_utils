@@ -56,7 +56,8 @@ class SqlGrammarDefinition extends GrammarDefinition {
           s[2] as Token<String>?));
 
   Parser sqlParameterType() =>
-      (string('::') & ref0(sqlParameterTypeToken)).map((s) => s[1]);
+      (string(':') & string(':').optional() & ref0(sqlParameterTypeToken))
+          .map((s) => s.last);
 
   Parser sqlParameterTypeToken() =>
       (ref0(identifierLexicalToken) & string('[]').optional())

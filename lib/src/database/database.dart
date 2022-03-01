@@ -1,3 +1,4 @@
+import 'schema/schema.dart';
 import 'page.dart';
 
 typedef Mapper<T> = T Function(Map<String, dynamic>);
@@ -80,12 +81,13 @@ extension DatabaseExtension on Database {
   }
 
   Future<T> update<T>(
-    String tableName, {
+    TableDefinition table, {
     required Map<String, Object> where,
     required Map<String, Object> set,
     List<String>? clear,
     required Mapper<T> mapper,
   }) {
+    var tableName = table.name;
     if (tableName.contains('"')) {
       throw Exception('Table name is invalid ($tableName)');
     }
@@ -100,7 +102,9 @@ extension DatabaseExtension on Database {
     var wheres = <String>[];
     var values = <String, Object>{};
     for (var e in set.entries) {
-      updates.add('"${e.key}" = :${e.key}');
+      var column = table.columns.firstWhere((c) => c.name == e.key);
+      updates.add(
+          '"${e.key}" = :${e.key}:${column.type.typeString}::${column.type.postgresType}');
       values[e.key] = e.value;
     }
     if (clear != null) {
@@ -109,7 +113,9 @@ extension DatabaseExtension on Database {
       }
     }
     for (var e in where.entries) {
-      wheres.add('"${e.key}" = :${e.key}');
+      var column = table.columns.firstWhere((c) => c.name == e.key);
+      wheres.add(
+          '"${e.key}" = :${e.key}:${column.type.typeString}::${column.type.postgresType}');
       values[e.key] = e.value;
     }
 

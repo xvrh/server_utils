@@ -139,8 +139,8 @@ class $className {
   String _projectionCode(
       ProjectionDeclaration projection, List<ColumnDefinition> columns) {
     var dartGenerator = DartGenerator();
-    return dartGenerator.generateClassFromColumns(
-        projection.name.name, columns);
+    return dartGenerator.generateClassFromColumns(projection.name.name, columns,
+        table: null);
   }
 }
 

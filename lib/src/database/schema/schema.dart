@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:server_utils/src/utils/escape_dart_string.dart';
 
 class DatabaseSchema {
   static final empty = DatabaseSchema([]);
@@ -43,6 +44,21 @@ class ColumnDefinition {
   })  : isNullable = isNullable ?? true,
         isPrimaryKey = isPrimaryKey ?? false;
 
+  String toCode() {
+    var domain = this.domain;
+    var reference = this.reference;
+    var args = <String, String?>{
+      'type': type.toCode(),
+      if (domain != null) 'domain': escapeDartString(domain),
+      if (!isNullable) 'isNullable': '$isNullable',
+      if (isPrimaryKey) 'isPrimaryKey': '$isPrimaryKey',
+      if (reference != null) 'reference': escapeDartString(reference),
+    };
+
+    var argCode = args.entries.map((e) => '${e.key}: ${e.value}').join(',');
+    return "ColumnDefinition('$name', $argCode)";
+  }
+
   @override
   String toString() => name;
 }
@@ -52,106 +68,152 @@ class ColumnDefinition {
 class DataType<T> {
   static const integer = DataType<int>._(
     'integer',
+    'integer',
+    'int4',
     aliases: ['int', 'int4'],
     dartType: 'int',
   );
   static const integerArray = DataType<List<int>>._(
+    'integerArray',
     'integer[]',
+    '_int4',
     aliases: ['int[]', 'int4[]'],
     dartType: 'List<int>',
   );
   static const bigint = DataType<int>._(
     'bigint',
+    'bigint',
+    'int8',
     aliases: ['int8'],
     dartType: 'int',
   );
   static const smallint = DataType<int>._(
     'smallint',
+    'smallint',
+    'int2',
     aliases: ['int2'],
     dartType: 'int',
   );
   static const serial = DataType<int>._(
     'serial',
+    'serial',
+    'int4',
     aliases: ['serial4'],
     dartType: 'int',
   );
   static const bigserial = DataType<int>._(
     'bigserial',
+    'bigserial',
+    'int8',
     aliases: ['serial8'],
     dartType: 'int',
   );
   static const text = DataType<String>._(
     'text',
+    'text',
+    'text',
     dartType: 'String',
   );
   static const name = DataType<String>._(
     'name',
+    'name',
+    'name',
     dartType: 'String',
   );
   static const textArray = DataType<List<String>>._(
+    'textArray',
     'text[]',
+    '_text',
     dartType: 'List<String>',
   );
   static const character = DataType<String>._(
     'character',
+    'character',
+    'text',
     aliases: ['har'],
     dartType: 'String',
   );
   static const characterVarying = DataType<String>._(
+    'characterVarying',
     'character varying',
+    'varchar',
     aliases: ['varchar'],
     dartType: 'String',
   );
   static const real = DataType<double>._(
     'real',
+    'real',
+    'float4',
     aliases: ['float4'],
     dartType: 'double',
   );
   static const doublePrecision = DataType<double>._(
+    'doublePrecision',
     'double precision',
+    'float8',
     aliases: ['float8'],
     dartType: 'double',
   );
   static const doubleArray = DataType<List<double>>._(
+    'doubleArray',
     'float8[]',
+    '_float8',
     dartType: 'List<double>',
   );
   static const boolean = DataType<bool>._(
+    'boolean',
+    'boolean',
     'boolean',
     aliases: ['bool'],
     dartType: 'bool',
   );
   static const timestampWithTimeZone = DataType<DateTime>._(
+    'timestampWithTimeZone',
     'timestamp with time zone',
+    'timestamptz',
     aliases: ['timestamptz'],
     dartType: 'DateTime',
   );
   static const timestampWithoutTimeZone = DataType<DateTime>._(
+    'timestampWithoutTimeZone',
     'timestamp without time zone',
+    'timestamp',
     aliases: ['timestamp'],
     dartType: 'DateTime',
   );
   static const date = DataType<DateTime>._(
     'date',
+    'date',
+    'date',
     dartType: 'DateTime',
   );
   static const json = DataType<dynamic>._(
+    'json',
+    'json',
     'json',
     dartType: 'Object',
   );
   static const jsonb = DataType<dynamic>._(
     'jsonb',
+    'jsonb',
+    'jsonb',
     dartType: 'Object',
   );
   static const jsonbArray = DataType<List<dynamic>>._(
+    'jsonbArray',
     'jsonb[]',
+    '_jsonb',
     dartType: 'List<dynamic>',
   );
   static const bytea = DataType<List<int>>._(
     'bytea',
+    'bytea',
+    'bytea',
     dartType: 'List<int>',
   );
   static const uuid = DataType<String>._(
+    'uuid',
+    'uuid',
     'uuid',
     dartType: 'String',
   );
@@ -199,12 +261,18 @@ class DataType<T> {
   final String postgresType;
   final List<String> aliases;
   final String dartType;
+  final String code;
 
-  const DataType._(this.postgresType,
+  // TypeString from postgres library
+  final String typeString;
+
+  const DataType._(this.code, this.postgresType, this.typeString,
       {List<String>? aliases, required this.dartType})
       : aliases = aliases ?? const [];
 
   Type get type => T;
+
+  String toCode() => 'DataType.$code';
 
   @override
   String toString() => postgresType;

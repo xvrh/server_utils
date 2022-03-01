@@ -140,7 +140,8 @@ void _simulateUseElements() {
   String _projectionCode(String projectionName,
       ProjectionDeclaration projection, List<ColumnDefinition> columns) {
     var dartGenerator = DartGenerator();
-    return dartGenerator.generateClassFromColumns(projectionName, columns);
+    return dartGenerator.generateClassFromColumns(projectionName, columns,
+        table: null);
   }
 }
 

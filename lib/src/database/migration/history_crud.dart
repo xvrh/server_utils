@@ -58,7 +58,7 @@ class MigrationHistoryCrud {
     DateTime? date,
   }) {
     return _database.update(
-      '_migration_history',
+     TableDefinition( '_migration_history', []),
       where: {
         'id': id,
       },

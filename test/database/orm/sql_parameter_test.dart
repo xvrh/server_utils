@@ -32,13 +32,11 @@ void main() {
     expect(query.parameters[1].name, 'otherName');
   });
 
-  test('Single colon not recognized as type', () {
+  test('Extract parameters from sql (5)', () {
     var query = SqlQuery.parse('select * where id = :id:text');
-    expect(query.parameters, hasLength(2));
+    expect(query.parameters, hasLength(1));
     expect(query.parameters[0].name, 'id');
-    expect(query.parameters[0].type, isNull);
-    expect(query.parameters[1].name, 'text');
-    expect(query.parameters[1].type, isNull);
+    expect(query.parameters[0].type, 'text');
   });
 
   test('Replace parameters', () {
@@ -69,7 +67,7 @@ where table_schema = :schemaName::text;
     expect(SqlQuery.parse(sql).bodyWithDartSubstitutions, '''
 select table_name::text
 from information_schema.tables
-where table_schema = @schemaName::text;''');
+where table_schema = @schemaName::text''');
   });
 
   test('SqlParser without colon', () {
