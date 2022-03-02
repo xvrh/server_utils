@@ -26,6 +26,7 @@ abstract class DomContext {
   Node element(
     String tag, {
     String? id,
+    String? style,
     Iterable<String>? classes,
     Map<String, String>? attributes,
     Iterable<Node>? children,
@@ -60,6 +61,7 @@ Node fragment(Iterable<Node> children) => dom.fragment(children);
 Node element(
   String tag, {
   String? id,
+  String? style,
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
@@ -69,6 +71,7 @@ Node element(
     dom.element(
       tag,
       id: id,
+      style: style,
       classes: classes,
       attributes: attributes,
       children: _children(children, child, text),
@@ -92,6 +95,7 @@ Node a({
   String? rel,
   String? target,
   String? title,
+  String? style,
 }) {
   final hasAttributes = attributes != null ||
       href != null ||
@@ -101,6 +105,7 @@ Node a({
   return dom.element(
     'a',
     id: id,
+    style: style,
     classes: classes,
     attributes: hasAttributes
         ? <String, String>{
@@ -137,6 +142,7 @@ Node div({
   String? id,
   Iterable<String>? classes,
   Map<String, String>? attributes,
+  String? style,
   Iterable<Node>? children,
   Node? child,
   String? text,
@@ -144,6 +150,7 @@ Node div({
     dom.element(
       'div',
       id: id,
+      style: style,
       classes: classes,
       attributes: attributes,
       children: _children(children, child, text),
@@ -152,6 +159,7 @@ Node div({
 /// Creates a `<h1>` Element using the default [DomContext].
 Node h1({
   String? id,
+  String? style,
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
@@ -161,6 +169,7 @@ Node h1({
     dom.element(
       'h1',
       id: id,
+      style: style,
       classes: classes,
       attributes: attributes,
       children: _children(children, child, text),
@@ -169,6 +178,7 @@ Node h1({
 /// Creates a `<h1>` Element using the default [DomContext].
 Node h2({
   String? id,
+  String? style,
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
@@ -178,6 +188,7 @@ Node h2({
     dom.element(
       'h2',
       id: id,
+      style: style,
       classes: classes,
       attributes: attributes,
       children: _children(children, child, text),
@@ -186,6 +197,7 @@ Node h2({
 /// Creates a `<h1>` Element using the default [DomContext].
 Node h3({
   String? id,
+  String? style,
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
@@ -195,6 +207,7 @@ Node h3({
     dom.element(
       'h3',
       id: id,
+      style: style,
       classes: classes,
       attributes: attributes,
       children: _children(children, child, text),
@@ -203,6 +216,7 @@ Node h3({
 /// Creates an `<img>` Element using the default [DomContext].
 Node img({
   String? id,
+  String? style,
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
@@ -215,6 +229,7 @@ Node img({
   return dom.element(
     'img',
     id: id,
+    style: style,
     classes: classes,
     attributes: hasAttributes
         ? <String, String>{
@@ -248,6 +263,7 @@ Node li({
 /// Creates a `<p>` Element using the default [DomContext].
 Node p({
   String? id,
+  String? style,
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
@@ -257,6 +273,7 @@ Node p({
     dom.element(
       'p',
       id: id,
+      style: style,
       classes: classes,
       attributes: attributes,
       children: _children(children, child, text),
@@ -265,6 +282,7 @@ Node p({
 /// Creates a `<span>` Element using the default [DomContext].
 Node span({
   String? id,
+  String? style,
   Iterable<String>? classes,
   Map<String, String>? attributes,
   Iterable<Node>? children,
@@ -274,6 +292,7 @@ Node span({
     dom.element(
       'span',
       id: id,
+      style: style,
       classes: classes,
       attributes: attributes,
       children: _children(children, child, text),
@@ -393,6 +412,7 @@ class _StringDomContext extends DomContext {
   Node element(
     String tag, {
     String? id,
+    String? style,
     Iterable<String>? classes,
     Map<String, String>? attributes,
     Iterable<Node>? children,
@@ -400,7 +420,7 @@ class _StringDomContext extends DomContext {
     _verifyElementTag(tag);
     _verifyAttributeKeys(attributes?.keys);
     return _StringElement(
-        tag, _mergeAttributes(id, classes, attributes), children);
+        tag, _mergeAttributes(id, classes, attributes, style: style), children);
   }
 
   @override
@@ -411,13 +431,17 @@ class _StringDomContext extends DomContext {
 }
 
 Map<String, String>? _mergeAttributes(
-    String? id, Iterable<String>? classes, Map<String, String>? attributes) {
+    String? id, Iterable<String>? classes, Map<String, String>? attributes,
+    {String? style}) {
   final hasClasses = classes != null && classes.isNotEmpty;
-  final hasAttributes =
-      id != null || hasClasses || (attributes != null && attributes.isNotEmpty);
+  final hasAttributes = id != null ||
+      style != null ||
+      hasClasses ||
+      (attributes != null && attributes.isNotEmpty);
   if (!hasAttributes) return null;
   return <String, String>{
     if (id != null) 'id': id,
+    if (style != null) 'style': style,
     if (classes != null && classes.isNotEmpty) 'class': classes.join(' '),
     if (attributes != null) ...attributes,
   };
