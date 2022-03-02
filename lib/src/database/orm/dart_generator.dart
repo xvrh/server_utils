@@ -362,6 +362,8 @@ import 'package:server_utils/database.dart';
 
   String generateCrudForTable(ConfiguredTable configuredTable) {
     var table = configuredTable.table;
+    var enumDefinition = enums.firstWhereOrNull((e) => e.table == table);
+
     var code = StringBuffer('');
 
     var className = '${table.name.words.toUpperCamel()}Crud';
@@ -377,11 +379,14 @@ class $className {
 
     _findCode(code, configuredTable, primaryKeys, orNull: false);
     _findCode(code, configuredTable, primaryKeys, orNull: true);
-    _insertCode(code, configuredTable);
-    if (columns.where((c) => !c.isPrimaryKey).isNotEmpty) {
-      _updateCode(code, configuredTable);
+
+    if (enumDefinition == null) {
+      _insertCode(code, configuredTable);
+      if (columns.where((c) => !c.isPrimaryKey).isNotEmpty) {
+        _updateCode(code, configuredTable);
+      }
+      _deleteCode(code, configuredTable, primaryKeys);
     }
-    _deleteCode(code, configuredTable, primaryKeys);
 
     code.writeln('}');
     return '$code';

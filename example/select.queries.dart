@@ -2,7 +2,7 @@ import 'package:server_utils/database.dart';
 
 import 'example_database_schema.dart';
 
-part 'select.queries.g.dart';
+part 'select.queries.gen.dart';
 
 extension _MyQueries on Database {
   AppUser findUser(int id) {

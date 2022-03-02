@@ -20,8 +20,8 @@ where id = :id::int
     ).single;
   }
 
-  Future<AppUser> findUserByEmail(String email) {
-    return Query<AppUser>(
+  Future<AppUser?> findUserByEmail(String email) {
+    return Query<AppUser?>(
       this,
       //language=sql
       r'''
@@ -33,7 +33,7 @@ where email = :email::text
         'email': email,
       },
       mapper: AppUser.fromRow,
-    ).single;
+    ).singleOrNull;
   }
 
   Query<AppUser> queryByCountry(String country) {
@@ -151,7 +151,7 @@ where notification_token_updated < :date
     }).affectedRows;
   }
 
-// ignore: unused_element
+  // ignore: unused_element
   void _simulateUseElements() {
     print(_MyQueries(this).findUser);
     print(_MyQueries(this).findUserByEmail);
@@ -231,5 +231,4 @@ class _MobileDeviceTokenColumns {
   final notificationToken = Column<MobileDeviceToken>('notification_token');
   final manufacturer = Column<MobileDeviceToken>('manufacturer');
   final deviceIdentifier = Column<MobileDeviceToken>('device_identifier');
-  late final list = [userId, notificationToken, manufacturer, deviceIdentifier];
 }

@@ -33,7 +33,7 @@ void main() {
   });
 
   test('Extract parameters from sql (5)', () {
-    var query = SqlQuery.parse('select * where id = :id:text');
+    var query = SqlQuery.parse('select * where id = :id:text::text');
     expect(query.parameters, hasLength(1));
     expect(query.parameters[0].name, 'id');
     expect(query.parameters[0].type, 'text');

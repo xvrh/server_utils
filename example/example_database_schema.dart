@@ -2,6 +2,22 @@
 import 'package:server_utils/database.dart';
 
 class CmsPage {
+  static final table = TableDefinition(
+    'cms_page',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('code', type: DataType.text),
+      ColumnDefinition('title',
+          type: DataType.jsonb, domain: 'translated_text', isNullable: false),
+      ColumnDefinition('title2', type: DataType.jsonb, isNullable: false),
+      ColumnDefinition('title3', type: DataType.jsonb),
+      ColumnDefinition('body',
+          type: DataType.jsonb, domain: 'translated_text', isNullable: false),
+      ColumnDefinition('page_type', type: DataType.text),
+    ],
+  );
+
   static final columns = _CmsPageColumns();
 
   final int id;
@@ -90,10 +106,87 @@ class _CmsPageColumns {
   final title3 = Column<CmsPage>('title3');
   final body = Column<CmsPage>('body');
   final pageType = Column<CmsPage>('page_type');
-  late final list = [id, code, title, title2, title3, body, pageType];
+}
+
+class AppConfiguration {
+  static final table = TableDefinition(
+    'app_configuration',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('enable_logs', type: DataType.boolean),
+    ],
+  );
+
+  static final columns = _AppConfigurationColumns();
+
+  final int id;
+  final bool? enableLogs;
+
+  AppConfiguration({
+    required this.id,
+    this.enableLogs,
+  });
+
+  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
+    return AppConfiguration(
+      id: row['id']! as int,
+      enableLogs: row['enable_logs'] as bool?,
+    );
+  }
+
+  factory AppConfiguration.fromJson(Map<String, Object?> json) {
+    return AppConfiguration(
+      id: (json['id']! as num).toInt(),
+      enableLogs: json['enableLogs'] as bool?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'enableLogs': enableLogs,
+    };
+  }
+
+  AppConfiguration copyWith({
+    int? id,
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return AppConfiguration(
+      id: id ?? this.id,
+      enableLogs:
+          (clearEnableLogs ?? false) ? null : enableLogs ?? this.enableLogs,
+    );
+  }
+}
+
+class _AppConfigurationColumns {
+  final id = Column<AppConfiguration>('id');
+  final enableLogs = Column<AppConfiguration>('enable_logs');
 }
 
 class Country {
+  static final table = TableDefinition(
+    'country',
+    [
+      ColumnDefinition('code',
+          type: DataType.characterVarying,
+          isNullable: false,
+          isPrimaryKey: true),
+      ColumnDefinition('code_iso3',
+          type: DataType.characterVarying, isNullable: false),
+      ColumnDefinition('currency',
+          type: DataType.characterVarying, isNullable: false),
+      ColumnDefinition('latitude',
+          type: DataType.doublePrecision, isNullable: false),
+      ColumnDefinition('longitude',
+          type: DataType.doublePrecision, isNullable: false),
+      ColumnDefinition('phone_code', type: DataType.integer, isNullable: false),
+    ],
+  );
+
   static final columns = _CountryColumns();
 
   final String code;
@@ -171,10 +264,21 @@ class _CountryColumns {
   final latitude = Column<Country>('latitude');
   final longitude = Column<Country>('longitude');
   final phoneCode = Column<Country>('phone_code');
-  late final list = [code, codeIso3, currency, latitude, longitude, phoneCode];
 }
 
 class Timezone {
+  static final table = TableDefinition(
+    'timezone',
+    [
+      ColumnDefinition('name',
+          type: DataType.text, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('country',
+          type: DataType.characterVarying, reference: 'country'),
+      ColumnDefinition('alias_for', type: DataType.text, reference: 'timezone'),
+      ColumnDefinition('lat_long', type: DataType.text, isNullable: false),
+    ],
+  );
+
   static final columns = _TimezoneColumns();
 
   final String name;
@@ -238,7 +342,6 @@ class _TimezoneColumns {
   final country = Column<Timezone>('country');
   final aliasFor = Column<Timezone>('alias_for');
   final latLong = Column<Timezone>('lat_long');
-  late final list = [name, country, aliasFor, latLong];
 }
 
 class AppRole {
@@ -296,6 +399,32 @@ class AppRole {
 }
 
 class AppUser {
+  static final table = TableDefinition(
+    'app_user',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('role',
+          type: DataType.text, isNullable: false, reference: 'app_role'),
+      ColumnDefinition('email', type: DataType.text, isNullable: false),
+      ColumnDefinition('created',
+          type: DataType.timestampWithTimeZone, isNullable: false),
+      ColumnDefinition('last_seen', type: DataType.timestampWithTimeZone),
+      ColumnDefinition('country_code',
+          type: DataType.characterVarying,
+          isNullable: false,
+          reference: 'country'),
+      ColumnDefinition('configuration_id',
+          type: DataType.integer,
+          isNullable: false,
+          reference: 'app_configuration'),
+      ColumnDefinition('eula_version', type: DataType.text),
+      ColumnDefinition('first_name', type: DataType.text),
+      ColumnDefinition('middle_name', type: DataType.text),
+      ColumnDefinition('last_name', type: DataType.text),
+    ],
+  );
+
   static final columns = _AppUserColumns();
 
   final int id;
@@ -420,73 +549,39 @@ class _AppUserColumns {
   final firstName = Column<AppUser>('first_name');
   final middleName = Column<AppUser>('middle_name');
   final lastName = Column<AppUser>('last_name');
-  late final list = [
-    id,
-    role,
-    email,
-    created,
-    lastSeen,
-    countryCode,
-    configurationId,
-    eulaVersion,
-    firstName,
-    middleName,
-    lastName
-  ];
-}
-
-class AppConfiguration {
-  static final columns = _AppConfigurationColumns();
-
-  final int id;
-  final bool? enableLogs;
-
-  AppConfiguration({
-    required this.id,
-    this.enableLogs,
-  });
-
-  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
-    return AppConfiguration(
-      id: row['id']! as int,
-      enableLogs: row['enable_logs'] as bool?,
-    );
-  }
-
-  factory AppConfiguration.fromJson(Map<String, Object?> json) {
-    return AppConfiguration(
-      id: (json['id']! as num).toInt(),
-      enableLogs: json['enableLogs'] as bool?,
-    );
-  }
-
-  Map<String, Object?> toJson() {
-    return {
-      'id': id,
-      'enableLogs': enableLogs,
-    };
-  }
-
-  AppConfiguration copyWith({
-    int? id,
-    bool? enableLogs,
-    bool? clearEnableLogs,
-  }) {
-    return AppConfiguration(
-      id: id ?? this.id,
-      enableLogs:
-          (clearEnableLogs ?? false) ? null : enableLogs ?? this.enableLogs,
-    );
-  }
-}
-
-class _AppConfigurationColumns {
-  final id = Column<AppConfiguration>('id');
-  final enableLogs = Column<AppConfiguration>('enable_logs');
-  late final list = [id, enableLogs];
 }
 
 class MobileDevice {
+  static final table = TableDefinition(
+    'mobile_device',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('user_id',
+          type: DataType.integer, isNullable: false, reference: 'app_user'),
+      ColumnDefinition('created',
+          type: DataType.timestampWithTimeZone, isNullable: false),
+      ColumnDefinition('last_seen',
+          type: DataType.timestampWithTimeZone, isNullable: false),
+      ColumnDefinition('device_identifier',
+          type: DataType.text, isNullable: false),
+      ColumnDefinition('notification_token', type: DataType.text),
+      ColumnDefinition('notification_token_updated',
+          type: DataType.timestampWithTimeZone),
+      ColumnDefinition('os_name', type: DataType.text, isNullable: false),
+      ColumnDefinition('os_version', type: DataType.text, isNullable: false),
+      ColumnDefinition('os_locale', type: DataType.text, isNullable: false),
+      ColumnDefinition('manufacturer', type: DataType.text, isNullable: false),
+      ColumnDefinition('model', type: DataType.text, isNullable: false),
+      ColumnDefinition('app_version', type: DataType.text, isNullable: false),
+      ColumnDefinition('app_language', type: DataType.text, isNullable: false),
+      ColumnDefinition('configuration_id',
+          type: DataType.integer,
+          isNullable: false,
+          reference: 'app_configuration'),
+    ],
+  );
+
   static final columns = _MobileDeviceColumns();
 
   final int id;
@@ -644,21 +739,4 @@ class _MobileDeviceColumns {
   final appVersion = Column<MobileDevice>('app_version');
   final appLanguage = Column<MobileDevice>('app_language');
   final configurationId = Column<MobileDevice>('configuration_id');
-  late final list = [
-    id,
-    userId,
-    created,
-    lastSeen,
-    deviceIdentifier,
-    notificationToken,
-    notificationTokenUpdated,
-    osName,
-    osVersion,
-    osLocale,
-    manufacturer,
-    model,
-    appVersion,
-    appLanguage,
-    configurationId
-  ];
 }
