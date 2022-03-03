@@ -29,7 +29,7 @@ Future<void> _afterRefresh(PostgreSQLConnection connection) async {
   var database = DatabaseIO(connection);
   var schema = await SchemaExtractor(database).schema(tableFilter: (_) => true);
   var code = DartGenerator(
-    tables: schema.withConfig({}),
+    schema.withConfig({}),
   );
   var schemaFile = 'history_schema.dart';
   File('lib/src/database/migration/$schemaFile')

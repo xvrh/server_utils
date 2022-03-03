@@ -30,8 +30,6 @@ bool isRequiredParameter(ParameterElement parameter) {
       _requiredChecker.firstAnnotationOf(parameter) != null;
 }
 
-bool isNum(DartType type) => type.isDartCoreNum;
-
 bool isDateTime(DartType type) =>
     type.element != null &&
     type.element!.library != null &&
@@ -51,7 +49,7 @@ bool isJsonSimpleType(DartType type) =>
     type.isDartCoreDouble ||
     type.isDartCoreBool ||
     type.isDartCoreString ||
-    isNum(type);
+    type.isDartCoreNum;
 
 bool isVoid(DartType type) =>
     type.isVoid ||

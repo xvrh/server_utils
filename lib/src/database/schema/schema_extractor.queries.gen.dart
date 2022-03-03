@@ -175,6 +175,44 @@ where typtype = 'd'
     ).list;
   }
 
+  Future<List<EnumValue>> valuesForEnums({String schemaName = 'public'}) {
+    return Query<EnumValue>(
+      this,
+      //language=sql
+      r'''
+select t.typname   as name,
+       e.enumlabel as value
+from pg_type t
+         join pg_enum e on t.oid = e.enumtypid
+         join pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+where n.nspname = :schemaName
+''',
+      arguments: {
+        'schemaName': schemaName,
+      },
+      mapper: EnumValue.fromRow,
+    ).list;
+  }
+
+  Future<List<UserDefinedType>> userDefinedTypes(
+      {String schemaName = 'public'}) {
+    return Query<UserDefinedType>(
+      this,
+      //language=sql
+      r'''  select    t.oid::int as id, t.typname::text as name, t.typtype::text as type
+from        pg_type t
+                left join   pg_catalog.pg_namespace n on n.oid = t.typnamespace
+where       (t.typrelid = 0 or (select c.relkind = 'c' from pg_catalog.pg_class c where c.oid = t.typrelid))
+  and     not exists(select 1 from pg_catalog.pg_type el where el.oid = t.typelem and el.typarray = t.oid)
+  and     n.nspname not in ('pg_catalog', 'information_schema')
+''',
+      arguments: {
+        'schemaName': schemaName,
+      },
+      mapper: UserDefinedType.fromRow,
+    ).list;
+  }
+
   // ignore: unused_element
   void _simulateUseElements() {
     print(_SchemaExtractorQueries(this).tablesForSchema);
@@ -678,4 +716,45 @@ class _DomainDescriptionColumns {
   final notNull = Column<DomainDescription>('not_null');
   final defaultValue = Column<DomainDescription>('default_value');
   late final list = [oid, name, notNull, defaultValue];
+}
+
+class EnumValue {
+  static final columns = _DomainDescriptionColumns();
+
+  final String name;
+  final String value;
+
+  EnumValue({
+    required this.value,
+    required this.name,
+  });
+
+  factory EnumValue.fromRow(Map<String, dynamic> row) {
+    return EnumValue(
+      name: row['name']! as String,
+      value: row['value']! as String,
+    );
+  }
+}
+
+class UserDefinedType {
+  static final columns = _DomainDescriptionColumns();
+
+  final int id;
+  final String name;
+  final String type;
+
+  UserDefinedType({
+    required this.id,
+    required this.name,
+    required this.type,
+  });
+
+  factory UserDefinedType.fromRow(Map<String, dynamic> row) {
+    return UserDefinedType(
+      id: row['id']! as int,
+      name: row['name']! as String,
+      type: row['type']! as String,
+    );
+  }
 }

@@ -3,7 +3,7 @@ import 'package:path/path.dart' as p;
 import 'package:postgres/postgres.dart';
 import '../../../database_builder.dart';
 import '../../utils/quick_dart_formatter.dart';
-import '../../utils/string.dart';
+import 'dart_generator.dart';
 import 'data_type_postgres.dart';
 import 'queries_parser.dart';
 import 'utils/sql_parser.dart';
@@ -25,12 +25,13 @@ class QueriesGenerator {
 
   Future<String> generate(String rawContent, {required String filePath}) async {
     var fileName = p.basenameWithoutExtension(filePath);
-    var parsed = parseQueries(rawContent);
-    if (parsed.isFailure) {
+    QueriesFile result;
+    try {
+      result = parseQueries(rawContent);
+    } catch (e) {
       throw QueriesGeneratorException('Fail to parse ${p.basename(filePath)} '
-          '(file://${p.normalize(p.absolute(filePath))}:${parsed.toPositionString()})');
+          '(file://${p.normalize(p.absolute(filePath))}:$e)');
     }
-    var result = parsed.value;
 
     var code = StringBuffer();
     var projectionsCode = StringBuffer();
@@ -38,94 +39,97 @@ class QueriesGenerator {
 // GENERATED-CODE: do not edit
 // Code is generated from ${p.basename(filePath)}
 
-import 'package:server_utils/database.dart';""");
+part of '$fileName.dart';""");
 
-    for (var import in result.importDirectives) {
-      code.writeln('import ${import.body};');
-    }
+    for (var extension in result.extensions) {
+      var extensionName = extension.name;
+      if (!extensionName.startsWith('_')) {
+        code.writeln('// Skip extension [$extensionName] (need to be private)');
 
-    var classDirective = result.classDirective;
-    var defaultName = fileName.words.toUpperCamel();
-    if (classDirective != null) {
-      var className = classDirective.name?.name ?? defaultName;
-      code.writeln('''
-class $className {
-  final Database database;
-  
-  $className(this.database);
-''');
-    } else {
-      var extensionDirective = result.extensionDirective;
-      code.writeln(
-          'extension ${extensionDirective?.name?.name ?? defaultName} on Database {');
-    }
-    for (var query in result.queries) {
-      var sqlParameters = query.query.parameters.map((p) => p.name).toSet();
-      var methodParameters =
-          query.header.method.parameters.parameters.map((p) => p.name).toSet();
-      var errorHeader =
-          'Error generating (file://${p.normalize(p.absolute(filePath))}) - ${query.header.method.name}:\n';
-      if (!const UnorderedIterableEquality()
-          .equals(sqlParameters, methodParameters)) {
-        throw Exception(
-            '${errorHeader}The declared parameters ($methodParameters) and sql parameters ($sqlParameters) has a mismatch');
+        continue;
       }
-      var testValues =
-          query.header.testValues?.values.map((p) => p.name).toSet();
-      if (testValues != null &&
-          testValues.any((t) => !sqlParameters.contains(t.name))) {
-        throw Exception(
-            '${errorHeader}The test values ($testValues) and sql parameters ($sqlParameters) has a mismatch');
-      }
+      extensionName = extensionName.substring(1);
+      code.writeln('extension $extensionName on Database {');
 
-      List<ColumnInfo> queryResult;
-      try {
-        queryResult = await evaluator.runQuery(query.query, query.header);
-      } catch (e) {
-        throw QueriesGeneratorException('[${query.header.method.name}]: $e');
-      }
+      for (var query in extension.queries) {
+        var sqlParameters = query.query.parameters.map((p) => p.name).toSet();
+        var methodParameters = query.header.method.parameters.parameters
+            .map((p) => p.name)
+            .toSet();
+        var errorHeader =
+            'Error generating (file://${p.normalize(p.absolute(filePath))}) - ${query.header.method.name}:\n';
+        if (!const UnorderedIterableEquality()
+            .equals(sqlParameters, methodParameters)) {
+          throw Exception(
+              '${errorHeader}The declared parameters ($methodParameters) and sql parameters ($sqlParameters) has a mismatch');
+        }
+        var testValues =
+            query.header.testValues?.values.map((p) => p.name).toSet();
+        if (testValues != null && !testValues.every(sqlParameters.contains)) {
+          throw Exception(
+              '${errorHeader}The test values ($testValues) and sql parameters ($sqlParameters) has a mismatch');
+        }
 
-      var projection = query.header.projection;
-      var columns =
-          computedColumns(schema, queryResult, projection: projection);
+        List<ColumnInfo> queryResult;
+        try {
+          queryResult = await evaluator.runQuery(query.query, query.header);
+        } catch (e, s) {
+          Error.throwWithStackTrace(
+              QueriesGeneratorException('[${query.header.method.name}]: $e'),
+              s);
+        }
 
-      if (projection != null) {
-        projectionsCode.writeln(_projectionCode(projection, columns));
-      }
+        var projection = query.header.projection;
+        var columns =
+            computedColumns(schema, queryResult, projection: projection);
+        var returnType = ReturnType(query.header.method.returnType);
 
-      var returnType = ReturnType(query.header.method.returnType);
-      var isSimpleType = columns.length == 1 &&
-          columns.first.type.dartType == returnType.innerTypeWithoutNullability;
+        if (projection != null) {
+          projectionsCode.writeln(_projectionCode(
+              returnType.innerTypeWithoutNullability, projection, columns));
+        }
 
-      var queryConstructor = '';
-      if (isSimpleType) {
-        queryConstructor = '.singleColumn';
-      } else if (returnType._isVoid) {
-        queryConstructor = '.noResult';
-      }
+        var isSimpleType = columns.length == 1 &&
+            columns.first.type.dartType ==
+                returnType.innerTypeWithoutNullability;
 
-      code.writeln('${returnType.returnType} ${query.header.method.name}'
-          '${query.header.method.parameters.rawDeclaration} {');
-      code.writeln(
-          'return Query<${returnType.innerType}>$queryConstructor(this, ');
-      code.writeln('  //language=sql');
-      code.writeln("r'''");
-      code.writeln(query.query.body);
-      code.writeln("''', arguments: {");
-      for (var parameter in query.header.method.parameters.parameters) {
-        code.writeln("'${parameter.name}': ${parameter.name},");
-      }
-      code.writeln('}');
-      if (!isSimpleType && !returnType._isVoid) {
+        var queryConstructor = '';
+        if (isSimpleType) {
+          queryConstructor = '.singleColumn';
+        } else if (returnType._isVoid) {
+          queryConstructor = '.noResult';
+        }
+
+        code.writeln('${returnType.returnType} ${query.header.method.name}'
+            '${query.header.method.parameters.rawDeclaration} {');
         code.writeln(
-            ', mapper: ${returnType.innerTypeWithoutNullability}.fromRow,');
+            'return Query<${returnType.innerType}>$queryConstructor(this, ');
+        code.writeln('  //language=sql');
+        code.writeln("r'''");
+        code.writeln(query.query.body);
+        code.writeln("''', arguments: {");
+        for (var parameter in query.header.method.parameters.parameters) {
+          code.writeln("'${parameter.name}': ${parameter.name},");
+        }
+        code.writeln('}');
+        if (!isSimpleType && !returnType._isVoid) {
+          code.writeln(
+              ', mapper: ${returnType.innerTypeWithoutNullability}.fromRow,');
+        }
+        code.writeln(')${returnType.methodCall};');
+        code.writeln('}');
       }
-      code.writeln(')${returnType.methodCall};');
-      code.writeln('}');
-    }
-    code.writeln('}');
 
-    code.writeln(projectionsCode);
+      code.writeln('''
+  // ignore: unused_element
+void _simulateUseElements() {
+  ${extension.queries.map((q) => 'print(${extension.name}(this).${q.header.method.name});').join('\n')}
+}      
+''');
+      code.writeln('}');
+
+      code.writeln(projectionsCode);
+    }
 
     var resultCode = '$code';
     try {
@@ -136,10 +140,10 @@ class $className {
     return resultCode;
   }
 
-  String _projectionCode(
+  String _projectionCode(String projectionName,
       ProjectionDeclaration projection, List<ColumnDefinition> columns) {
-    var dartGenerator = DartGenerator();
-    return dartGenerator.generateClassFromColumns(projection.name.name, columns,
+    var dartGenerator = DartGenerator(ConfiguredSchema.empty);
+    return dartGenerator.generateClassFromColumns(projectionName, columns,
         table: null);
   }
 }
@@ -207,9 +211,10 @@ abstract class QueryEvaluator {
 }
 
 class PostgresQueryEvaluator implements QueryEvaluator {
+  final DatabaseSchema schema;
   final PostgreSQLConnection connection;
 
-  PostgresQueryEvaluator(this.connection);
+  PostgresQueryEvaluator(this.schema, this.connection);
 
   @override
   Future<List<ColumnInfo>> runQuery(
@@ -217,7 +222,7 @@ class PostgresQueryEvaluator implements QueryEvaluator {
     var args = <String, dynamic>{};
     for (var parameter in query.parameters) {
       var testValue = queryHeader.testValues?.values
-          .firstWhereOrNull((p) => p.name.name == parameter.name);
+          .firstWhereOrNull((p) => p.name == parameter.name);
       dynamic defaultValue;
       if (testValue != null) {
         defaultValue = testValue.value;
@@ -251,13 +256,20 @@ class PostgresQueryEvaluator implements QueryEvaluator {
       return result;
     });
 
-    return result.columnDescriptions
-        .map((d) => ColumnInfo(
-            d.columnName,
-            d.tableName,
-            dataTypeFromTypeId(d.typeId,
-                debugMessage: 'Column: ${d.columnName}/${d.tableName}')))
-        .toList();
+    return result.columnDescriptions.map((d) {
+      DataType dataType;
+
+      var enumUserType =
+          schema.enums.firstWhereOrNull((e) => e.userType.id == d.typeId);
+      if (enumUserType != null) {
+        dataType = DataType.text;
+      } else {
+        dataType = dataTypeFromTypeId(d.typeId,
+            debugMessage: 'Column: ${d.columnName}/${d.tableName}');
+      }
+
+      return ColumnInfo(d.columnName, d.tableName, dataType);
+    }).toList();
   }
 }
 
@@ -285,7 +297,7 @@ List<ColumnDefinition> computedColumns(
     results.add(ColumnDefinition(column.columnName,
         type: column.type,
         isNullable: isNullable,
-        reference: tableColumn?.reference));
+        enumDefinition: tableColumn?.enumDefinition));
   }
 
   return results;

@@ -52,7 +52,8 @@ select * from country;
 
     var result = await database.useConnection((db) async {
       var dbSchema = await SchemaExtractor(DatabaseIO(db)).schema();
-      var generator = QueriesGenerator(dbSchema, PostgresQueryEvaluator(db));
+      var generator =
+          QueriesGenerator(dbSchema, PostgresQueryEvaluator(dbSchema, db));
       return generator.generate(queries, filePath: 'my_queries.sql');
     });
 

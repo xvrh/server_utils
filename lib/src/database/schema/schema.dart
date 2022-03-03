@@ -1,12 +1,14 @@
 import 'package:collection/collection.dart';
+import 'package:server_utils/src/database/schema/schema_extractor.queries.dart' show UserDefinedType;
 import 'package:server_utils/src/utils/escape_dart_string.dart';
 
 class DatabaseSchema {
-  static final empty = DatabaseSchema([]);
+  static final empty = DatabaseSchema([], []);
 
   final List<TableDefinition> tables;
+  final List<EnumDefinition> enums;
 
-  DatabaseSchema(this.tables);
+  DatabaseSchema(this.tables, this.enums);
 
   TableDefinition? operator [](String tableName) =>
       tables.firstWhereOrNull((e) => e.name == tableName);
@@ -31,7 +33,8 @@ class ColumnDefinition {
   final String? domain;
   final bool isNullable, isPrimaryKey;
   final String? defaultValue;
-  final String? reference;
+  final String? foreignTable;
+  final EnumDefinition? enumDefinition;
 
   const ColumnDefinition(
     this.name, {
@@ -40,19 +43,20 @@ class ColumnDefinition {
     bool? isPrimaryKey,
     this.defaultValue,
     this.domain,
-    this.reference,
+    this.foreignTable,
+    this.enumDefinition,
   })  : isNullable = isNullable ?? true,
         isPrimaryKey = isPrimaryKey ?? false;
 
   String toCode() {
     var domain = this.domain;
-    var reference = this.reference;
+    var foreignTable = this.foreignTable;
     var args = <String, String?>{
       'type': type.toCode(),
       if (domain != null) 'domain': escapeDartString(domain),
       if (!isNullable) 'isNullable': '$isNullable',
       if (isPrimaryKey) 'isPrimaryKey': '$isPrimaryKey',
-      if (reference != null) 'reference': escapeDartString(reference),
+      if (foreignTable != null) 'foreignTable': escapeDartString(foreignTable),
     };
 
     var argCode = args.entries.map((e) => '${e.key}: ${e.value}').join(',');
@@ -61,6 +65,14 @@ class ColumnDefinition {
 
   @override
   String toString() => name;
+}
+
+class EnumDefinition {
+  final String name;
+  final List<String> values;
+  final UserDefinedType userType;
+
+  EnumDefinition(this.name, this.values, {required this.userType});
 }
 
 // When adding a datatype, make sure to add it in data_type_postgres file.

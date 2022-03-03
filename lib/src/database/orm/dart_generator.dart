@@ -1,10 +1,17 @@
-import 'package:collection/collection.dart';
 import '../../utils/escape_dart_string.dart';
 import '../../utils/quick_dart_formatter.dart';
 import '../../utils/string.dart';
 import '../../utils/type.dart';
 import '../schema/schema.dart';
-import 'enum_extractor.dart';
+
+class ConfiguredSchema {
+  static final empty = ConfiguredSchema(DatabaseSchema.empty, []);
+
+  final DatabaseSchema schema;
+  final List<ConfiguredTable> tables;
+
+  ConfiguredSchema(this.schema, this.tables);
+}
 
 class ConfiguredTable {
   final TableDefinition table;
@@ -21,7 +28,7 @@ class TableConfig {
 }
 
 extension TableConfigExtension on DatabaseSchema {
-  List<ConfiguredTable> withConfig(Map<String, TableConfig> configs) {
+  ConfiguredSchema withConfig(Map<String, TableConfig> configs) {
     configs = Map.of(configs);
     var configuredTables = <ConfiguredTable>[];
     for (var table in tables) {
@@ -33,7 +40,7 @@ extension TableConfigExtension on DatabaseSchema {
           '${configs.entries.map((e) => e.key).join(', ')} are not table');
     }
 
-    return configuredTables;
+    return ConfiguredSchema(this, configuredTables);
   }
 }
 
@@ -46,17 +53,11 @@ class DomainConfig {
 }
 
 class DartGenerator {
-  final List<EnumDefinition> enums;
-  final List<ConfiguredTable> tables;
+  final ConfiguredSchema schema;
   final Map<String, DomainConfig> domains;
 
-  DartGenerator(
-      {List<EnumDefinition>? enums,
-      List<ConfiguredTable>? tables,
-      Map<String, DomainConfig>? domains})
-      : enums = enums ?? const [],
-        tables = tables ?? const [],
-        domains = domains ?? const {};
+  DartGenerator(this.schema, {Map<String, DomainConfig>? domains})
+      : domains = domains ?? const {};
 
   DomainConfig? _domainForColumn(ColumnDefinition column) {
     var domainName = column.domain;
@@ -69,10 +70,7 @@ class DartGenerator {
   List<_ColumnField> _computeFields(List<ColumnDefinition> columns) {
     var fields = <_ColumnField>[];
     for (var column in columns) {
-      fields.add(_ColumnField(column,
-          reference:
-              enums.firstWhereOrNull((e) => e.table.name == column.reference),
-          domain: _domainForColumn(column)));
+      fields.add(_ColumnField(column, domain: _domainForColumn(column)));
     }
     return fields;
   }
@@ -87,20 +85,20 @@ import 'package:server_utils/database.dart';
       code.writeln("import '$import';");
     }
 
-    for (var configuredTable in tables) {
-      var table = configuredTable.table;
-      var enumDefinition = enums.firstWhereOrNull((e) => e.table == table);
-      if (enumDefinition != null) {
-        code.writeln(generateEnum(configuredTable, enumDefinition));
-      } else {
-        var columns = table.columns.toList();
-        if (configuredTable.config.skipPrimaryInEntity) {
-          columns.removeWhere((e) => e.isPrimaryKey);
-        }
+    for (var enumDefinition in schema.schema.enums) {
+      code.writeln(generateEnum(enumDefinition));
+      code.writeln();
+    }
 
-        code.writeln(
-            generateClassFromColumns(table.name, columns, table: table));
+    for (var configuredTable in schema.tables) {
+      var table = configuredTable.table;
+
+      var columns = table.columns.toList();
+      if (configuredTable.config.skipPrimaryInEntity) {
+        columns.removeWhere((e) => e.isPrimaryKey);
       }
+
+      code.writeln(generateClassFromColumns(table.name, columns, table: table));
       code.writeln();
     }
     var resultCode = '$code';
@@ -149,18 +147,18 @@ import 'package:server_utils/database.dart';
     code.writeln('return $className(');
     for (var field in fields) {
       code.writeln('${field.name}: ');
-      var reference = field.reference;
+      var enumDefinition = field.column.enumDefinition;
 
       if (field.domain != null) {
         var fromJsonCode = field.jsonType.fromJsonCode(
             Value("row['${field.name}']", ObjectType(isNullable: true)));
         code.writeln('$fromJsonCode,');
-      } else if (reference == null) {
+      } else if (enumDefinition == null) {
         code.writeln(
             "row['${field.column.name}']${field.isNullable ? '' : '!'} "
             "as ${field.type}${field.isNullable ? '?' : ''},");
       } else {
-        code.writeln('${reference.table.name.words.toUpperCamel()}'
+        code.writeln('${enumDefinition.name.words.toUpperCamel()}'
             "(row['${field.column.name}']${field.isNullable ? '' : '!'} as String),");
       }
     }
@@ -222,102 +220,43 @@ import 'package:server_utils/database.dart';
     return '$code';
   }
 
-  String generateEnum(
-      ConfiguredTable configuredTable, EnumDefinition enumDefinition) {
-    var table = configuredTable.table;
+  String generateEnum(EnumDefinition enumDefinition) {
     var code = StringBuffer('');
 
-    var className = table.name.words.toUpperCamel();
-    var columns = table.columns;
+    var className = enumDefinition.name.words.toUpperCamel();
 
-    // Enums only support a single primary key of type String
-    var primaryKey = columns.singleWhere((e) => e.isPrimaryKey);
-    if (primaryKey.type.dartType != 'String') {
-      throw Exception('Exception must have single primary key of type String');
-    }
-    var valueField = primaryKey.name.words.toLowerCamel();
-
-    code.writeln('class $className {');
-    var enumPrimaryKey = enumDefinition.primaryKey;
-    for (var enumLine in enumDefinition.rows) {
-      var primaryKeyValue = enumLine[enumPrimaryKey]! as String;
-
-      var arguments = <String>[];
-      for (var entry in enumLine.entries) {
-        arguments.add(
-            '${entry.key.name.words.toLowerCamel()}: ${_toDartLiteral(entry.value)}');
-      }
+    code.writeln('class $className implements EnumLike {');
+    for (var enumLine in enumDefinition.values) {
       code.writeln(
-          'static const ${primaryKeyValue.words.toLowerCamel()} = $className._(${arguments.join(', ')});');
+          'static const ${enumLine.words.toLowerCamel()} = $className._(${escapeDartString(enumLine)});');
     }
     code.writeln('');
     code.writeln('static const values = [');
-    for (var enumLine in enumDefinition.rows) {
-      var primaryKeyValue = enumLine[enumPrimaryKey]! as String;
-      code.writeln('${primaryKeyValue.words.toLowerCamel()},');
+    for (var enumLine in enumDefinition.values) {
+      code.writeln('${enumLine.words.toLowerCamel()},');
     }
     code.writeln('];');
     code.writeln('');
-
-    for (var column in columns) {
-      code.writeln(
-          'final ${column.type.dartType}${column.isNullable ? '?' : ''} ${column.name.words.toLowerCamel()};');
-    }
+    code.writeln('final String value;');
 
     code.writeln('');
-    code.writeln('const $className._({');
-    for (var column in columns) {
-      code.writeln(
-          '${column.isNullable ? '' : 'required '}this.${column.name.words.toLowerCamel()},');
-    }
-    code.writeln('});');
+    code.writeln('const $className._(this.value);');
     code.writeln('');
-
-    var fromRowArgs = <String>[];
-    for (var column in table.columns) {
-      fromRowArgs.add('${column.name.words.toLowerCamel()}: '
-          "row['${column.name}']${column.isNullable ? '' : '!'} "
-          "as ${column.type.dartType}${column.isNullable ? '?' : ''}");
-    }
-
-    var fromJsonArgs = <String>[];
-    for (var column in table.columns) {
-      var accessor = "json['${column.name.words.toLowerCamel()}']";
-      var type = ValueType.fromTypeName(column.type.dartType,
-          isNullable: column.isNullable);
-      var code =
-          type.fromJsonCode(Value(accessor, ObjectType(isNullable: true)));
-
-      fromJsonArgs.add('${column.name.words.toLowerCamel()}: $code');
-    }
-
-    var toJsonArgs = <String>[];
-    for (var column in table.columns) {
-      var type = ValueType.fromTypeName(column.type.dartType,
-          isNullable: column.isNullable);
-
-      var toJsonCode = type.toJsonCode(column.name.words.toLowerCamel());
-      toJsonArgs.add("'${column.name.words.toLowerCamel()}': $toJsonCode");
-    }
 
     code.writeln('''
-factory $className(String $valueField) => 
-   values.firstWhere((e) => e.$valueField == $valueField);
-    
-static $className fromRow(Map<String, dynamic> row) =>
-  values.firstWhere((e) => e.$valueField == row['${primaryKey.name}']! as String,
-    orElse: () => $className._(${fromRowArgs.join(',')}));
+factory $className(String value) => 
+   values.firstWhere((e) => e.value == value);
 
-static $className fromJson(Map<String, Object?> json) =>
-  values.firstWhere((e) => e.$valueField == json['${primaryKey.name.words.toLowerCamel()}']! as String,
-    orElse: () => $className._(${fromJsonArgs.join(',')}));
+factory $className.fromJson(String json) =>
+  values.firstWhere((e) => e.value == json,
+    orElse: () => $className._(json));
     
-Map<String, Object?> toJson() => { ${toJsonArgs.join(',')}${toJsonArgs.length > 1 ? ',' : ''} };
+String toJson() => value;
 
-bool get isUnknown => values.every((v) => v.$valueField != $valueField);
+bool get isUnknown => values.every((v) => v.value != value);
 
 @override
-String toString() => $valueField;
+String toString() => value;
 ''');
 
     code.writeln('}');
@@ -338,7 +277,7 @@ import 'package:server_utils/database.dart';
 
     extensionName ??= 'DatabaseCrudExtension';
     code.writeln('extension $extensionName on Database {');
-    for (var configuredTable in tables) {
+    for (var configuredTable in schema.tables) {
       var table = configuredTable.table;
       var className = '${table.name.words.toUpperCamel()}Crud';
       code.writeln(
@@ -347,7 +286,7 @@ import 'package:server_utils/database.dart';
     }
     code.writeln('}');
 
-    for (var table in tables) {
+    for (var table in schema.tables) {
       code.writeln(generateCrudForTable(table));
       code.writeln();
     }
@@ -362,7 +301,6 @@ import 'package:server_utils/database.dart';
 
   String generateCrudForTable(ConfiguredTable configuredTable) {
     var table = configuredTable.table;
-    var enumDefinition = enums.firstWhereOrNull((e) => e.table == table);
 
     var code = StringBuffer('');
 
@@ -380,13 +318,11 @@ class $className {
     _findCode(code, configuredTable, primaryKeys, orNull: false);
     _findCode(code, configuredTable, primaryKeys, orNull: true);
 
-    if (enumDefinition == null) {
-      _insertCode(code, configuredTable);
-      if (columns.where((c) => !c.isPrimaryKey).isNotEmpty) {
-        _updateCode(code, configuredTable);
-      }
-      _deleteCode(code, configuredTable, primaryKeys);
+    _insertCode(code, configuredTable);
+    if (columns.where((c) => !c.isPrimaryKey).isNotEmpty) {
+      _updateCode(code, configuredTable);
     }
+    _deleteCode(code, configuredTable, primaryKeys);
 
     code.writeln('}');
     return '$code';
@@ -433,7 +369,7 @@ class $className {
     for (var field in fields) {
       var fieldName = field.name;
       if (field.isNullable || field.column.defaultValue != null) {
-        var type = field.nonReferenceType;
+        var type = field.type;
         if (type == 'dynamic') {
           type = 'Object';
         }
@@ -444,7 +380,7 @@ class $className {
         }
         code.writeln('$type $fieldName $comment,');
       } else {
-        code.writeln('required ${field.nonReferenceType} $fieldName,');
+        code.writeln('required ${field.type} $fieldName,');
       }
     }
     code.writeln('}) {');
@@ -457,6 +393,10 @@ class $className {
       }
       if (field.domain != null) {
         variableName = '$variableName.toJson()';
+      }
+      var enumRef = field.column.enumDefinition;
+      if (enumRef != null) {
+        variableName = '$variableName.value';
       }
       code.writeln("'${field.column.name}': $variableName,");
     }
@@ -475,12 +415,12 @@ class $className {
 
     code.write('Future<$entityName> update(');
     for (var primaryKey in fields.where((c) => c.column.isPrimaryKey)) {
-      code.write('${primaryKey.nonReferenceType} ${primaryKey.name},');
+      code.write('${primaryKey.type} ${primaryKey.name},');
     }
     code.write('{');
     var clears = <ColumnDefinition>[];
     for (var field in fields.where((c) => !c.column.isPrimaryKey)) {
-      code.write('${field.nonReferenceType}? ${field.name},');
+      code.write('${field.type}? ${field.name},');
       if (field.isNullable) {
         clears.add(field.column);
         code.write('bool? clear${field.column.name.words.toUpperCamel()},');
@@ -497,7 +437,12 @@ class $className {
     code.writeln('set: {');
     for (var column in table.columns.where((c) => !c.isPrimaryKey)) {
       var variable = column.name.words.toLowerCamel();
-      code.write("if ($variable != null) '${column.name}': $variable,");
+      var enumRef = column.enumDefinition;
+      var suffix = '';
+      if (enumRef != null) {
+        suffix = '.value';
+      }
+      code.write("if ($variable != null) '${column.name}': $variable$suffix,");
     }
     code.writeln('},');
     if (clears.isNotEmpty) {
@@ -535,15 +480,8 @@ class $className {
       code.write('$prefix${primaryKey.name.words.toLowerCamel()},');
     }
     for (var column in table.columns.where((c) => !c.isPrimaryKey)) {
-      var enumRef =
-          enums.firstWhereOrNull((e) => e.table.name == column.reference);
-      var enumSuffix = '';
-      if (enumRef != null) {
-        enumSuffix =
-            '${column.isNullable ? '?' : ''}.${enumRef.primaryKey.name.words.toLowerCamel()}';
-      }
       var fieldName = column.name.words.toLowerCamel();
-      code.write('$fieldName: entity.$fieldName$enumSuffix,');
+      code.write('$fieldName: entity.$fieldName,');
       if (column.isNullable) {
         code.write(
             'clear${column.name.words.toUpperCamel()}: entity.$fieldName == null,');
@@ -580,19 +518,12 @@ class $className {
   }
 }
 
-String _toDartLiteral(Object? value) {
-  if (value == null) return 'null';
-  if (value is String) return escapeDartString(value);
-  return '$value';
-}
-
 class _ColumnField {
   final ColumnDefinition column;
-  final EnumDefinition? reference;
   final DomainConfig? domain;
   final String _name;
 
-  _ColumnField(this.column, {this.reference, this.domain})
+  _ColumnField(this.column, {this.domain})
       : _name = column.name.words.toLowerCamel();
 
   String get name => _name;
@@ -604,17 +535,9 @@ class _ColumnField {
     if (domain != null) {
       return domain.dartType;
     }
-    var reference = this.reference;
-    if (reference != null) {
-      return reference.table.name.words.toUpperCamel();
-    }
-    return column.type.dartType;
-  }
-
-  String get nonReferenceType {
-    var domain = this.domain;
-    if (domain != null) {
-      return domain.dartType;
+    var enumDefinition = column.enumDefinition;
+    if (enumDefinition != null) {
+      return enumDefinition.name.words.toUpperCamel();
     }
     return column.type.dartType;
   }
@@ -624,12 +547,11 @@ class _ColumnField {
     if (domain != null) {
       return ComplexType(domain.dartType, isNullable: isNullable);
     }
-    var reference = this.reference;
-    if (reference == null) {
+    var enumDefinition = column.enumDefinition;
+    if (enumDefinition == null) {
       return ValueType.fromTypeName(type, isNullable: isNullable);
     } else {
-      return ComplexType(reference.table.name.words.toUpperCamel(),
-          isNullable: isNullable);
+      return EnumLikeType(type, isNullable: isNullable);
     }
   }
 }

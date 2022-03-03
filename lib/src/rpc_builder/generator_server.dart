@@ -124,7 +124,7 @@ String _castMethodForType(DartType type, {required bool isNullable}) {
     return '${methodPrefix}String()';
   } else if (type.isDartCoreInt) {
     return '${methodPrefix}Int()';
-  } else if (isNum(type)) {
+  } else if (type.isDartCoreNum) {
     return '${methodPrefix}Num()';
   } else if (type.isDartCoreDouble) {
     return '${methodPrefix}Double()';

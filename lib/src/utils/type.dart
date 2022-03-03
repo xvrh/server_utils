@@ -283,6 +283,41 @@ class ComplexType extends ValueType {
       isNullable: isNullable ?? this.isNullable, genericTypes: genericTypes);
 }
 
+class EnumLikeType extends ValueType {
+  final String enumName;
+
+  EnumLikeType(this.enumName, {bool isNullable = false})
+      : super(isNullable: isNullable);
+
+  @override
+  bool equalsWithoutNullability(other) {
+    return other is EnumLikeType && other.enumName == enumName;
+  }
+
+  @override
+  String get nameWithoutNullability => enumName;
+
+  @override
+  String fromJsonCode(Value value) {
+    if (isNullable && value.type.isNullable) {
+      var insideValue = value.isSimpleIdentifier ? value.asNonNull : value;
+      return '${value.accessor} != null ? $nameWithoutNullability.fromJson(${StringType().fromJsonCode(insideValue)}) : null';
+    }
+
+    var accessor = StringType().fromJsonCode(value);
+    return '$nameWithoutNullability.fromJson($accessor)';
+  }
+
+  @override
+  String toJsonCode(String target) {
+    return '$target${isNullable ? '?' : ''}.toJson()';
+  }
+
+  @override
+  ValueType copyWith({bool? isNullable}) =>
+      EnumType(enumName, isNullable: isNullable ?? this.isNullable);
+}
+
 class ListType extends ValueType {
   final ValueType itemType;
 

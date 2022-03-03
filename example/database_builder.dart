@@ -61,12 +61,8 @@ Future<void> _afterCreate(PostgreSQLConnection connection) async {}
 Future<void> _afterRefresh(PostgreSQLConnection connection) async {
   var database = DatabaseIO(connection);
   var schema = await SchemaExtractor(database).schema();
-  var enumExtractor = EnumExtractor(database, schema);
   var code = DartGenerator(
-    tables: schema.withConfig({}),
-    enums: [
-      await enumExtractor.extractTable('app_role'),
-    ],
+    schema.withConfig({}),
   );
   var schemaFile = 'example_database_schema.dart';
   File('example/$schemaFile').writeAsStringSync(await code.generateEntities());

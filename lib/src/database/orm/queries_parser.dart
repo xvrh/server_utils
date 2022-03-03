@@ -1,311 +1,178 @@
 import 'package:collection/collection.dart';
-import 'package:petitparser/petitparser.dart';
-import 'utils/dart_parser.dart';
 import 'utils/sql_parser.dart';
+import 'package:analyzer/dart/ast/ast.dart';
+import 'queries_decorators.dart' show Col;
+import 'package:analyzer/dart/analysis/utilities.dart';
 
-Result<QueriesFile> parseQueries(String content) {
-  final definition = QueriesGrammarDefinition();
-  final parser = definition.build();
-  return parser.parse(content).map((e) => e as QueriesFile);
-}
+QueriesFile parseQueries(String content) {
+  var parseResult = parseString(content: content);
+  var ast = parseResult.unit;
 
-class QueriesGrammarDefinition extends GrammarDefinition {
-  final Parser _dartMethodParser = (() {
-    var dartDefinition = DartAstDefinition();
-    return dartDefinition.build(start: dartDefinition.functionDeclaration);
-  })();
+  var extensions = <QueriesExtension>[];
 
-  final Parser _dartLiteralParser = (() {
-    var dartDefinition = DartLiteralDefinition();
-    return dartDefinition.build(start: dartDefinition.valueLiteral);
-  })();
+  for (var extension in ast.declarations
+      .whereType<ExtensionDeclaration>()
+      .where((e) => (e.extendedType as NamedType).name.name == 'Database')) {
+    var name = extension.name?.name;
+    if (name == null) continue;
 
-  final Parser _sqlParser = (() {
-    var sqlDefinition = SqlGrammarDefinition();
-    return sqlDefinition.build(start: sqlDefinition.query);
-  })();
+    var queries = <QueryDeclaration>[];
+    for (var method in extension.members.whereType<MethodDeclaration>()) {
+      var returnType = method.returnType! as NamedType;
+      var parameters = method.parameters!;
+      var info = MethodInfo(
+        _typeToString(returnType),
+        method.name.name,
+        DartParameters(parameters.toSource(),
+            parameters.parameters.map(_parameterFromAst).toList()),
+      );
 
-  Parser token(Object input) {
-    if (input is Parser) {
-      return input.token().trim(ref0(hiddenStuff));
-    } else if (input is String) {
-      return token(input.toParser());
-    }
-    throw ArgumentError.value(input, 'Invalid token parser');
-  }
-
-  Parser directivePrefix() => ref1(token, '--@');
-
-  @override
-  Parser start() => ref0(file).end();
-
-  Parser file() => (ref0(directive).star().trim(ref0(hiddenStuff)) &
-              ref0(query).star().trim(ref0(hiddenStuff)))
-          .map((l) {
-        return QueriesFile((l[0] as List).cast<Directive>(),
-            (l[1] as List).cast<QueryDeclaration>());
-      });
-
-  Parser directive() =>
-      ref0(extensionDirective) | ref0(classDirective) | ref0(importDirective);
-
-  Parser extensionDirective() => (ref0(directivePrefix) &
-          ref1(token, 'extension') &
-          ref0(identifier).optional())
-      .map((List s) => ExtensionDirective(s[2] as Identifier?));
-
-  Parser classDirective() => (ref0(directivePrefix) &
-          ref1(token, 'class') &
-          ref0(identifier).optional())
-      .map((List s) => ClassDirective(s[2] as Identifier?));
-
-  Parser importDirective() => (ref0(directivePrefix) &
-          ref1(token, 'import') &
-          ref1(token, ';').neg().star().flatten().map(ImportDirective.new) &
-          ref1(token, ';'))
-      .map((s) => s[2]);
-
-  Parser query() => (ref0(queryHeader).trim() & ref0(queryBody))
-      .map((List s) => QueryDeclaration(s[0] as QueryHeader, s[1] as SqlQuery));
-
-  Parser queryHeader() => (ref0(openQueryHeader).flatten() &
-          ref0(queryHeaderBody) &
-          (ref0(closeQueryHeader).flatten()))
-      .map((s) => s[1]);
-
-  Parser openQueryHeader() =>
-      string('/**') & string('*').star() & ref0(newlineLexicalToken);
-
-  Parser closeQueryHeader() =>
-      string('**') & string('*').star() & char('/') & ref0(newlineLexicalToken);
-
-  Parser queryHeaderBody() => (ref0(queryMethodSignature) &
-              ref0(testValuesDeclaration).optional() &
-              ref0(projectionDeclaration).optional())
-          .map((s) {
-        var projection = s.whereType<ProjectionDeclaration>().firstOrNull;
-        var testValues = s.whereType<TestValuesDeclaration>().firstOrNull;
-        return QueryHeader(s[0] as MethodDeclaration, projection, testValues);
-      });
-
-  Parser queryMethodSignature() => _dartMethodParser;
-
-  Parser testValuesDeclaration() => (string('testValues') &
-              ref1(token, '=') &
-              ((ref1(token, '{') & ref1(token, '}')) |
-                  (ref1(token, '{') &
-                      ref0(testValueLine) &
-                      ref0(testValueLineTail).optional() &
-                      ref1(token, ',').optional() &
-                      ref1(token, '}'))))
-          .map((l) {
-        var lines = (l[2] as List)
-            .map((t) => t is TestValueLine ? t : t)
-            .expand((f) => f is List ? f : [f])
-            .whereType<TestValueLine>()
-            .toList();
-        return TestValuesDeclaration(lines);
-      });
-
-  Parser testValueLineTail() => (ref1(token, ',') &
-              ref0(testValueLine) &
-              ref0(testValueLineTail).optional())
-          .map((l) {
-        var first = l[1] as TestValueLine;
-        var subList = l[2] as List<TestValueLine>?;
-        return [first, ...?subList];
-      });
-
-  Parser testValueLine() => (ref0(identifier) &
-              ref1(token, ':') &
-              _dartLiteralParser.trim().map((s) => (s as Token).value))
-          .map((s) {
-        return TestValueLine(s[0] as Identifier, s[2]);
-      });
-
-  Parser projectionDeclaration() => (string('projection') &
-              ref0(identifier) &
-              ((ref1(token, '(') & ref1(token, ')')) |
-                  (ref1(token, '(') &
-                      ref0(projectionLine) &
-                      ref0(projectionLineTail).optional() &
-                      ref1(token, ',').optional() &
-                      ref1(token, ')'))))
-          .map((l) {
-        var lines = (l[2] as List)
-            .map((t) => t is ProjectionLine ? t : t)
-            .expand((f) => f is List ? f : [f])
-            .whereType<ProjectionLine>()
-            .toList();
-        return ProjectionDeclaration(l[1] as Identifier, lines);
-      });
-
-  Parser projectionLineTail() => (ref1(token, ',') &
-              ref0(projectionLine) &
-              ref0(projectionLineTail).optional())
-          .map((l) {
-        var first = l[1] as ProjectionLine;
-        var subList = l[2] as List<ProjectionLine>?;
-        return [first, ...?subList];
-      });
-
-  Parser projectionLine() =>
-      ((ref1(token, '*') | ref0(identifier)) & ref0(projectionModifier).plus())
-          .map((s) {
-        var first = s[0];
-        Identifier? name;
-        if (first is Identifier) {
-          name = first;
+      var body = method.body;
+      SqlQuery? sqlQuery;
+      ProjectionDeclaration? projection;
+      TestValuesDeclaration? testValues;
+      if (body is BlockFunctionBody) {
+        for (var statement in body.block.statements) {
+          Expression? expression;
+          if (statement is ReturnStatement) {
+            expression = statement.expression;
+          } else if (statement is ExpressionStatement) {
+            expression = statement.expression;
+          }
+          if (expression is MethodInvocation) {
+            sqlQuery = _sqlQueryFromExpression(expression);
+          } else if (expression is AssignmentExpression) {
+            var left = expression.leftHandSide;
+            if (left is SimpleIdentifier && left.name == 'projection') {
+              projection = _projectionFromExpression(expression.rightHandSide);
+            } else if (left is SimpleIdentifier && left.name == 'testValues') {
+              testValues = _testValuesFromExpression(expression.rightHandSide);
+            }
+          }
         }
+      } else if (body is ExpressionFunctionBody) {
+        sqlQuery = _sqlQueryFromExpression(body.expression);
+      }
 
-        return ProjectionLine(name, (s[1] as List).cast<ProjectionModifier>());
-      });
+      if (sqlQuery == null) {
+        throw Exception('[${method.name}]: No SQL query found (q(...) method)');
+      }
 
-  Parser projectionModifier() =>
-      ref0(notNullModifier) | ref0(nullModifier) | ref0(asModifier);
+      var header = QueryHeader(info, projection, testValues);
+      queries.add(QueryDeclaration(header, sqlQuery));
+    }
 
-  Parser nullModifier() =>
-      ref1(token, 'null').map((_) => ProjectionModifierNull());
+    extensions.add(QueriesExtension(name, queries));
+  }
 
-  Parser notNullModifier() => (ref1(token, 'not') & ref1(token, 'null'))
-      .map((_) => ProjectionModifierNotNull());
-
-  Parser asModifier() => (ref1(token, 'as') & ref0(identifier))
-      .map((s) => ProjectionModifierAs(s[1] as Identifier));
-
-  Parser queryBody() => _sqlParser;
-
-  Parser identifier() => ref1(token, ref0(identifierLexicalToken))
-      .map((s) => (s as Token).value as Identifier);
-
-  Parser identifierLexicalToken() =>
-      (ref0(letter) & ref0(identifierPartLexicalToken).star())
-          .flatten()
-          .token()
-          .map((token) => Identifier(token));
-
-  Parser identifierPartLexicalToken() => ref0(letter) | ref0(digit) | char('_');
-
-  Parser newlineLexicalToken() => pattern('\n\r');
-
-  Parser hiddenStuff() =>
-      ref0(whitespace) |
-      ref0(singleLineComment) |
-      ref0(multiLineCommentTopLevel);
-
-  Parser singleLineComment() =>
-      string('--').seq(char('@').not()) &
-      ref0(newlineLexicalToken).neg().star() &
-      ref0(newlineLexicalToken).optional();
-
-  Parser multiLineCommentTopLevel() =>
-      string('/*').seq(string('*').not()) &
-      (ref0(multiLineComment) | string('*/').neg()).star() &
-      string('*/');
-
-  Parser multiLineComment() =>
-      string('/*') &
-      (ref0(multiLineComment) | string('*/').neg()).star() &
-      string('*/');
+  return QueriesFile(extensions);
 }
 
-class DartAstDefinition extends DartGrammarDefinition {
-  @override
-  Parser<MethodDeclaration> functionDeclaration() =>
-      (ref0(returnType).flatten().trim() &
-              ref0(identifier).flatten().trim() &
-              ref0(formalParameterList).token().trim())
-          .map((l) {
-        var parametersToken = l[2] as Token;
-
-        var dartParameters =
-            _flatten(parametersToken.value).whereType<DartParameter>().toList();
-
-        return MethodDeclaration(
-            (l[0] as String).trim(),
-            (l[1] as String).trim(),
-            DartParameters(parametersToken.input, dartParameters));
-      });
-
-  @override
-  Parser simpleFormalParameter() => super.simpleFormalParameter().map((l) {
-        var list = l as List;
-        return DartParameter(
-            (list[1] as String).trim(), (list[0] as String).trim());
-      });
-
-  static Iterable<Object?> _flatten(Object? parent) sync* {
-    if (parent is Token) {
-      yield* _flatten(parent.value);
-    } else if (parent is Iterable) {
-      for (var child in parent) {
-        yield* _flatten(child);
-      }
-    } else {
-      yield parent;
-    }
+DartParameter _parameterFromAst(FormalParameter parameter) {
+  if (parameter is SimpleFormalParameter) {
+    var type = parameter.type! as NamedType;
+    return DartParameter(parameter.identifier!.name, _typeToString(type));
+  } else if (parameter is DefaultFormalParameter) {
+    return _parameterFromAst(parameter.parameter);
+  } else {
+    throw UnsupportedError(
+        'Unknown parameter of type ${parameter.runtimeType}');
   }
 }
 
-class DartLiteralDefinition extends DartGrammarDefinition {
-  Parser valueLiteral() => ref1(
-      token,
-      ref0(nullToken).map((s) => null) |
-          ref0(trueToken).map((s) => true) |
-          ref0(falseToken).map((s) => false) |
-          ref0(hexNumberLexicalToken).flatten().map((s) => int.parse(s)) |
-          ref0(numberLexicalToken).flatten().map((s) => num.parse(s)) |
-          ref0(stringLexicalToken)
-              .flatten()
-              .map((s) => s.substring(1, s.length - 1)));
+SqlQuery? _sqlQueryFromExpression(Expression expression) {
+  if (expression is MethodInvocation) {
+    if (expression.methodName.name == 'q' &&
+        expression.argumentList.arguments.length == 1) {
+      var rawSql = expression.argumentList.arguments.first as StringLiteral;
+      return SqlQuery.parse(rawSql.stringValue!);
+    }
+  }
+  return null;
+}
+
+String _typeToString(NamedType type) {
+  var simpleName = type.name.name;
+  var typeArguments = type.typeArguments?.arguments;
+  var question = type.question != null ? '?' : '';
+  if (typeArguments != null && typeArguments.isNotEmpty) {
+    return '$simpleName<${typeArguments.map((t) => (t as NamedType).name.name).join(', ')}>$question';
+  } else {
+    return '$simpleName$question';
+  }
+}
+
+ProjectionDeclaration _projectionFromExpression(Expression expression) {
+  Expression? arg(String name, InvocationExpression invocation) {
+    return invocation.argumentList.arguments
+        .whereType<NamedExpression>()
+        .firstWhereOrNull((e) => e.name.label.name == name)
+        ?.expression;
+  }
+
+  bool? boolArg(Expression? expression) {
+    if (expression == null) return null;
+    return (expression as BooleanLiteral).value;
+  }
+
+  var projectionLines = <ProjectionLine>[];
+  var right = expression as SetOrMapLiteral;
+  for (var entry in right.elements.cast<MapLiteralEntry>()) {
+    var key = entry.key as StringLiteral;
+    var value = entry.value as InvocationExpression;
+
+    projectionLines.add(
+      ProjectionLine(
+        key.stringValue!,
+        Col(
+          nullable: boolArg(arg('nullable', value)),
+        ),
+      ),
+    );
+  }
+  return ProjectionDeclaration(projectionLines);
+}
+
+TestValuesDeclaration _testValuesFromExpression(Expression expression) {
+  var lines = <TestValueLine>[];
+  var set = expression as SetOrMapLiteral;
+  for (var entry in set.elements.cast<AssignmentExpression>()) {
+    var key = entry.leftHandSide as SimpleIdentifier;
+    var valueExpression = entry.rightHandSide;
+    dynamic value;
+    if (valueExpression is StringLiteral) {
+      value = valueExpression.stringValue;
+    } else if (valueExpression is BooleanLiteral) {
+      value = valueExpression.value;
+    } else if (valueExpression is IntegerLiteral) {
+      value = valueExpression.value;
+    } else if (valueExpression is DoubleLiteral) {
+      value = valueExpression.value;
+    }
+
+    lines.add(TestValueLine(key.name, value));
+  }
+
+  return TestValuesDeclaration(lines);
 }
 
 class QueriesFile {
-  final List<Directive> directives;
+  final List<QueriesExtension> extensions;
+
+  QueriesFile(this.extensions);
+
+  @override
+  String toString() => 'QueriesFile($extensions)';
+}
+
+class QueriesExtension {
+  final String name;
   final List<QueryDeclaration> queries;
 
-  QueriesFile(this.directives, this.queries);
-
-  ExtensionDirective? get extensionDirective =>
-      directives.whereType<ExtensionDirective>().firstOrNull;
-
-  ClassDirective? get classDirective =>
-      directives.whereType<ClassDirective>().firstOrNull;
-
-  Iterable<ImportDirective> get importDirectives =>
-      directives.whereType<ImportDirective>();
+  QueriesExtension(this.name, this.queries);
 
   @override
-  String toString() => 'QueriesFile($directives, $queries)';
-}
-
-abstract class Directive {}
-
-class ExtensionDirective implements Directive {
-  final Identifier? name;
-
-  ExtensionDirective(this.name);
-
-  @override
-  String toString() => 'ExtensionDirective($name)';
-}
-
-class ClassDirective implements Directive {
-  final Identifier? name;
-
-  ClassDirective(this.name);
-
-  @override
-  String toString() => 'ClassDirective($name)';
-}
-
-class ImportDirective implements Directive {
-  final String body;
-
-  ImportDirective(this.body);
-
-  @override
-  String toString() => 'ImportDirective($body)';
+  String toString() => 'QueriesExtension($name, $queries)';
 }
 
 class QueryDeclaration {
@@ -319,7 +186,7 @@ class QueryDeclaration {
 }
 
 class QueryHeader {
-  final MethodDeclaration method;
+  final MethodInfo method;
   final ProjectionDeclaration? projection;
   final TestValuesDeclaration? testValues;
 
@@ -329,15 +196,15 @@ class QueryHeader {
   String toString() => 'QueryHeader($method, $projection)';
 }
 
-class MethodDeclaration {
+class MethodInfo {
   final String returnType;
   final String name;
   final DartParameters parameters;
 
-  MethodDeclaration(this.returnType, this.name, this.parameters);
+  MethodInfo(this.returnType, this.name, this.parameters);
 
   @override
-  String toString() => 'MethodDeclaration($returnType, $name, $parameters)';
+  String toString() => 'MethodInfo($returnType, $name, $parameters)';
 }
 
 class DartParameters {
@@ -368,59 +235,30 @@ class DartParameter {
 }
 
 class ProjectionDeclaration {
-  final Identifier name;
   final List<ProjectionLine> lines;
 
-  ProjectionDeclaration(this.name, this.lines);
+  ProjectionDeclaration(this.lines);
 
   ProjectionLine? get defaultLine =>
-      lines.firstWhereOrNull((e) => e.columnName == null);
+      lines.firstWhereOrNull((e) => e.columnName == '*');
 
   ProjectionLine? lineFor(String columnName) =>
-      lines.firstWhereOrNull((e) => e.columnName?.name == columnName);
+      lines.firstWhereOrNull((e) => e.columnName == columnName);
 
   @override
-  String toString() => 'ProjectionDeclaration($name, lines: $lines)';
+  String toString() => 'ProjectionDeclaration(lines: $lines)';
 }
 
 class ProjectionLine {
-  final Identifier? columnName;
-  final List<ProjectionModifier> modifiers;
+  final String columnName;
+  final Col config;
 
-  ProjectionLine(this.columnName, this.modifiers);
+  ProjectionLine(this.columnName, this.config);
 
-  bool? get nullable {
-    if (modifiers.any((e) => e is ProjectionModifierNull)) {
-      return true;
-    } else if (modifiers.any((e) => e is ProjectionModifierNotNull)) {
-      return false;
-    }
-    return null;
-  }
+  bool? get nullable => config.nullable;
 
   @override
-  String toString() => 'ProjectionLine($columnName, $modifiers)';
-}
-
-abstract class ProjectionModifier {}
-
-class ProjectionModifierNull implements ProjectionModifier {
-  @override
-  String toString() => 'ProjectionModifierNull';
-}
-
-class ProjectionModifierNotNull implements ProjectionModifier {
-  @override
-  String toString() => 'ProjectionModifierNotNull';
-}
-
-class ProjectionModifierAs implements ProjectionModifier {
-  final Identifier type;
-
-  ProjectionModifierAs(this.type);
-
-  @override
-  String toString() => 'ProjectionModifierAs($type)';
+  String toString() => 'ProjectionLine($columnName, $config)';
 }
 
 class TestValuesDeclaration {
@@ -430,19 +268,8 @@ class TestValuesDeclaration {
 }
 
 class TestValueLine {
-  final Identifier name;
+  final String name;
   final dynamic value;
 
   TestValueLine(this.name, this.value);
-}
-
-class Identifier {
-  final Token<String> token;
-
-  Identifier(this.token);
-
-  String get name => token.value;
-
-  @override
-  String toString() => name;
 }

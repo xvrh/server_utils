@@ -6,17 +6,17 @@ import 'example_database_schema.dart';
 extension DatabaseCrudExtension on Database {
   CmsPageCrud get cmsPage => CmsPageCrud(this);
 
-  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
-
   CountryCrud get country => CountryCrud(this);
 
   TimezoneCrud get timezone => TimezoneCrud(this);
 
-  AppRoleCrud get appRole => AppRoleCrud(this);
-
   AppUserCrud get appUser => AppUserCrud(this);
 
+  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
+
   MobileDeviceCrud get mobileDevice => MobileDeviceCrud(this);
+
+  ConsentCrud get consent => ConsentCrud(this);
 }
 
 class CmsPageCrud {
@@ -125,89 +125,6 @@ class CmsPageCrud {
     return _database.execute(
       //language=sql
       'delete from cms_page where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-    );
-  }
-}
-
-class AppConfigurationCrud {
-  final Database _database;
-
-  AppConfigurationCrud(this._database);
-
-  Future<AppConfiguration> find(int id) {
-    return _database.single(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration?> findOrNull(int id) {
-    return _database.singleOrNull(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> insert({
-    int? id /* nextval('app_configuration_id_seq'::regclass) */,
-    bool? enableLogs,
-  }) {
-    return _database.insert(
-      'app_configuration',
-      values: {
-        if (id != null) 'id': id,
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> update(
-    int id, {
-    bool? enableLogs,
-    bool? clearEnableLogs,
-  }) {
-    return _database.update(
-      AppConfiguration.table,
-      where: {
-        'id': id,
-      },
-      set: {
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      clear: [
-        if (clearEnableLogs ?? false) 'enable_logs',
-      ],
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
-    return update(
-      entity.id,
-      enableLogs: entity.enableLogs,
-      clearEnableLogs: entity.enableLogs == null,
-    );
-  }
-
-  Future<int> delete(int id) {
-    return _database.execute(
-      //language=sql
-      'delete from app_configuration where id = :id::integer',
       //language=none
       args: {
         'id': id,
@@ -410,36 +327,6 @@ class TimezoneCrud {
   }
 }
 
-class AppRoleCrud {
-  final Database _database;
-
-  AppRoleCrud(this._database);
-
-  Future<AppRole> find(String code) {
-    return _database.single(
-      //language=sql
-      'select * from app_role where code = :code::text',
-      //language=none
-      args: {
-        'code': code,
-      },
-      mapper: AppRole.fromRow,
-    );
-  }
-
-  Future<AppRole?> findOrNull(String code) {
-    return _database.singleOrNull(
-      //language=sql
-      'select * from app_role where code = :code::text',
-      //language=none
-      args: {
-        'code': code,
-      },
-      mapper: AppRole.fromRow,
-    );
-  }
-}
-
 class AppUserCrud {
   final Database _database;
 
@@ -471,7 +358,7 @@ class AppUserCrud {
 
   Future<AppUser> insert({
     int? id /* nextval('app_user_id_seq'::regclass) */,
-    required String role,
+    required AppRole role,
     required String email,
     DateTime? created /* now() */,
     DateTime? lastSeen,
@@ -486,7 +373,7 @@ class AppUserCrud {
       'app_user',
       values: {
         if (id != null) 'id': id,
-        'role': role,
+        'role': role.value,
         'email': email,
         if (created != null) 'created': created,
         if (lastSeen != null) 'last_seen': lastSeen,
@@ -503,7 +390,7 @@ class AppUserCrud {
 
   Future<AppUser> update(
     int id, {
-    String? role,
+    AppRole? role,
     String? email,
     DateTime? created,
     DateTime? lastSeen,
@@ -525,7 +412,7 @@ class AppUserCrud {
         'id': id,
       },
       set: {
-        if (role != null) 'role': role,
+        if (role != null) 'role': role.value,
         if (email != null) 'email': email,
         if (created != null) 'created': created,
         if (lastSeen != null) 'last_seen': lastSeen,
@@ -550,7 +437,7 @@ class AppUserCrud {
   Future<AppUser> updateEntity(AppUser entity) {
     return update(
       entity.id,
-      role: entity.role.code,
+      role: entity.role,
       email: entity.email,
       created: entity.created,
       lastSeen: entity.lastSeen,
@@ -572,6 +459,89 @@ class AppUserCrud {
     return _database.execute(
       //language=sql
       'delete from app_user where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+    );
+  }
+}
+
+class AppConfigurationCrud {
+  final Database _database;
+
+  AppConfigurationCrud(this._database);
+
+  Future<AppConfiguration> find(int id) {
+    return _database.single(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration?> findOrNull(int id) {
+    return _database.singleOrNull(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> insert({
+    int? id /* nextval('app_configuration_id_seq'::regclass) */,
+    bool? enableLogs,
+  }) {
+    return _database.insert(
+      'app_configuration',
+      values: {
+        if (id != null) 'id': id,
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> update(
+    int id, {
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return _database.update(
+      AppConfiguration.table,
+      where: {
+        'id': id,
+      },
+      set: {
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      clear: [
+        if (clearEnableLogs ?? false) 'enable_logs',
+      ],
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
+    return update(
+      entity.id,
+      enableLogs: entity.enableLogs,
+      clearEnableLogs: entity.enableLogs == null,
+    );
+  }
+
+  Future<int> delete(int id) {
+    return _database.execute(
+      //language=sql
+      'delete from app_configuration where id = :id::integer',
       //language=none
       args: {
         'id': id,
@@ -726,6 +696,84 @@ class MobileDeviceCrud {
     return _database.execute(
       //language=sql
       'delete from mobile_device where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+    );
+  }
+}
+
+class ConsentCrud {
+  final Database _database;
+
+  ConsentCrud(this._database);
+
+  Future<Consent> find(int id) {
+    return _database.single(
+      //language=sql
+      'select * from consent where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: Consent.fromRow,
+    );
+  }
+
+  Future<Consent?> findOrNull(int id) {
+    return _database.singleOrNull(
+      //language=sql
+      'select * from consent where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: Consent.fromRow,
+    );
+  }
+
+  Future<Consent> insert({
+    int? id /* nextval('consent_id_seq'::regclass) */,
+    required ConsentType type,
+  }) {
+    return _database.insert(
+      'consent',
+      values: {
+        if (id != null) 'id': id,
+        'type': type.value,
+      },
+      mapper: Consent.fromRow,
+    );
+  }
+
+  Future<Consent> update(
+    int id, {
+    ConsentType? type,
+  }) {
+    return _database.update(
+      Consent.table,
+      where: {
+        'id': id,
+      },
+      set: {
+        if (type != null) 'type': type.value,
+      },
+      mapper: Consent.fromRow,
+    );
+  }
+
+  Future<Consent> updateEntity(Consent entity) {
+    return update(
+      entity.id,
+      type: entity.type,
+    );
+  }
+
+  Future<int> delete(int id) {
+    return _database.execute(
+      //language=sql
+      'delete from consent where id = :id::integer',
       //language=none
       args: {
         'id': id,

@@ -1,6 +1,59 @@
 // GENERATED-FILE
 import 'package:server_utils/database.dart';
 
+class AppRole implements EnumLike {
+  static const user = AppRole._('USER');
+  static const admin = AppRole._('ADMIN');
+
+  static const values = [
+    user,
+    admin,
+  ];
+
+  final String value;
+
+  const AppRole._(this.value);
+
+  factory AppRole(String value) => values.firstWhere((e) => e.value == value);
+
+  factory AppRole.fromJson(String json) =>
+      values.firstWhere((e) => e.value == json, orElse: () => AppRole._(json));
+
+  String toJson() => value;
+
+  bool get isUnknown => values.every((v) => v.value != value);
+
+  @override
+  String toString() => value;
+}
+
+class ConsentType implements EnumLike {
+  static const privacyPolicy = ConsentType._('privacy_policy');
+  static const termsOfUse = ConsentType._('terms_of_use');
+
+  static const values = [
+    privacyPolicy,
+    termsOfUse,
+  ];
+
+  final String value;
+
+  const ConsentType._(this.value);
+
+  factory ConsentType(String value) =>
+      values.firstWhere((e) => e.value == value);
+
+  factory ConsentType.fromJson(String json) => values
+      .firstWhere((e) => e.value == json, orElse: () => ConsentType._(json));
+
+  String toJson() => value;
+
+  bool get isUnknown => values.every((v) => v.value != value);
+
+  @override
+  String toString() => value;
+}
+
 class CmsPage {
   static final table = TableDefinition(
     'cms_page',
@@ -106,65 +159,6 @@ class _CmsPageColumns {
   final title3 = Column<CmsPage>('title3');
   final body = Column<CmsPage>('body');
   final pageType = Column<CmsPage>('page_type');
-}
-
-class AppConfiguration {
-  static final table = TableDefinition(
-    'app_configuration',
-    [
-      ColumnDefinition('id',
-          type: DataType.integer, isNullable: false, isPrimaryKey: true),
-      ColumnDefinition('enable_logs', type: DataType.boolean),
-    ],
-  );
-
-  static final columns = _AppConfigurationColumns();
-
-  final int id;
-  final bool? enableLogs;
-
-  AppConfiguration({
-    required this.id,
-    this.enableLogs,
-  });
-
-  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
-    return AppConfiguration(
-      id: row['id']! as int,
-      enableLogs: row['enable_logs'] as bool?,
-    );
-  }
-
-  factory AppConfiguration.fromJson(Map<String, Object?> json) {
-    return AppConfiguration(
-      id: (json['id']! as num).toInt(),
-      enableLogs: json['enableLogs'] as bool?,
-    );
-  }
-
-  Map<String, Object?> toJson() {
-    return {
-      'id': id,
-      'enableLogs': enableLogs,
-    };
-  }
-
-  AppConfiguration copyWith({
-    int? id,
-    bool? enableLogs,
-    bool? clearEnableLogs,
-  }) {
-    return AppConfiguration(
-      id: id ?? this.id,
-      enableLogs:
-          (clearEnableLogs ?? false) ? null : enableLogs ?? this.enableLogs,
-    );
-  }
-}
-
-class _AppConfigurationColumns {
-  final id = Column<AppConfiguration>('id');
-  final enableLogs = Column<AppConfiguration>('enable_logs');
 }
 
 class Country {
@@ -273,8 +267,9 @@ class Timezone {
       ColumnDefinition('name',
           type: DataType.text, isNullable: false, isPrimaryKey: true),
       ColumnDefinition('country',
-          type: DataType.characterVarying, reference: 'country'),
-      ColumnDefinition('alias_for', type: DataType.text, reference: 'timezone'),
+          type: DataType.characterVarying, foreignTable: 'country'),
+      ColumnDefinition('alias_for',
+          type: DataType.text, foreignTable: 'timezone'),
       ColumnDefinition('lat_long', type: DataType.text, isNullable: false),
     ],
   );
@@ -344,68 +339,13 @@ class _TimezoneColumns {
   final latLong = Column<Timezone>('lat_long');
 }
 
-class AppRole {
-  static const admin =
-      AppRole._(code: 'ADMIN', index: 100, name: 'Admin', description: '');
-  static const user =
-      AppRole._(code: 'USER', index: 0, name: 'User', description: '');
-
-  static const values = [
-    admin,
-    user,
-  ];
-
-  final String code;
-  final int index;
-  final String name;
-  final String description;
-
-  const AppRole._({
-    required this.code,
-    required this.index,
-    required this.name,
-    required this.description,
-  });
-
-  factory AppRole(String code) => values.firstWhere((e) => e.code == code);
-
-  static AppRole fromRow(Map<String, dynamic> row) =>
-      values.firstWhere((e) => e.code == row['code']! as String,
-          orElse: () => AppRole._(
-              code: row['code']! as String,
-              index: row['index']! as int,
-              name: row['name']! as String,
-              description: row['description']! as String));
-
-  static AppRole fromJson(Map<String, Object?> json) =>
-      values.firstWhere((e) => e.code == json['code']! as String,
-          orElse: () => AppRole._(
-              code: json['code']! as String,
-              index: (json['index']! as num).toInt(),
-              name: json['name']! as String,
-              description: json['description']! as String));
-
-  Map<String, Object?> toJson() => {
-        'code': code,
-        'index': index,
-        'name': name,
-        'description': description,
-      };
-
-  bool get isUnknown => values.every((v) => v.code != code);
-
-  @override
-  String toString() => code;
-}
-
 class AppUser {
   static final table = TableDefinition(
     'app_user',
     [
       ColumnDefinition('id',
           type: DataType.integer, isNullable: false, isPrimaryKey: true),
-      ColumnDefinition('role',
-          type: DataType.text, isNullable: false, reference: 'app_role'),
+      ColumnDefinition('role', type: DataType.text, isNullable: false),
       ColumnDefinition('email', type: DataType.text, isNullable: false),
       ColumnDefinition('created',
           type: DataType.timestampWithTimeZone, isNullable: false),
@@ -413,11 +353,11 @@ class AppUser {
       ColumnDefinition('country_code',
           type: DataType.characterVarying,
           isNullable: false,
-          reference: 'country'),
+          foreignTable: 'country'),
       ColumnDefinition('configuration_id',
           type: DataType.integer,
           isNullable: false,
-          reference: 'app_configuration'),
+          foreignTable: 'app_configuration'),
       ColumnDefinition('eula_version', type: DataType.text),
       ColumnDefinition('first_name', type: DataType.text),
       ColumnDefinition('middle_name', type: DataType.text),
@@ -472,7 +412,7 @@ class AppUser {
   factory AppUser.fromJson(Map<String, Object?> json) {
     return AppUser(
       id: (json['id']! as num).toInt(),
-      role: AppRole.fromJson(json['role']! as Map<String, Object?>),
+      role: AppRole.fromJson(json['role']! as String),
       email: json['email']! as String,
       created: DateTime.parse(json['created']! as String),
       lastSeen: DateTime.tryParse(json['lastSeen'] as String? ?? ''),
@@ -551,6 +491,65 @@ class _AppUserColumns {
   final lastName = Column<AppUser>('last_name');
 }
 
+class AppConfiguration {
+  static final table = TableDefinition(
+    'app_configuration',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('enable_logs', type: DataType.boolean),
+    ],
+  );
+
+  static final columns = _AppConfigurationColumns();
+
+  final int id;
+  final bool? enableLogs;
+
+  AppConfiguration({
+    required this.id,
+    this.enableLogs,
+  });
+
+  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
+    return AppConfiguration(
+      id: row['id']! as int,
+      enableLogs: row['enable_logs'] as bool?,
+    );
+  }
+
+  factory AppConfiguration.fromJson(Map<String, Object?> json) {
+    return AppConfiguration(
+      id: (json['id']! as num).toInt(),
+      enableLogs: json['enableLogs'] as bool?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'enableLogs': enableLogs,
+    };
+  }
+
+  AppConfiguration copyWith({
+    int? id,
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return AppConfiguration(
+      id: id ?? this.id,
+      enableLogs:
+          (clearEnableLogs ?? false) ? null : enableLogs ?? this.enableLogs,
+    );
+  }
+}
+
+class _AppConfigurationColumns {
+  final id = Column<AppConfiguration>('id');
+  final enableLogs = Column<AppConfiguration>('enable_logs');
+}
+
 class MobileDevice {
   static final table = TableDefinition(
     'mobile_device',
@@ -558,7 +557,7 @@ class MobileDevice {
       ColumnDefinition('id',
           type: DataType.integer, isNullable: false, isPrimaryKey: true),
       ColumnDefinition('user_id',
-          type: DataType.integer, isNullable: false, reference: 'app_user'),
+          type: DataType.integer, isNullable: false, foreignTable: 'app_user'),
       ColumnDefinition('created',
           type: DataType.timestampWithTimeZone, isNullable: false),
       ColumnDefinition('last_seen',
@@ -578,7 +577,7 @@ class MobileDevice {
       ColumnDefinition('configuration_id',
           type: DataType.integer,
           isNullable: false,
-          reference: 'app_configuration'),
+          foreignTable: 'app_configuration'),
     ],
   );
 
@@ -739,4 +738,61 @@ class _MobileDeviceColumns {
   final appVersion = Column<MobileDevice>('app_version');
   final appLanguage = Column<MobileDevice>('app_language');
   final configurationId = Column<MobileDevice>('configuration_id');
+}
+
+class Consent {
+  static final table = TableDefinition(
+    'consent',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('type', type: DataType.text, isNullable: false),
+    ],
+  );
+
+  static final columns = _ConsentColumns();
+
+  final int id;
+  final ConsentType type;
+
+  Consent({
+    required this.id,
+    required this.type,
+  });
+
+  factory Consent.fromRow(Map<String, dynamic> row) {
+    return Consent(
+      id: row['id']! as int,
+      type: ConsentType(row['type']! as String),
+    );
+  }
+
+  factory Consent.fromJson(Map<String, Object?> json) {
+    return Consent(
+      id: (json['id']! as num).toInt(),
+      type: ConsentType.fromJson(json['type']! as String),
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'type': type.toJson(),
+    };
+  }
+
+  Consent copyWith({
+    int? id,
+    ConsentType? type,
+  }) {
+    return Consent(
+      id: id ?? this.id,
+      type: type ?? this.type,
+    );
+  }
+}
+
+class _ConsentColumns {
+  final id = Column<Consent>('id');
+  final type = Column<Consent>('type');
 }

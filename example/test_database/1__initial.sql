@@ -36,22 +36,12 @@ create table timezone
     lat_long  text       not null
 );
 
-create table app_role
-(
-    code        text not null primary key,
-    index       int  not null,
-    name        text not null,
-    description text not null default ''
-);
-
-insert into app_role (code, index, name)
-values ('ADMIN', 100, 'Admin'),
-       ('USER', 0, 'User');
+create type app_role as enum ('ADMIN', 'USER');
 
 create table app_user
 (
     id               serial primary key,
-    role             text        not null references app_role (code),
+    role             app_role        not null,
     email            text        not null unique,
     created          timestamptz not null default now(),
     last_seen        timestamptz,

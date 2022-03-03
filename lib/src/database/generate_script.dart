@@ -8,7 +8,6 @@ import 'package:postgres/postgres.dart';
 import 'package:watcher/watcher.dart';
 import '../../database.dart';
 import 'orm/queries_generator.dart';
-import 'orm/queries_generator_v2.dart' as v2;
 import 'package:pool/pool.dart';
 import 'utils.dart';
 
@@ -193,26 +192,15 @@ class _DatabaseBuilder {
   Future<QueriesGenerator> _queryGenerator(
       PostgreSQLConnection connection) async {
     var dbSchema = await SchemaExtractor(DatabaseIO(connection)).schema();
-    var evaluator = PostgresQueryEvaluator(connection);
+    var evaluator = PostgresQueryEvaluator(dbSchema, connection);
     return QueriesGenerator(dbSchema, evaluator);
   }
 
   Future<void> _generateQueryFile(QueriesGenerator generator, File file) async {
     try {
-      String result;
-      if (file.path.endsWith('.dart')) {
-        var connection =
-            (generator.evaluator as PostgresQueryEvaluator).connection;
-        var gen = v2.QueriesGenerator(
-            generator.schema, v2.PostgresQueryEvaluator(connection));
-        result =
-            await gen.generate(file.readAsStringSync(), filePath: file.path);
-        File(p.setExtension(file.path, '.gen.dart')).writeAsStringSync(result);
-      } else {
-        result = await generator.generate(file.readAsStringSync(),
-            filePath: file.path);
-        File(p.setExtension(file.path, '.dart')).writeAsStringSync(result);
-      }
+      var result = await generator.generate(file.readAsStringSync(),
+          filePath: file.path);
+      File(p.setExtension(file.path, '.gen.dart')).writeAsStringSync(result);
 
       _logger.fine('Generated query ${file.path}');
     } catch (e, s) {
