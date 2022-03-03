@@ -25,4 +25,3 @@ builders:
     build_extensions: {".dart": [".client.dart"]}
     auto_apply: dependents
     build_to: source
-
