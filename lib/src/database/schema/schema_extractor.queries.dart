@@ -176,12 +176,12 @@ where n.nspname = :schemaName
       '*': Col(nullable: false),
     };
     //language=sql
-    q(r'''  select    t.oid as id, t.typname as name, t.typtype as type
-from        pg_type t
-                left join   pg_catalog.pg_namespace n on n.oid = t.typnamespace
-where       (t.typrelid = 0 or (select c.relkind = 'c' from pg_catalog.pg_class c where c.oid = t.typrelid))
-  and     not exists(select 1 from pg_catalog.pg_type el where el.oid = t.typelem and el.typarray = t.oid)
-  and     n.nspname not in ('pg_catalog', 'information_schema')
+    q(r'''select t.oid::int as id, t.typname::text as name, t.typtype::text as type
+from pg_type t
+         left join pg_catalog.pg_namespace n on n.oid = t.typnamespace
+where (t.typrelid = 0 or (select c.relkind = 'c' from pg_catalog.pg_class c where c.oid = t.typrelid))
+  and not exists(select 1 from pg_catalog.pg_type el where el.oid = t.typelem and el.typarray = t.oid)
+  and n.nspname = :schemaName
 ''');
   }
 }

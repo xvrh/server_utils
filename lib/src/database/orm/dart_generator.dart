@@ -159,7 +159,7 @@ import 'package:server_utils/database.dart';
             "as ${field.type}${field.isNullable ? '?' : ''},");
       } else {
         code.writeln('${enumDefinition.name.words.toUpperCamel()}'
-            "(row['${field.column.name}']${field.isNullable ? '' : '!'} as String),");
+            ".fromRow(row['${field.column.name}']${field.isNullable ? '' : '!'} as String),");
       }
     }
     code.writeln(');');
@@ -226,9 +226,11 @@ import 'package:server_utils/database.dart';
     var className = enumDefinition.name.words.toUpperCamel();
 
     code.writeln('class $className implements EnumLike {');
+    var index = 0;
     for (var enumLine in enumDefinition.values) {
       code.writeln(
-          'static const ${enumLine.words.toLowerCamel()} = $className._(${escapeDartString(enumLine)});');
+          'static const ${enumLine.words.toLowerCamel()} = $className._(${escapeDartString(enumLine)}, $index);');
+      ++index;
     }
     code.writeln('');
     code.writeln('static const values = [');
@@ -236,20 +238,28 @@ import 'package:server_utils/database.dart';
       code.writeln('${enumLine.words.toLowerCamel()},');
     }
     code.writeln('];');
-    code.writeln('');
-    code.writeln('final String value;');
-
-    code.writeln('');
-    code.writeln('const $className._(this.value);');
-    code.writeln('');
-
     code.writeln('''
-factory $className(String value) => 
+    
+    @override
+    final String value;
+    
+    @override
+    final int index;
+''');
+
+    code.writeln('');
+    code.writeln('const $className._(this.value, this.index);');
+    code.writeln('');
+
+    // Use static instead of factory so that the analyzer recognize the class
+    // as an Enum-like class and trigger the warnings when switch cases are not complete
+    code.writeln('''
+static $className fromRow(String value) => 
    values.firstWhere((e) => e.value == value);
 
-factory $className.fromJson(String json) =>
+static $className fromJson(String json) =>
   values.firstWhere((e) => e.value == json,
-    orElse: () => $className._(json));
+    orElse: () => $className._(json, 0xffff));
     
 String toJson() => value;
 

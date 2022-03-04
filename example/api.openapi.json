@@ -1,0 +1,70 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Fluidra EMEA IoT Consumer API",
+    "description": "API for Consumer mobile app (iAquaLink+)",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/page/fetch-entity": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entity"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Error": {
+        "description": "Generic error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Entity": {
+        "type": "object",
+        "required": [
+          "myEnum",
+          "otherProp"
+        ],
+        "properties": {
+          "myEnum": {
+            "description": "Some comment that will not be visible",
+            "$ref": "#/components/schemas/OneEnum"
+          },
+          "otherProp": {
+            "description": "This one can have a description",
+            "type": "number"
+          }
+        }
+      },
+      "OneEnum": {
+        "description": "Come other comment\nOn several lines\nJust like this",
+        "type": "string",
+        "enum": [
+          "value1",
+          "value2"
+        ]
+      }
+    }
+  }
+}

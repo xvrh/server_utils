@@ -33,10 +33,11 @@ Future<String> generateOpenApiSchema(
   var schema = <String, dynamic>{
     'openapi': '3.0.0',
     'info': {
-      'title': 'Fluidra EMEA IoT Consumer API',
-      'description': 'API for Consumer mobile app (iAquaLink+)',
-      'version': '0.0.1',
+      'title': title,
+      'description': description,
+      'version': version,
     },
+    'tags': builder.tags,
     'paths': builder.paths,
     'components': {
       'responses': {
@@ -55,11 +56,6 @@ Future<String> generateOpenApiSchema(
     },
   };
 
-  // Steps:
-  // - Add "enum" property for enum & enum-like class
-  //     => enum like with only one "code", should be encoded as "string"
-  // -
-
   return const JsonEncoder.withIndent('  ').convert(schema);
 }
 
@@ -68,6 +64,7 @@ class _SchemaBuilder {
   final List<Api> _apis;
   final paths = <String, dynamic>{};
   final schemas = <String, dynamic>{};
+  final tags = <Map<String, dynamic>>[];
 
   _SchemaBuilder(this._context, this._apis);
 
@@ -82,6 +79,9 @@ class _SchemaBuilder {
           .where((c) => c.metadata.any((m) => m.name.name == apiMetaName))
           .where((c) => api.className == null || c.name.name == api.className)
           .single;
+
+      var apiTag = _removeSuffix(apiClass.name.name, suffix: 'Api');
+      tags.add({'name': apiTag, 'description': api.description});
 
       var apiMeta =
           apiClass.metadata.firstWhere((m) => m.name.name == apiMetaName);
@@ -141,13 +141,11 @@ class _SchemaBuilder {
             };
           }
 
-          var comment = method.documentationComment;
+          var comment = _commentString(methodElement.documentationComment);
           paths['/${p.url.join(basePath, methodPath)}'] = {
             httpMethod: {
-              if (comment != null)
-                'description': comment.tokens
-                    .map((l) => l.toString().substring(4))
-                    .join('\n'),
+              'tags': [apiTag],
+              if (comment != null) 'description': comment,
               if (parameters != null) 'parameters': parameters,
               if (requestBody != null) 'requestBody': requestBody,
               'responses': {
@@ -203,10 +201,29 @@ class _SchemaBuilder {
     if (!schemas.containsKey(typeName)) {
       var element = type.element!;
       if (element is ClassElement) {
+        List<String>? enums;
+        var comment = _commentString(element.documentationComment);
+
         if (element.isEnum) {
+          enums = element.fields
+              .where((f) => f.isStatic && f.name != 'values')
+              .map((e) => e.name)
+              .toList();
+        } else if (element.allSupertypes
+            .any((s) => s.element.name == 'EnumLike')) {
+          enums = element.fields
+              .where((f) => f.isConst && f.hasInitializer && f.name != 'values')
+              .map((e) =>
+                  e.computeConstantValue()?.getField('value')?.toStringValue())
+              .whereNotNull()
+              .toList();
+        }
+
+        if (enums != null) {
           schemas[typeName] = {
+            if (comment != null) 'description': comment,
             'type': 'string',
-            'enum': [],
+            'enum': enums,
           };
         } else {
           var fields = element.fields.where((e) => !e.isStatic);
@@ -217,22 +234,52 @@ class _SchemaBuilder {
 
           var description = schemas[typeName] = {
             'type': 'object',
+            if (comment != null) 'description': comment,
             if (required.isNotEmpty) 'required': required,
           };
-          description['properties'] = {
-            for (var field in fields) field.name: _schemaForType(field.type),
-          };
+          var properties = {};
+          for (var field in fields) {
+            var fieldComment = _commentString(field.documentationComment);
+            var fieldSchema = _schemaForType(field.type);
+            properties[field.name] = {
+              // Description with $ref field is not supported in OpenApi 3.0.0
+              // 3.1.0 does support it. But SwaggerUI doesn't support this version yet.
+              if (fieldComment != null && !fieldSchema.containsKey(r'$ref'))
+                'description': fieldComment,
+              ...fieldSchema,
+            };
+          }
+          description['properties'] = properties;
         }
       }
     }
 
     return '#/components/schemas/$typeName';
   }
+
+  String? _commentString(String? comment) {
+    if (comment != null) {
+      return LineSplitter.split(comment).map((l) => l.substring(4)).join('\n');
+    }
+    return null;
+  }
+
+  String _removeSuffix(String input, {required String suffix}) {
+    if (input.endsWith(suffix)) {
+      return input.substring(0, input.length - suffix.length);
+    }
+    return input;
+  }
 }
 
 class Api {
   final File file;
   final String? className;
+  final String description;
 
-  Api(String file, {this.className}) : file = File(file);
+  Api(
+    String file, {
+    this.className,
+    required this.description,
+  }) : file = File(file);
 }

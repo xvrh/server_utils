@@ -199,12 +199,13 @@ where n.nspname = :schemaName
     return Query<UserDefinedType>(
       this,
       //language=sql
-      r'''  select    t.oid::int as id, t.typname::text as name, t.typtype::text as type
-from        pg_type t
-                left join   pg_catalog.pg_namespace n on n.oid = t.typnamespace
-where       (t.typrelid = 0 or (select c.relkind = 'c' from pg_catalog.pg_class c where c.oid = t.typrelid))
-  and     not exists(select 1 from pg_catalog.pg_type el where el.oid = t.typelem and el.typarray = t.oid)
-  and     n.nspname not in ('pg_catalog', 'information_schema')
+      r'''
+select t.oid::int as id, t.typname::text as name, t.typtype::text as type
+from pg_type t
+         left join pg_catalog.pg_namespace n on n.oid = t.typnamespace
+where (t.typrelid = 0 or (select c.relkind = 'c' from pg_catalog.pg_class c where c.oid = t.typrelid))
+  and not exists(select 1 from pg_catalog.pg_type el where el.oid = t.typelem and el.typarray = t.oid)
+  and n.nspname = :schemaName
 ''',
       arguments: {
         'schemaName': schemaName,
@@ -221,6 +222,8 @@ where       (t.typrelid = 0 or (select c.relkind = 'c' from pg_catalog.pg_class 
     print(_SchemaExtractorQueries(this).foreignKeysForSchema);
     print(_SchemaExtractorQueries(this).describeTables);
     print(_SchemaExtractorQueries(this).domainsForSchema);
+    print(_SchemaExtractorQueries(this).valuesForEnums);
+    print(_SchemaExtractorQueries(this).userDefinedTypes);
   }
 }
 
@@ -318,15 +321,6 @@ class _ColumnDataColumns {
   final characterMaximumLength = Column<ColumnData>('character_maximum_length');
   final domainName = Column<ColumnData>('domain_name');
   final isNullable = Column<ColumnData>('is_nullable');
-  late final list = [
-    tableName,
-    columnName,
-    columnDefault,
-    dataType,
-    characterMaximumLength,
-    domainName,
-    isNullable
-  ];
 }
 
 class PrimaryKey {
@@ -399,7 +393,6 @@ class _PrimaryKeyColumns {
   final constraintName = Column<PrimaryKey>('constraint_name');
   final columnName = Column<PrimaryKey>('column_name');
   final ordinalPosition = Column<PrimaryKey>('ordinal_position');
-  late final list = [tableName, constraintName, columnName, ordinalPosition];
 }
 
 class ForeignKey {
@@ -488,15 +481,6 @@ class _ForeignKeyColumns {
   final foreignTableSchema = Column<ForeignKey>('foreign_table_schema');
   final foreignTableName = Column<ForeignKey>('foreign_table_name');
   final foreignColumnName = Column<ForeignKey>('foreign_column_name');
-  late final list = [
-    tableSchema,
-    constraintName,
-    tableName,
-    columnName,
-    foreignTableSchema,
-    foreignTableName,
-    foreignColumnName
-  ];
 }
 
 class ColumnDescription {
@@ -634,20 +618,6 @@ class _ColumnDescriptionColumns {
   final foreignKey = Column<ColumnDescription>('foreign_key');
   final foreignKeyFieldnum = Column<ColumnDescription>('foreign_key_fieldnum');
   final defaultInfo = Column<ColumnDescription>('default_info');
-  late final list = [
-    tableName,
-    number,
-    name,
-    attnum,
-    notNull,
-    typeId,
-    type,
-    isPrimaryKey,
-    uniqueKey,
-    foreignKey,
-    foreignKeyFieldnum,
-    defaultInfo
-  ];
 }
 
 class DomainDescription {
@@ -715,18 +685,17 @@ class _DomainDescriptionColumns {
   final name = Column<DomainDescription>('name');
   final notNull = Column<DomainDescription>('not_null');
   final defaultValue = Column<DomainDescription>('default_value');
-  late final list = [oid, name, notNull, defaultValue];
 }
 
 class EnumValue {
-  static final columns = _DomainDescriptionColumns();
+  static final columns = _EnumValueColumns();
 
   final String name;
   final String value;
 
   EnumValue({
-    required this.value,
     required this.name,
+    required this.value,
   });
 
   factory EnumValue.fromRow(Map<String, dynamic> row) {
@@ -735,10 +704,39 @@ class EnumValue {
       value: row['value']! as String,
     );
   }
+
+  factory EnumValue.fromJson(Map<String, Object?> json) {
+    return EnumValue(
+      name: json['name']! as String,
+      value: json['value']! as String,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'name': name,
+      'value': value,
+    };
+  }
+
+  EnumValue copyWith({
+    String? name,
+    String? value,
+  }) {
+    return EnumValue(
+      name: name ?? this.name,
+      value: value ?? this.value,
+    );
+  }
+}
+
+class _EnumValueColumns {
+  final name = Column<EnumValue>('name');
+  final value = Column<EnumValue>('value');
 }
 
 class UserDefinedType {
-  static final columns = _DomainDescriptionColumns();
+  static final columns = _UserDefinedTypeColumns();
 
   final int id;
   final String name;
@@ -757,4 +755,38 @@ class UserDefinedType {
       type: row['type']! as String,
     );
   }
+
+  factory UserDefinedType.fromJson(Map<String, Object?> json) {
+    return UserDefinedType(
+      id: (json['id']! as num).toInt(),
+      name: json['name']! as String,
+      type: json['type']! as String,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'type': type,
+    };
+  }
+
+  UserDefinedType copyWith({
+    int? id,
+    String? name,
+    String? type,
+  }) {
+    return UserDefinedType(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+    );
+  }
+}
+
+class _UserDefinedTypeColumns {
+  final id = Column<UserDefinedType>('id');
+  final name = Column<UserDefinedType>('name');
+  final type = Column<UserDefinedType>('type');
 }

@@ -6,13 +6,13 @@ import 'example_database_schema.dart';
 extension DatabaseCrudExtension on Database {
   CmsPageCrud get cmsPage => CmsPageCrud(this);
 
+  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
+
   CountryCrud get country => CountryCrud(this);
 
   TimezoneCrud get timezone => TimezoneCrud(this);
 
   AppUserCrud get appUser => AppUserCrud(this);
-
-  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
 
   MobileDeviceCrud get mobileDevice => MobileDeviceCrud(this);
 
@@ -125,6 +125,89 @@ class CmsPageCrud {
     return _database.execute(
       //language=sql
       'delete from cms_page where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+    );
+  }
+}
+
+class AppConfigurationCrud {
+  final Database _database;
+
+  AppConfigurationCrud(this._database);
+
+  Future<AppConfiguration> find(int id) {
+    return _database.single(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration?> findOrNull(int id) {
+    return _database.singleOrNull(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> insert({
+    int? id /* nextval('app_configuration_id_seq'::regclass) */,
+    bool? enableLogs,
+  }) {
+    return _database.insert(
+      'app_configuration',
+      values: {
+        if (id != null) 'id': id,
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> update(
+    int id, {
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return _database.update(
+      AppConfiguration.table,
+      where: {
+        'id': id,
+      },
+      set: {
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      clear: [
+        if (clearEnableLogs ?? false) 'enable_logs',
+      ],
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
+    return update(
+      entity.id,
+      enableLogs: entity.enableLogs,
+      clearEnableLogs: entity.enableLogs == null,
+    );
+  }
+
+  Future<int> delete(int id) {
+    return _database.execute(
+      //language=sql
+      'delete from app_configuration where id = :id::integer',
       //language=none
       args: {
         'id': id,
@@ -459,89 +542,6 @@ class AppUserCrud {
     return _database.execute(
       //language=sql
       'delete from app_user where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-    );
-  }
-}
-
-class AppConfigurationCrud {
-  final Database _database;
-
-  AppConfigurationCrud(this._database);
-
-  Future<AppConfiguration> find(int id) {
-    return _database.single(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration?> findOrNull(int id) {
-    return _database.singleOrNull(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> insert({
-    int? id /* nextval('app_configuration_id_seq'::regclass) */,
-    bool? enableLogs,
-  }) {
-    return _database.insert(
-      'app_configuration',
-      values: {
-        if (id != null) 'id': id,
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> update(
-    int id, {
-    bool? enableLogs,
-    bool? clearEnableLogs,
-  }) {
-    return _database.update(
-      AppConfiguration.table,
-      where: {
-        'id': id,
-      },
-      set: {
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      clear: [
-        if (clearEnableLogs ?? false) 'enable_logs',
-      ],
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
-    return update(
-      entity.id,
-      enableLogs: entity.enableLogs,
-      clearEnableLogs: entity.enableLogs == null,
-    );
-  }
-
-  Future<int> delete(int id) {
-    return _database.execute(
-      //language=sql
-      'delete from app_configuration where id = :id::integer',
       //language=none
       args: {
         'id': id,

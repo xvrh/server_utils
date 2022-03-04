@@ -43,7 +43,7 @@ class SchemaExtractor {
       tableDefinitions.add(tableHolder);
 
       for (var column in allColumns.where((c) => c.tableName == tableName)) {
-        var columnDescription = tableDescriptions.singleWhere(
+        var columnDescription = tableDescriptions.firstWhere(
             (e) => e.tableName == tableName && e.name == column.columnName);
         var isPrimaryKey = primaryKeys.any((c) =>
             c.tableName == tableName && c.columnName == column.columnName);

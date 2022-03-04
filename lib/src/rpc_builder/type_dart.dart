@@ -41,7 +41,11 @@ ValueType typeFromDart(DartType type) {
     if (element is ClassElement) {
       if (element.isEnum) {
         return EnumType(element.name, isNullable: isNullable);
+      } else if (element.allSupertypes
+          .any((s) => s.element.name == 'EnumLike')) {
+        return EnumLikeType(element.name, isNullable: isNullable);
       }
+
       var genericTypes = <String, ValueType>{};
       if (type is ParameterizedType) {
         var i = 0;

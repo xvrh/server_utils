@@ -2,6 +2,17 @@
 import 'package:server_utils/database.dart';
 
 class MigrationHistory {
+  static final table = TableDefinition(
+    '_migration_history',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('name', type: DataType.text, isNullable: false),
+      ColumnDefinition('date',
+          type: DataType.timestampWithTimeZone, isNullable: false),
+    ],
+  );
+
   static final columns = _MigrationHistoryColumns();
 
   final int id;
@@ -55,5 +66,4 @@ class _MigrationHistoryColumns {
   final id = Column<MigrationHistory>('id');
   final name = Column<MigrationHistory>('name');
   final date = Column<MigrationHistory>('date');
-  late final list = [id, name, date];
 }
