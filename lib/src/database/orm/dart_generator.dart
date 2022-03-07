@@ -122,7 +122,7 @@ import 'package:server_utils/database.dart';
       code.writeln('static final table = TableDefinition(');
       code.write('${escapeDartString(table.name)},');
       code.write('[');
-      for (var column in columns) {
+      for (var column in table.columns) {
         code.writeln('${column.toCode()},');
       }
       code.writeln('],);');

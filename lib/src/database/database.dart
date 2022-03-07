@@ -102,7 +102,8 @@ extension DatabaseExtension on Database {
     var wheres = <String>[];
     var values = <String, Object>{};
     for (var e in set.entries) {
-      var column = table.columns.firstWhere((c) => c.name == e.key);
+      var column = table.columns.firstWhere((c) => c.name == e.key,
+          orElse: () => throw Exception('Column [${e.key}] not found.'));
       updates.add(
           '"${e.key}" = :${e.key}:${column.type.typeString}::${column.type.postgresType}');
       values[e.key] = e.value;
@@ -113,7 +114,8 @@ extension DatabaseExtension on Database {
       }
     }
     for (var e in where.entries) {
-      var column = table.columns.firstWhere((c) => c.name == e.key);
+      var column = table.columns.firstWhere((c) => c.name == e.key,
+          orElse: () => throw Exception('Column where [${e.key}] not found.'));
       wheres.add(
           '"${e.key}" = :${e.key}:${column.type.typeString}::${column.type.postgresType}');
       values[e.key] = e.value;
