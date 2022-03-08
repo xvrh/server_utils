@@ -42,7 +42,7 @@ class MigrationHistoryCrud {
     DateTime? date /* now() */,
   }) {
     return _database.insert(
-      '_migration_history',
+      MigrationHistory.table,
       values: {
         if (id != null) 'id': id,
         'name': name,

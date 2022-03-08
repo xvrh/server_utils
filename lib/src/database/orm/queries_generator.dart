@@ -260,7 +260,7 @@ class PostgresQueryEvaluator implements QueryEvaluator {
       DataType dataType;
 
       var enumUserType =
-          schema.enums.firstWhereOrNull((e) => e.userType.id == d.typeId);
+          schema.enums.firstWhereOrNull((e) => e.typeId == d.typeId);
       if (enumUserType != null) {
         dataType = DataType.text;
       } else {

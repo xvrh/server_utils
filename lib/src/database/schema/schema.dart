@@ -1,6 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:server_utils/src/database/schema/schema_extractor.queries.dart'
-    show UserDefinedType;
 import 'package:server_utils/src/utils/escape_dart_string.dart';
 
 class DatabaseSchema {
@@ -52,12 +50,14 @@ class ColumnDefinition {
   String toCode() {
     var domain = this.domain;
     var foreignTable = this.foreignTable;
+    var enumDefinition = this.enumDefinition;
     var args = <String, String?>{
       'type': type.toCode(),
       if (domain != null) 'domain': escapeDartString(domain),
       if (!isNullable) 'isNullable': '$isNullable',
       if (isPrimaryKey) 'isPrimaryKey': '$isPrimaryKey',
       if (foreignTable != null) 'foreignTable': escapeDartString(foreignTable),
+      if (enumDefinition != null) 'enumDefinition': enumDefinition.toCode(),
     };
 
     var argCode = args.entries.map((e) => '${e.key}: ${e.value}').join(',');
@@ -71,9 +71,13 @@ class ColumnDefinition {
 class EnumDefinition {
   final String name;
   final List<String> values;
-  final UserDefinedType userType;
+  final int typeId;
 
-  EnumDefinition(this.name, this.values, {required this.userType});
+  EnumDefinition(this.name, this.values, {required this.typeId});
+
+  String toCode() {
+    return "EnumDefinition('$name', [${values.map((v) => escapeDartString(v)).join(',')}], typeId: $typeId)";
+  }
 }
 
 // When adding a datatype, make sure to add it in data_type_postgres file.

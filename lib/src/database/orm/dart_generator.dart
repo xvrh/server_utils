@@ -394,7 +394,7 @@ class $className {
       }
     }
     code.writeln('}) {');
-    code.writeln("return _database.insert('${table.name}',");
+    code.writeln('return _database.insert($entityName.table,');
     code.writeln('values: {');
     for (var field in fields) {
       var variableName = field.name;

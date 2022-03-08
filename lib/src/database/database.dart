@@ -60,10 +60,11 @@ abstract class Database {
 
 extension DatabaseExtension on Database {
   Future<T> insert<T>(
-    String tableName, {
+    TableDefinition table, {
     required Map<String, dynamic> values,
     required Mapper<T> mapper,
   }) {
+    var tableName = table.name;
     var keys = values.keys.toList();
     if (tableName.contains('"')) {
       throw Exception('Table name is invalid ($tableName)');
@@ -71,10 +72,17 @@ extension DatabaseExtension on Database {
     if (keys.any((k) => k.contains('"'))) {
       throw Exception('One column has an invalid name ($keys)');
     }
+    var valueVariables = <String>[];
+    for (var key in keys) {
+      var column = table[key]!;
+      valueVariables.add(
+          ':$key::${column.enumDefinition?.name ?? column.type.postgresType}');
+    }
+
     return single(
       'insert into "$tableName" '
       '(${keys.map((j) => '"$j"').join(', ')}) '
-      'values (${keys.map((k) => ':$k').join(',')}) returning *',
+      'values (${valueVariables.join(',')}) returning *',
       mapper: mapper,
       args: values,
     );

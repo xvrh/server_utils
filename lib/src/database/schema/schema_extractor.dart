@@ -32,7 +32,7 @@ class SchemaExtractor {
     for (var enumName in enums.map((e) => e.name).toSet()) {
       var def = EnumDefinition(enumName,
           enums.where((e) => e.name == enumName).map((e) => e.value).toList(),
-          userType: userDefinedTypes.singleWhere((t) => t.name == enumName));
+          typeId: userDefinedTypes.singleWhere((t) => t.name == enumName).id);
       enumDefinitions.add(def);
     }
 

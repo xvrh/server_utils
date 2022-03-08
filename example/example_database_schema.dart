@@ -172,65 +172,6 @@ class _CmsPageColumns {
   final pageType = Column<CmsPage>('page_type');
 }
 
-class AppConfiguration {
-  static final table = TableDefinition(
-    'app_configuration',
-    [
-      ColumnDefinition('id',
-          type: DataType.integer, isNullable: false, isPrimaryKey: true),
-      ColumnDefinition('enable_logs', type: DataType.boolean),
-    ],
-  );
-
-  static final columns = _AppConfigurationColumns();
-
-  final int id;
-  final bool? enableLogs;
-
-  AppConfiguration({
-    required this.id,
-    this.enableLogs,
-  });
-
-  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
-    return AppConfiguration(
-      id: row['id']! as int,
-      enableLogs: row['enable_logs'] as bool?,
-    );
-  }
-
-  factory AppConfiguration.fromJson(Map<String, Object?> json) {
-    return AppConfiguration(
-      id: (json['id']! as num).toInt(),
-      enableLogs: json['enableLogs'] as bool?,
-    );
-  }
-
-  Map<String, Object?> toJson() {
-    return {
-      'id': id,
-      'enableLogs': enableLogs,
-    };
-  }
-
-  AppConfiguration copyWith({
-    int? id,
-    bool? enableLogs,
-    bool? clearEnableLogs,
-  }) {
-    return AppConfiguration(
-      id: id ?? this.id,
-      enableLogs:
-          (clearEnableLogs ?? false) ? null : enableLogs ?? this.enableLogs,
-    );
-  }
-}
-
-class _AppConfigurationColumns {
-  final id = Column<AppConfiguration>('id');
-  final enableLogs = Column<AppConfiguration>('enable_logs');
-}
-
 class Country {
   static final table = TableDefinition(
     'country',
@@ -407,158 +348,6 @@ class _TimezoneColumns {
   final country = Column<Timezone>('country');
   final aliasFor = Column<Timezone>('alias_for');
   final latLong = Column<Timezone>('lat_long');
-}
-
-class AppUser {
-  static final table = TableDefinition(
-    'app_user',
-    [
-      ColumnDefinition('id',
-          type: DataType.integer, isNullable: false, isPrimaryKey: true),
-      ColumnDefinition('role', type: DataType.text, isNullable: false),
-      ColumnDefinition('email', type: DataType.text, isNullable: false),
-      ColumnDefinition('created',
-          type: DataType.timestampWithTimeZone, isNullable: false),
-      ColumnDefinition('last_seen', type: DataType.timestampWithTimeZone),
-      ColumnDefinition('country_code',
-          type: DataType.characterVarying,
-          isNullable: false,
-          foreignTable: 'country'),
-      ColumnDefinition('configuration_id',
-          type: DataType.integer,
-          isNullable: false,
-          foreignTable: 'app_configuration'),
-      ColumnDefinition('eula_version', type: DataType.text),
-      ColumnDefinition('first_name', type: DataType.text),
-      ColumnDefinition('middle_name', type: DataType.text),
-      ColumnDefinition('last_name', type: DataType.text),
-    ],
-  );
-
-  static final columns = _AppUserColumns();
-
-  final int id;
-  final AppRole role;
-  final String email;
-  final DateTime created;
-  final DateTime? lastSeen;
-  final String countryCode;
-  final int configurationId;
-  final String? eulaVersion;
-  final String? firstName;
-  final String? middleName;
-  final String? lastName;
-
-  AppUser({
-    required this.id,
-    required this.role,
-    required this.email,
-    required this.created,
-    this.lastSeen,
-    required this.countryCode,
-    required this.configurationId,
-    this.eulaVersion,
-    this.firstName,
-    this.middleName,
-    this.lastName,
-  });
-
-  factory AppUser.fromRow(Map<String, dynamic> row) {
-    return AppUser(
-      id: row['id']! as int,
-      role: AppRole.fromRow(row['role']! as String),
-      email: row['email']! as String,
-      created: row['created']! as DateTime,
-      lastSeen: row['last_seen'] as DateTime?,
-      countryCode: row['country_code']! as String,
-      configurationId: row['configuration_id']! as int,
-      eulaVersion: row['eula_version'] as String?,
-      firstName: row['first_name'] as String?,
-      middleName: row['middle_name'] as String?,
-      lastName: row['last_name'] as String?,
-    );
-  }
-
-  factory AppUser.fromJson(Map<String, Object?> json) {
-    return AppUser(
-      id: (json['id']! as num).toInt(),
-      role: AppRole.fromJson(json['role']! as String),
-      email: json['email']! as String,
-      created: DateTime.parse(json['created']! as String),
-      lastSeen: DateTime.tryParse(json['lastSeen'] as String? ?? ''),
-      countryCode: json['countryCode']! as String,
-      configurationId: (json['configurationId']! as num).toInt(),
-      eulaVersion: json['eulaVersion'] as String?,
-      firstName: json['firstName'] as String?,
-      middleName: json['middleName'] as String?,
-      lastName: json['lastName'] as String?,
-    );
-  }
-
-  Map<String, Object?> toJson() {
-    return {
-      'id': id,
-      'role': role.toJson(),
-      'email': email,
-      'created': created.toIso8601String(),
-      'lastSeen': lastSeen?.toIso8601String(),
-      'countryCode': countryCode,
-      'configurationId': configurationId,
-      'eulaVersion': eulaVersion,
-      'firstName': firstName,
-      'middleName': middleName,
-      'lastName': lastName,
-    };
-  }
-
-  AppUser copyWith({
-    int? id,
-    AppRole? role,
-    String? email,
-    DateTime? created,
-    DateTime? lastSeen,
-    bool? clearLastSeen,
-    String? countryCode,
-    int? configurationId,
-    String? eulaVersion,
-    bool? clearEulaVersion,
-    String? firstName,
-    bool? clearFirstName,
-    String? middleName,
-    bool? clearMiddleName,
-    String? lastName,
-    bool? clearLastName,
-  }) {
-    return AppUser(
-      id: id ?? this.id,
-      role: role ?? this.role,
-      email: email ?? this.email,
-      created: created ?? this.created,
-      lastSeen: (clearLastSeen ?? false) ? null : lastSeen ?? this.lastSeen,
-      countryCode: countryCode ?? this.countryCode,
-      configurationId: configurationId ?? this.configurationId,
-      eulaVersion:
-          (clearEulaVersion ?? false) ? null : eulaVersion ?? this.eulaVersion,
-      firstName: (clearFirstName ?? false) ? null : firstName ?? this.firstName,
-      middleName:
-          (clearMiddleName ?? false) ? null : middleName ?? this.middleName,
-      lastName: (clearLastName ?? false) ? null : lastName ?? this.lastName,
-    );
-  }
-}
-
-class _AppUserColumns {
-  final id = Column<AppUser>('id');
-  final role = Column<AppUser>('role');
-  final email = Column<AppUser>('email');
-  final created = Column<AppUser>('created');
-  final lastSeen = Column<AppUser>('last_seen');
-  final countryCode = Column<AppUser>('country_code');
-  final configurationId = Column<AppUser>('configuration_id');
-  final eulaVersion = Column<AppUser>('eula_version');
-  final firstName = Column<AppUser>('first_name');
-  final middleName = Column<AppUser>('middle_name');
-  final lastName = Column<AppUser>('last_name');
 }
 
 class MobileDevice {
@@ -751,13 +540,233 @@ class _MobileDeviceColumns {
   final configurationId = Column<MobileDevice>('configuration_id');
 }
 
+class AppUser {
+  static final table = TableDefinition(
+    'app_user',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('role',
+          type: DataType.text,
+          isNullable: false,
+          enumDefinition:
+              EnumDefinition('app_role', ['USER', 'ADMIN'], typeId: 45854)),
+      ColumnDefinition('email', type: DataType.text, isNullable: false),
+      ColumnDefinition('created',
+          type: DataType.timestampWithTimeZone, isNullable: false),
+      ColumnDefinition('last_seen', type: DataType.timestampWithTimeZone),
+      ColumnDefinition('country_code',
+          type: DataType.characterVarying,
+          isNullable: false,
+          foreignTable: 'country'),
+      ColumnDefinition('configuration_id',
+          type: DataType.integer,
+          isNullable: false,
+          foreignTable: 'app_configuration'),
+      ColumnDefinition('eula_version', type: DataType.text),
+      ColumnDefinition('first_name', type: DataType.text),
+      ColumnDefinition('middle_name', type: DataType.text),
+      ColumnDefinition('last_name', type: DataType.text),
+    ],
+  );
+
+  static final columns = _AppUserColumns();
+
+  final int id;
+  final AppRole role;
+  final String email;
+  final DateTime created;
+  final DateTime? lastSeen;
+  final String countryCode;
+  final int configurationId;
+  final String? eulaVersion;
+  final String? firstName;
+  final String? middleName;
+  final String? lastName;
+
+  AppUser({
+    required this.id,
+    required this.role,
+    required this.email,
+    required this.created,
+    this.lastSeen,
+    required this.countryCode,
+    required this.configurationId,
+    this.eulaVersion,
+    this.firstName,
+    this.middleName,
+    this.lastName,
+  });
+
+  factory AppUser.fromRow(Map<String, dynamic> row) {
+    return AppUser(
+      id: row['id']! as int,
+      role: AppRole.fromRow(row['role']! as String),
+      email: row['email']! as String,
+      created: row['created']! as DateTime,
+      lastSeen: row['last_seen'] as DateTime?,
+      countryCode: row['country_code']! as String,
+      configurationId: row['configuration_id']! as int,
+      eulaVersion: row['eula_version'] as String?,
+      firstName: row['first_name'] as String?,
+      middleName: row['middle_name'] as String?,
+      lastName: row['last_name'] as String?,
+    );
+  }
+
+  factory AppUser.fromJson(Map<String, Object?> json) {
+    return AppUser(
+      id: (json['id']! as num).toInt(),
+      role: AppRole.fromJson(json['role']! as String),
+      email: json['email']! as String,
+      created: DateTime.parse(json['created']! as String),
+      lastSeen: DateTime.tryParse(json['lastSeen'] as String? ?? ''),
+      countryCode: json['countryCode']! as String,
+      configurationId: (json['configurationId']! as num).toInt(),
+      eulaVersion: json['eulaVersion'] as String?,
+      firstName: json['firstName'] as String?,
+      middleName: json['middleName'] as String?,
+      lastName: json['lastName'] as String?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'role': role.toJson(),
+      'email': email,
+      'created': created.toIso8601String(),
+      'lastSeen': lastSeen?.toIso8601String(),
+      'countryCode': countryCode,
+      'configurationId': configurationId,
+      'eulaVersion': eulaVersion,
+      'firstName': firstName,
+      'middleName': middleName,
+      'lastName': lastName,
+    };
+  }
+
+  AppUser copyWith({
+    int? id,
+    AppRole? role,
+    String? email,
+    DateTime? created,
+    DateTime? lastSeen,
+    bool? clearLastSeen,
+    String? countryCode,
+    int? configurationId,
+    String? eulaVersion,
+    bool? clearEulaVersion,
+    String? firstName,
+    bool? clearFirstName,
+    String? middleName,
+    bool? clearMiddleName,
+    String? lastName,
+    bool? clearLastName,
+  }) {
+    return AppUser(
+      id: id ?? this.id,
+      role: role ?? this.role,
+      email: email ?? this.email,
+      created: created ?? this.created,
+      lastSeen: (clearLastSeen ?? false) ? null : lastSeen ?? this.lastSeen,
+      countryCode: countryCode ?? this.countryCode,
+      configurationId: configurationId ?? this.configurationId,
+      eulaVersion:
+          (clearEulaVersion ?? false) ? null : eulaVersion ?? this.eulaVersion,
+      firstName: (clearFirstName ?? false) ? null : firstName ?? this.firstName,
+      middleName:
+          (clearMiddleName ?? false) ? null : middleName ?? this.middleName,
+      lastName: (clearLastName ?? false) ? null : lastName ?? this.lastName,
+    );
+  }
+}
+
+class _AppUserColumns {
+  final id = Column<AppUser>('id');
+  final role = Column<AppUser>('role');
+  final email = Column<AppUser>('email');
+  final created = Column<AppUser>('created');
+  final lastSeen = Column<AppUser>('last_seen');
+  final countryCode = Column<AppUser>('country_code');
+  final configurationId = Column<AppUser>('configuration_id');
+  final eulaVersion = Column<AppUser>('eula_version');
+  final firstName = Column<AppUser>('first_name');
+  final middleName = Column<AppUser>('middle_name');
+  final lastName = Column<AppUser>('last_name');
+}
+
+class AppConfiguration {
+  static final table = TableDefinition(
+    'app_configuration',
+    [
+      ColumnDefinition('id',
+          type: DataType.integer, isNullable: false, isPrimaryKey: true),
+      ColumnDefinition('enable_logs', type: DataType.boolean),
+    ],
+  );
+
+  static final columns = _AppConfigurationColumns();
+
+  final int id;
+  final bool? enableLogs;
+
+  AppConfiguration({
+    required this.id,
+    this.enableLogs,
+  });
+
+  factory AppConfiguration.fromRow(Map<String, dynamic> row) {
+    return AppConfiguration(
+      id: row['id']! as int,
+      enableLogs: row['enable_logs'] as bool?,
+    );
+  }
+
+  factory AppConfiguration.fromJson(Map<String, Object?> json) {
+    return AppConfiguration(
+      id: (json['id']! as num).toInt(),
+      enableLogs: json['enableLogs'] as bool?,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'enableLogs': enableLogs,
+    };
+  }
+
+  AppConfiguration copyWith({
+    int? id,
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return AppConfiguration(
+      id: id ?? this.id,
+      enableLogs:
+          (clearEnableLogs ?? false) ? null : enableLogs ?? this.enableLogs,
+    );
+  }
+}
+
+class _AppConfigurationColumns {
+  final id = Column<AppConfiguration>('id');
+  final enableLogs = Column<AppConfiguration>('enable_logs');
+}
+
 class Consent {
   static final table = TableDefinition(
     'consent',
     [
       ColumnDefinition('id',
           type: DataType.integer, isNullable: false, isPrimaryKey: true),
-      ColumnDefinition('type', type: DataType.text, isNullable: false),
+      ColumnDefinition('type',
+          type: DataType.text,
+          isNullable: false,
+          enumDefinition: EnumDefinition(
+              'consent_type', ['privacy_policy', 'terms_of_use'],
+              typeId: 45920)),
     ],
   );
 

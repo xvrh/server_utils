@@ -6,15 +6,15 @@ import 'example_database_schema.dart';
 extension DatabaseCrudExtension on Database {
   CmsPageCrud get cmsPage => CmsPageCrud(this);
 
-  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
-
   CountryCrud get country => CountryCrud(this);
 
   TimezoneCrud get timezone => TimezoneCrud(this);
 
+  MobileDeviceCrud get mobileDevice => MobileDeviceCrud(this);
+
   AppUserCrud get appUser => AppUserCrud(this);
 
-  MobileDeviceCrud get mobileDevice => MobileDeviceCrud(this);
+  AppConfigurationCrud get appConfiguration => AppConfigurationCrud(this);
 
   ConsentCrud get consent => ConsentCrud(this);
 }
@@ -58,7 +58,7 @@ class CmsPageCrud {
     String? pageType,
   }) {
     return _database.insert(
-      'cms_page',
+      CmsPage.table,
       values: {
         if (id != null) 'id': id,
         if (code != null) 'code': code,
@@ -133,89 +133,6 @@ class CmsPageCrud {
   }
 }
 
-class AppConfigurationCrud {
-  final Database _database;
-
-  AppConfigurationCrud(this._database);
-
-  Future<AppConfiguration> find(int id) {
-    return _database.single(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration?> findOrNull(int id) {
-    return _database.singleOrNull(
-      //language=sql
-      'select * from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> insert({
-    int? id /* nextval('app_configuration_id_seq'::regclass) */,
-    bool? enableLogs,
-  }) {
-    return _database.insert(
-      'app_configuration',
-      values: {
-        if (id != null) 'id': id,
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> update(
-    int id, {
-    bool? enableLogs,
-    bool? clearEnableLogs,
-  }) {
-    return _database.update(
-      AppConfiguration.table,
-      where: {
-        'id': id,
-      },
-      set: {
-        if (enableLogs != null) 'enable_logs': enableLogs,
-      },
-      clear: [
-        if (clearEnableLogs ?? false) 'enable_logs',
-      ],
-      mapper: AppConfiguration.fromRow,
-    );
-  }
-
-  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
-    return update(
-      entity.id,
-      enableLogs: entity.enableLogs,
-      clearEnableLogs: entity.enableLogs == null,
-    );
-  }
-
-  Future<int> delete(int id) {
-    return _database.execute(
-      //language=sql
-      'delete from app_configuration where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-    );
-  }
-}
-
 class CountryCrud {
   final Database _database;
 
@@ -254,7 +171,7 @@ class CountryCrud {
     required int phoneCode,
   }) {
     return _database.insert(
-      'country',
+      Country.table,
       values: {
         'code': code,
         'code_iso3': codeIso3,
@@ -350,7 +267,7 @@ class TimezoneCrud {
     required String latLong,
   }) {
     return _database.insert(
-      'timezone',
+      Timezone.table,
       values: {
         'name': name,
         if (country != null) 'country': country,
@@ -410,146 +327,6 @@ class TimezoneCrud {
   }
 }
 
-class AppUserCrud {
-  final Database _database;
-
-  AppUserCrud(this._database);
-
-  Future<AppUser> find(int id) {
-    return _database.single(
-      //language=sql
-      'select * from app_user where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppUser.fromRow,
-    );
-  }
-
-  Future<AppUser?> findOrNull(int id) {
-    return _database.singleOrNull(
-      //language=sql
-      'select * from app_user where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-      mapper: AppUser.fromRow,
-    );
-  }
-
-  Future<AppUser> insert({
-    int? id /* nextval('app_user_id_seq'::regclass) */,
-    required AppRole role,
-    required String email,
-    DateTime? created /* now() */,
-    DateTime? lastSeen,
-    required String countryCode,
-    int? configurationId /* 0 */,
-    String? eulaVersion,
-    String? firstName,
-    String? middleName,
-    String? lastName,
-  }) {
-    return _database.insert(
-      'app_user',
-      values: {
-        if (id != null) 'id': id,
-        'role': role.value,
-        'email': email,
-        if (created != null) 'created': created,
-        if (lastSeen != null) 'last_seen': lastSeen,
-        'country_code': countryCode,
-        if (configurationId != null) 'configuration_id': configurationId,
-        if (eulaVersion != null) 'eula_version': eulaVersion,
-        if (firstName != null) 'first_name': firstName,
-        if (middleName != null) 'middle_name': middleName,
-        if (lastName != null) 'last_name': lastName,
-      },
-      mapper: AppUser.fromRow,
-    );
-  }
-
-  Future<AppUser> update(
-    int id, {
-    AppRole? role,
-    String? email,
-    DateTime? created,
-    DateTime? lastSeen,
-    bool? clearLastSeen,
-    String? countryCode,
-    int? configurationId,
-    String? eulaVersion,
-    bool? clearEulaVersion,
-    String? firstName,
-    bool? clearFirstName,
-    String? middleName,
-    bool? clearMiddleName,
-    String? lastName,
-    bool? clearLastName,
-  }) {
-    return _database.update(
-      AppUser.table,
-      where: {
-        'id': id,
-      },
-      set: {
-        if (role != null) 'role': role.value,
-        if (email != null) 'email': email,
-        if (created != null) 'created': created,
-        if (lastSeen != null) 'last_seen': lastSeen,
-        if (countryCode != null) 'country_code': countryCode,
-        if (configurationId != null) 'configuration_id': configurationId,
-        if (eulaVersion != null) 'eula_version': eulaVersion,
-        if (firstName != null) 'first_name': firstName,
-        if (middleName != null) 'middle_name': middleName,
-        if (lastName != null) 'last_name': lastName,
-      },
-      clear: [
-        if (clearLastSeen ?? false) 'last_seen',
-        if (clearEulaVersion ?? false) 'eula_version',
-        if (clearFirstName ?? false) 'first_name',
-        if (clearMiddleName ?? false) 'middle_name',
-        if (clearLastName ?? false) 'last_name',
-      ],
-      mapper: AppUser.fromRow,
-    );
-  }
-
-  Future<AppUser> updateEntity(AppUser entity) {
-    return update(
-      entity.id,
-      role: entity.role,
-      email: entity.email,
-      created: entity.created,
-      lastSeen: entity.lastSeen,
-      clearLastSeen: entity.lastSeen == null,
-      countryCode: entity.countryCode,
-      configurationId: entity.configurationId,
-      eulaVersion: entity.eulaVersion,
-      clearEulaVersion: entity.eulaVersion == null,
-      firstName: entity.firstName,
-      clearFirstName: entity.firstName == null,
-      middleName: entity.middleName,
-      clearMiddleName: entity.middleName == null,
-      lastName: entity.lastName,
-      clearLastName: entity.lastName == null,
-    );
-  }
-
-  Future<int> delete(int id) {
-    return _database.execute(
-      //language=sql
-      'delete from app_user where id = :id::integer',
-      //language=none
-      args: {
-        'id': id,
-      },
-    );
-  }
-}
-
 class MobileDeviceCrud {
   final Database _database;
 
@@ -597,7 +374,7 @@ class MobileDeviceCrud {
     int? configurationId /* 0 */,
   }) {
     return _database.insert(
-      'mobile_device',
+      MobileDevice.table,
       values: {
         if (id != null) 'id': id,
         'user_id': userId,
@@ -704,6 +481,229 @@ class MobileDeviceCrud {
   }
 }
 
+class AppUserCrud {
+  final Database _database;
+
+  AppUserCrud(this._database);
+
+  Future<AppUser> find(int id) {
+    return _database.single(
+      //language=sql
+      'select * from app_user where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppUser.fromRow,
+    );
+  }
+
+  Future<AppUser?> findOrNull(int id) {
+    return _database.singleOrNull(
+      //language=sql
+      'select * from app_user where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppUser.fromRow,
+    );
+  }
+
+  Future<AppUser> insert({
+    int? id /* nextval('app_user_id_seq'::regclass) */,
+    required AppRole role,
+    required String email,
+    DateTime? created /* now() */,
+    DateTime? lastSeen,
+    required String countryCode,
+    int? configurationId /* 0 */,
+    String? eulaVersion,
+    String? firstName,
+    String? middleName,
+    String? lastName,
+  }) {
+    return _database.insert(
+      AppUser.table,
+      values: {
+        if (id != null) 'id': id,
+        'role': role.value,
+        'email': email,
+        if (created != null) 'created': created,
+        if (lastSeen != null) 'last_seen': lastSeen,
+        'country_code': countryCode,
+        if (configurationId != null) 'configuration_id': configurationId,
+        if (eulaVersion != null) 'eula_version': eulaVersion,
+        if (firstName != null) 'first_name': firstName,
+        if (middleName != null) 'middle_name': middleName,
+        if (lastName != null) 'last_name': lastName,
+      },
+      mapper: AppUser.fromRow,
+    );
+  }
+
+  Future<AppUser> update(
+    int id, {
+    AppRole? role,
+    String? email,
+    DateTime? created,
+    DateTime? lastSeen,
+    bool? clearLastSeen,
+    String? countryCode,
+    int? configurationId,
+    String? eulaVersion,
+    bool? clearEulaVersion,
+    String? firstName,
+    bool? clearFirstName,
+    String? middleName,
+    bool? clearMiddleName,
+    String? lastName,
+    bool? clearLastName,
+  }) {
+    return _database.update(
+      AppUser.table,
+      where: {
+        'id': id,
+      },
+      set: {
+        if (role != null) 'role': role.value,
+        if (email != null) 'email': email,
+        if (created != null) 'created': created,
+        if (lastSeen != null) 'last_seen': lastSeen,
+        if (countryCode != null) 'country_code': countryCode,
+        if (configurationId != null) 'configuration_id': configurationId,
+        if (eulaVersion != null) 'eula_version': eulaVersion,
+        if (firstName != null) 'first_name': firstName,
+        if (middleName != null) 'middle_name': middleName,
+        if (lastName != null) 'last_name': lastName,
+      },
+      clear: [
+        if (clearLastSeen ?? false) 'last_seen',
+        if (clearEulaVersion ?? false) 'eula_version',
+        if (clearFirstName ?? false) 'first_name',
+        if (clearMiddleName ?? false) 'middle_name',
+        if (clearLastName ?? false) 'last_name',
+      ],
+      mapper: AppUser.fromRow,
+    );
+  }
+
+  Future<AppUser> updateEntity(AppUser entity) {
+    return update(
+      entity.id,
+      role: entity.role,
+      email: entity.email,
+      created: entity.created,
+      lastSeen: entity.lastSeen,
+      clearLastSeen: entity.lastSeen == null,
+      countryCode: entity.countryCode,
+      configurationId: entity.configurationId,
+      eulaVersion: entity.eulaVersion,
+      clearEulaVersion: entity.eulaVersion == null,
+      firstName: entity.firstName,
+      clearFirstName: entity.firstName == null,
+      middleName: entity.middleName,
+      clearMiddleName: entity.middleName == null,
+      lastName: entity.lastName,
+      clearLastName: entity.lastName == null,
+    );
+  }
+
+  Future<int> delete(int id) {
+    return _database.execute(
+      //language=sql
+      'delete from app_user where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+    );
+  }
+}
+
+class AppConfigurationCrud {
+  final Database _database;
+
+  AppConfigurationCrud(this._database);
+
+  Future<AppConfiguration> find(int id) {
+    return _database.single(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration?> findOrNull(int id) {
+    return _database.singleOrNull(
+      //language=sql
+      'select * from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> insert({
+    int? id /* nextval('app_configuration_id_seq'::regclass) */,
+    bool? enableLogs,
+  }) {
+    return _database.insert(
+      AppConfiguration.table,
+      values: {
+        if (id != null) 'id': id,
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> update(
+    int id, {
+    bool? enableLogs,
+    bool? clearEnableLogs,
+  }) {
+    return _database.update(
+      AppConfiguration.table,
+      where: {
+        'id': id,
+      },
+      set: {
+        if (enableLogs != null) 'enable_logs': enableLogs,
+      },
+      clear: [
+        if (clearEnableLogs ?? false) 'enable_logs',
+      ],
+      mapper: AppConfiguration.fromRow,
+    );
+  }
+
+  Future<AppConfiguration> updateEntity(AppConfiguration entity) {
+    return update(
+      entity.id,
+      enableLogs: entity.enableLogs,
+      clearEnableLogs: entity.enableLogs == null,
+    );
+  }
+
+  Future<int> delete(int id) {
+    return _database.execute(
+      //language=sql
+      'delete from app_configuration where id = :id::integer',
+      //language=none
+      args: {
+        'id': id,
+      },
+    );
+  }
+}
+
 class ConsentCrud {
   final Database _database;
 
@@ -738,7 +738,7 @@ class ConsentCrud {
     required ConsentType type,
   }) {
     return _database.insert(
-      'consent',
+      Consent.table,
       values: {
         if (id != null) 'id': id,
         'type': type.value,
