@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
-import 'package:server_utils/src/database/schema/schema_extractor.queries.dart' show UserDefinedType;
+import 'package:server_utils/src/database/schema/schema_extractor.queries.dart'
+    show UserDefinedType;
 import 'package:server_utils/src/utils/escape_dart_string.dart';
 
 class DatabaseSchema {
@@ -262,12 +263,16 @@ class DataType<T> {
   };
 
   static DataType fromPostgresName(String name) {
-    var type = _allAndAliases[name.toLowerCase()];
+    var type = tryPostgresName(name);
     if (type == null) {
       throw UnsupportedError(
           'Type [$name] not found. Add it to the list of supported type.');
     }
     return type;
+  }
+
+  static DataType? tryPostgresName(String name) {
+    return _allAndAliases[name.toLowerCase()];
   }
 
   final String postgresType;
