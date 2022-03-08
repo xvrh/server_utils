@@ -33,17 +33,30 @@ void main() {
   });
 
   test('Extract parameters from sql (5)', () {
-    var query = SqlQuery.parse('select * where id = :id:text::text');
+    var query = SqlQuery.parse('select * where id = :id:_json::text');
     expect(query.parameters, hasLength(1));
     expect(query.parameters[0].name, 'id');
     expect(query.parameters[0].type, 'text');
   });
 
-  test('Replace parameters', () {
-    expect(SqlQuery.parse('select * id = :id').bodyWithDartSubstitutions,
-        'select * id = @id');
-    expect(SqlQuery.parse(':id select * id = :id').bodyWithDartSubstitutions,
-        '@id select * id = @id');
+  test('Replace parameters 1', () {
+    expect(
+      SqlQuery.parse('select * id = :id').bodyWithDartSubstitutions,
+      'select * id = @id',
+    );
+    expect(
+      SqlQuery.parse(':id select * id = :id').bodyWithDartSubstitutions,
+      '@id select * id = @id',
+    );
+    expect(
+      SqlQuery.parse(':id select * id = :id:_json').bodyWithDartSubstitutions,
+      '@id select * id = @id:_json',
+    );
+    expect(
+      SqlQuery.parse(':id select * id = :id:_json::jsonb')
+          .bodyWithDartSubstitutions,
+      '@id select * id = @id:_json::jsonb',
+    );
     expect(SqlQuery.parse(':id').bodyWithDartSubstitutions, '@id');
     expect(SqlQuery.parse(' :id ').bodyWithDartSubstitutions, ' @id');
     expect(SqlQuery.parse('''
@@ -56,6 +69,23 @@ select
     * /*:id2*/
     id = 
     @id''');
+  });
+
+  test('Replace parameters 2', () {
+    expect(
+      SqlQuery.parse('select * id = :id:int8').bodyWithStandardSubstitutions,
+      'select * id = :id',
+    );
+    expect(
+      SqlQuery.parse('select * id = :id:int8 and other')
+          .bodyWithStandardSubstitutions,
+      'select * id = :id and other',
+    );
+    expect(
+      SqlQuery.parse('select * id = :id:int8::int')
+          .bodyWithStandardSubstitutions,
+      'select * id = :id::int',
+    );
   });
 
   test('Dart substitutions', () {

@@ -51,13 +51,16 @@ class SqlGrammarDefinition extends GrammarDefinition {
 
   Parser sqlParameter() => (anyOf(':@').token() &
           ref0(identifierLexicalToken) &
+          ref0(dartParameterType).optional() &
           ref0(sqlParameterType).optional())
       .map((s) => SqlParameter(s[0] as Token<String>, s[1] as Token<String>,
-          s[2] as Token<String>?));
+          s[2] as Token<String>?, s[3] as Token<String>?));
 
   Parser sqlParameterType() =>
-      (string(':') & string(':').optional() & ref0(sqlParameterTypeToken))
-          .map((s) => s.last);
+      (string('::') & ref0(sqlParameterTypeToken)).map((s) => s.last);
+
+  Parser dartParameterType() =>
+      (string(':') & ref0(sqlParameterTypeToken)).map((s) => s.last);
 
   Parser sqlParameterTypeToken() =>
       (ref0(identifierLexicalToken) & string('[]').optional())
@@ -117,6 +120,25 @@ class SqlQuery {
     return '$output';
   }
 
+  String get bodyWithStandardSubstitutions {
+    var output = StringBuffer();
+    var lastSliceStart = 0;
+    for (var parameter in parameters) {
+      var sliceIndex = parameter._colonToken.start - position;
+      output.write(body.substring(lastSliceStart, sliceIndex));
+      output.write(':${parameter.name}');
+      if (parameter._dartTypeToken != null) {
+        lastSliceStart = parameter._dartTypeToken!.stop - position;
+      } else {
+        lastSliceStart = parameter._nameToken.stop - position;
+      }
+    }
+    if (lastSliceStart <= body.length) {
+      output.write(body.substring(lastSliceStart));
+    }
+    return '$output';
+  }
+
   static SqlQuery parse(String content) {
     final definition = SqlGrammarDefinition();
     final parser = definition.build();
@@ -141,9 +163,11 @@ class SqlQueryParseException implements Exception {
 class SqlParameter {
   final Token<String> _colonToken;
   final Token<String> _nameToken;
+  final Token<String>? _dartTypeToken;
   final Token<String>? _typeToken;
 
-  SqlParameter(this._colonToken, this._nameToken, this._typeToken);
+  SqlParameter(
+      this._colonToken, this._nameToken, this._dartTypeToken, this._typeToken);
 
   String get name => _nameToken.value;
 

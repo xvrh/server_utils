@@ -153,7 +153,7 @@ class DatabaseIO implements Database {
 
   String _queryString(SqlQuery query) {
     if (_connection is PostgreSQLExecutionContextWithStandardParameters) {
-      return query.body;
+      return query.bodyWithStandardSubstitutions;
     } else {
       return query.bodyWithDartSubstitutions;
     }
