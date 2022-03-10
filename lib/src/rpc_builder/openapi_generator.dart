@@ -109,14 +109,18 @@ class _SchemaBuilder {
           Object? parameters;
           Object? requestBody;
           if (const ['get', 'delete'].contains(httpMethod)) {
-            var parameters = [];
+            var parameterList = [];
             for (var parameter in methodElement.parameters) {
-              parameters.add({
+              parameterList.add({
+                'name': parameter.name,
                 'in': 'query',
                 'required':
                     parameter.type.nullabilitySuffix == NullabilitySuffix.none,
                 'schema': _schemaForType(parameter.type),
               });
+            }
+            if (parameterList.isNotEmpty) {
+              parameters = parameterList;
             }
           } else {
             var requiredList = methodElement.parameters
