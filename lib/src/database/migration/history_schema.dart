@@ -5,10 +5,10 @@ class MigrationHistory {
   static final table = TableDefinition(
     '_migration_history',
     [
-      ColumnDefinition(0, 'id',
+      ColumnDefinition(1, 'id',
           type: DataType.integer, isNullable: false, isPrimaryKey: true),
-      ColumnDefinition(0, 'name', type: DataType.text, isNullable: false),
-      ColumnDefinition(0, 'date',
+      ColumnDefinition(2, 'name', type: DataType.text, isNullable: false),
+      ColumnDefinition(3, 'date',
           type: DataType.timestampWithTimeZone, isNullable: false),
     ],
   );
