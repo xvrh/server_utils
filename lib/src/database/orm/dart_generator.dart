@@ -158,8 +158,15 @@ import 'package:server_utils/database.dart';
             "row['${field.column.name}']${field.isNullable ? '' : '!'} "
             "as ${field.type}${field.isNullable ? '?' : ''},");
       } else {
-        code.writeln('${enumDefinition.name.words.toUpperCamel()}'
-            ".fromRow(row['${field.column.name}']${field.isNullable ? '' : '!'} as String),");
+        if (field.isNullable) {
+          code.write("row['${field.column.name}'] != null ? ");
+        }
+        code.write('${enumDefinition.name.words.toUpperCamel()}'
+            ".fromRow(row['${field.column.name}']${field.isNullable ? '' : '!'} as String)");
+        if (field.isNullable) {
+          code.write(': null');
+        }
+        code.writeln(',');
       }
     }
     code.writeln(');');
@@ -251,13 +258,11 @@ import 'package:server_utils/database.dart';
     code.writeln('const $className._(this.value, this.index);');
     code.writeln('');
 
-    // Use static instead of factory so that the analyzer recognize the class
-    // as an Enum-like class and trigger the warnings when switch cases are not complete
     code.writeln('''
 static $className fromRow(String value) => 
    values.firstWhere((e) => e.value == value);
 
-static $className fromJson(String json) =>
+factory $className.fromJson(String json) =>
   values.firstWhere((e) => e.value == json,
     orElse: () => $className._(json, 0xffff));
     

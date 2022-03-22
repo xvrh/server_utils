@@ -1,1 +1,2 @@
-export 'src/rpc_builder/openapi_generator.dart' show generateOpenApiSchema, Api;
+export 'src/rpc_builder/openapi_generator.dart'
+    show generateOpenApiSchema, Api, UrlReplacement;

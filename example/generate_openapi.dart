@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:server_utils/rpc_openapi.dart';
 
@@ -10,5 +11,6 @@ void main() async {
     description: 'API',
     version: '0.0.1',
   );
-  File('example/api.openapi.json').writeAsStringSync(result);
+  File('example/api.openapi.json')
+      .writeAsStringSync(JsonEncoder.withIndent('  ').convert(result));
 }

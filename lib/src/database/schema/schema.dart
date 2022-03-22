@@ -27,6 +27,7 @@ class TableDefinition {
 }
 
 class ColumnDefinition {
+  final int id;
   final DataType type;
   final String name;
   final String? domain;
@@ -35,7 +36,7 @@ class ColumnDefinition {
   final String? foreignTable;
   final EnumDefinition? enumDefinition;
 
-  const ColumnDefinition(
+  const ColumnDefinition(this.id,
     this.name, {
     required this.type,
     bool? isNullable,
@@ -61,7 +62,7 @@ class ColumnDefinition {
     };
 
     var argCode = args.entries.map((e) => '${e.key}: ${e.value}').join(',');
-    return "ColumnDefinition('$name', $argCode)";
+    return "ColumnDefinition($id, '$name', $argCode)";
   }
 
   @override

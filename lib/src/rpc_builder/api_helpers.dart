@@ -24,6 +24,14 @@ class _RpcRouter {
     _router.post(_path(path), _rpcHandler(path, callback));
   }
 
+  void put(String path, FutureOr Function(_RequestWrapper) callback) {
+    _router.put(_path(path), _rpcHandler(path, callback));
+  }
+
+  void patch(String path, FutureOr Function(_RequestWrapper) callback) {
+    _router.patch(_path(path), _rpcHandler(path, callback));
+  }
+
   void delete(String path, FutureOr Function(_RequestWrapper) callback) {
     _router.delete(_path(path), _rpcHandler(path, callback));
   }

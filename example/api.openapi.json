@@ -1,13 +1,22 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.0",
   "info": {
-    "title": "Fluidra EMEA IoT Consumer API",
-    "description": "API for Consumer mobile app (iAquaLink+)",
+    "title": "API",
+    "description": "API",
     "version": "0.0.1"
   },
+  "tags": [
+    {
+      "name": "Page",
+      "description": ""
+    }
+  ],
   "paths": {
     "/page/fetch-entity": {
       "get": {
+        "tags": [
+          "Page"
+        ],
         "responses": {
           "200": {
             "description": "Success",
@@ -44,16 +53,19 @@
         "type": "object",
         "required": [
           "myEnum",
-          "otherProp"
+          "otherProp",
+          "id"
         ],
         "properties": {
           "myEnum": {
-            "description": "Some comment that will not be visible",
             "$ref": "#/components/schemas/OneEnum"
           },
           "otherProp": {
             "description": "This one can have a description",
             "type": "number"
+          },
+          "id": {
+            "type": "string"
           }
         }
       },

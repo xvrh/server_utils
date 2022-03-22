@@ -18,17 +18,27 @@ class Api<T> {
 }
 
 class Post extends Action {
-  const Post();
+  const Post([String? path]) : super(path);
+}
+
+class Put extends Action {
+  const Put([String? path]) : super(path);
+}
+
+class Patch extends Action {
+  const Patch([String? path]) : super(path);
 }
 
 class Get extends Action {
-  const Get();
+  const Get([String? path]) : super(path);
 }
 
 class Delete extends Action {
-  const Delete();
+  const Delete([String? path]) : super(path);
 }
 
 class Action {
-  const Action();
+  final String? path;
+
+  const Action(this.path);
 }

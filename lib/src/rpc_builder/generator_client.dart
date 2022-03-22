@@ -167,8 +167,6 @@ class $className {
   final String _basePath;
   
   $className(this._client, {required String basePath}): _basePath = basePath;
-  
-  void close() => _client.close();
 
 $code
 }

@@ -7,6 +7,9 @@ import 'dart_generator.dart';
 import 'data_type_postgres.dart';
 import 'queries_parser.dart';
 import 'utils/sql_parser.dart';
+//TODO(xha): expose columnID from FieldDescription
+// ignore: implementation_imports
+import 'package:postgres/src/query.dart' show FieldDescription;
 
 class QueriesGeneratorException implements Exception {
   final String message;
@@ -257,6 +260,7 @@ class PostgresQueryEvaluator implements QueryEvaluator {
     });
 
     return result.columnDescriptions.map((d) {
+      var description = d as FieldDescription;
       DataType dataType;
 
       var enumUserType =
@@ -268,17 +272,22 @@ class PostgresQueryEvaluator implements QueryEvaluator {
             debugMessage: 'Column: ${d.columnName}/${d.tableName}');
       }
 
-      return ColumnInfo(d.columnName, d.tableName, dataType);
+      return ColumnInfo(
+          description.columnID, d.columnName, d.tableName, dataType,
+          enumDefinition: enumUserType);
     }).toList();
   }
 }
 
 class ColumnInfo {
+  final int columnId;
   final String columnName;
   final String tableName;
   final DataType type;
+  final EnumDefinition? enumDefinition;
 
-  ColumnInfo(this.columnName, this.tableName, this.type);
+  ColumnInfo(this.columnId, this.columnName, this.tableName, this.type,
+      {this.enumDefinition});
 }
 
 List<ColumnDefinition> computedColumns(
@@ -287,17 +296,20 @@ List<ColumnDefinition> computedColumns(
   var results = <ColumnDefinition>[];
 
   for (var column in columns) {
-    var tableColumn = schema[column.tableName]?[column.columnName];
+    var table = schema[column.tableName];
+    var tableColumn =
+        table?.columns.firstWhereOrNull((c) => c.id == column.columnId);
+    tableColumn ??= table?[column.columnName];
 
     var isNullable = projection?.lineFor(column.columnName)?.nullable ??
         tableColumn?.isNullable ??
         projection?.defaultLine?.nullable ??
         true;
 
-    results.add(ColumnDefinition(column.columnName,
+    results.add(ColumnDefinition(column.columnId, column.columnName,
         type: column.type,
         isNullable: isNullable,
-        enumDefinition: tableColumn?.enumDefinition));
+        enumDefinition: column.enumDefinition ?? tableColumn?.enumDefinition));
   }
 
   return results;

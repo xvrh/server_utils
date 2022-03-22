@@ -21,6 +21,8 @@ class Entity {
 
   Entity({required this.myEnum, required this.otherProp});
 
+  String get id => 'aaa';
+
   factory Entity.fromJson(Map<String, dynamic> json) => _$EntityFromJson(json);
 
   Map<String, dynamic> toJson() => _$EntityToJson(this);

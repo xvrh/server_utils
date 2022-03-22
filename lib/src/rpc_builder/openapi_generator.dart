@@ -15,11 +15,12 @@ import 'package:collection/collection.dart';
 
 import 'utils.dart';
 
-Future<String> generateOpenApiSchema(
+Future<Map<String, dynamic>> generateOpenApiSchema(
   List<Api> apis, {
   required String title,
   required String description,
   required String version,
+  UrlReplacement? Function(String)? urlReplacer,
 }) async {
   var collection = AnalysisContextCollection(
     includedPaths:
@@ -27,7 +28,7 @@ Future<String> generateOpenApiSchema(
     resourceProvider: PhysicalResourceProvider.INSTANCE,
   );
   var contexts = collection.contexts;
-  var builder = _SchemaBuilder(contexts[0], apis);
+  var builder = _SchemaBuilder(contexts[0], apis, urlReplacer);
   await builder.build();
 
   var schema = <String, dynamic>{
@@ -56,17 +57,18 @@ Future<String> generateOpenApiSchema(
     },
   };
 
-  return const JsonEncoder.withIndent('  ').convert(schema);
+  return schema;
 }
 
 class _SchemaBuilder {
   final AnalysisContext _context;
   final List<Api> _apis;
-  final paths = <String, dynamic>{};
+  final paths = <String, Map<String, dynamic>>{};
   final schemas = <String, dynamic>{};
   final tags = <Map<String, dynamic>>[];
+  final UrlReplacement? Function(String)? urlReplacer;
 
-  _SchemaBuilder(this._context, this._apis);
+  _SchemaBuilder(this._context, this._apis, this.urlReplacer);
 
   Future<void> build() async {
     const apiMetaName = 'Api';
@@ -87,14 +89,27 @@ class _SchemaBuilder {
           apiClass.metadata.firstWhere((m) => m.name.name == apiMetaName);
       var basePath =
           (apiMeta.arguments!.arguments.first as StringLiteral).stringValue!;
+      var urlPrefix = api.urlPrefix;
+      if (urlPrefix != null) {
+        basePath = p.url.join(urlPrefix, basePath);
+      }
 
       for (var method in apiClass.members.whereType<MethodDeclaration>()) {
         var methodElement = method.declaredElement! as MethodElement;
-        var meta = method.metadata.firstWhereOrNull(
-            (m) => const ['Get', 'Post', 'Delete'].contains(m.name.name));
+        var meta = method.metadata.firstWhereOrNull((m) => const [
+              'Get',
+              'Post',
+              'Put',
+              'Patch',
+              'Delete'
+            ].contains(m.name.name));
         if (meta != null) {
-          var httpMethod = meta.name.name.toLowerCase();
           var methodPath = method.name.name.words.toLowerHyphen();
+          if (meta.arguments!.arguments.isNotEmpty) {
+            methodPath =
+                (meta.arguments!.arguments.first as StringLiteral).stringValue!;
+          }
+          var httpMethod = meta.name.name.toLowerCase();
 
           var returnType = method.returnType?.type;
           Map<String, dynamic>? response;
@@ -106,12 +121,47 @@ class _SchemaBuilder {
             };
           }
 
-          Object? parameters;
+          var parameters = <Map<String, dynamic>>[];
           Object? requestBody;
+
+          var fullUrl = p.url.join(basePath, methodPath);
+          var urlReplacement = urlReplacer?.call(fullUrl);
+          if (urlReplacement != null) {
+            fullUrl = urlReplacement.url;
+            var newParameters = urlReplacement.newParameters;
+            if (newParameters != null) {
+              for (var newParameter in newParameters.entries) {
+                if (!methodElement.parameters
+                    .any((e) => e.name == newParameter.key)) {
+                  parameters.insert(0, {
+                    'name': newParameter.key,
+                    'in': 'path',
+                    'required': true,
+                    'schema': {'type': newParameter.value},
+                  });
+                }
+              }
+            }
+          }
+
+          bool isPathParameter(ParameterElement p) =>
+              fullUrl.contains('{${p.name}}');
+          var nonPathParameters =
+              methodElement.parameters.whereNot(isPathParameter).toList();
+
+          for (var parameter
+              in methodElement.parameters.where(isPathParameter).toList()) {
+            parameters.add({
+              'name': parameter.name,
+              'in': 'path',
+              'required': true,
+              'schema': _schemaForType(parameter.type),
+            });
+          }
+
           if (const ['get', 'delete'].contains(httpMethod)) {
-            var parameterList = [];
-            for (var parameter in methodElement.parameters) {
-              parameterList.add({
+            for (var parameter in nonPathParameters) {
+              parameters.add({
                 'name': parameter.name,
                 'in': 'query',
                 'required':
@@ -119,11 +169,8 @@ class _SchemaBuilder {
                 'schema': _schemaForType(parameter.type),
               });
             }
-            if (parameterList.isNotEmpty) {
-              parameters = parameterList;
-            }
           } else {
-            var requiredList = methodElement.parameters
+            var requiredList = nonPathParameters
                 .where(
                     (p) => p.type.nullabilitySuffix == NullabilitySuffix.none)
                 .map((p) => p.name)
@@ -136,7 +183,7 @@ class _SchemaBuilder {
                     'type': 'object',
                     if (requiredList.isNotEmpty) 'required': requiredList,
                     'properties': {
-                      for (var parameter in methodElement.parameters)
+                      for (var parameter in nonPathParameters)
                         parameter.name: _schemaForType(parameter.type),
                     },
                   }
@@ -146,19 +193,19 @@ class _SchemaBuilder {
           }
 
           var comment = _commentString(methodElement.documentationComment);
-          paths['/${p.url.join(basePath, methodPath)}'] = {
-            httpMethod: {
-              'tags': [apiTag],
-              if (comment != null) 'description': comment,
-              if (parameters != null) 'parameters': parameters,
-              if (requestBody != null) 'requestBody': requestBody,
-              'responses': {
-                '200': {
-                  'description': 'Success',
-                  if (response != null) 'content': response,
-                },
-                '500': {r'$ref': '#/components/responses/Error'},
+          var pathEntry = paths['/$fullUrl'] ??= {};
+          pathEntry[httpMethod] = {
+            'operationId': method.name.name,
+            'tags': [apiTag],
+            if (comment != null) 'description': comment,
+            if (parameters.isNotEmpty) 'parameters': parameters,
+            if (requestBody != null) 'requestBody': requestBody,
+            'responses': {
+              '200': {
+                'description': 'Success',
+                if (response != null) 'content': response,
               },
+              '500': {r'$ref': '#/components/responses/Error'},
             },
           };
         }
@@ -230,7 +277,10 @@ class _SchemaBuilder {
             'enum': enums,
           };
         } else {
-          var fields = element.fields.where((e) => !e.isStatic);
+          var fields = element.fields.where((e) {
+            // Filter getters only
+            return !e.isStatic && e.nameOffset >= 0;
+          });
           var required = fields
               .where((f) => f.type.nullabilitySuffix == NullabilitySuffix.none)
               .map((f) => f.name)
@@ -280,10 +330,19 @@ class Api {
   final File file;
   final String? className;
   final String description;
+  final String? urlPrefix;
 
   Api(
     String file, {
     this.className,
     required this.description,
+    this.urlPrefix,
   }) : file = File(file);
+}
+
+class UrlReplacement {
+  final String url;
+  final Map<String, String>? newParameters;
+
+  UrlReplacement(this.url, {this.newParameters});
 }

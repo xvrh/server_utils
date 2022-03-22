@@ -112,9 +112,15 @@ extension DatabaseExtension on Database {
     for (var e in set.entries) {
       var column = table.columns.firstWhere((c) => c.name == e.key,
           orElse: () => throw Exception('Column [${e.key}] not found.'));
-      updates.add(
-          '"${e.key}" = :${e.key}:${column.type.typeString}::${column.type.postgresType}');
-      values[e.key] = e.value;
+      var enumDefinition = column.enumDefinition;
+      if (enumDefinition != null) {
+        updates.add(
+            '"${e.key}" = ' "'${e.value.toString().replaceAll("'", "''")}'");
+      } else {
+        updates.add(
+            '"${e.key}" = :${e.key}:${column.type.typeString}::${column.type.postgresType}');
+        values[e.key] = e.value;
+      }
     }
     if (clear != null) {
       for (var e in clear) {
@@ -125,10 +131,13 @@ extension DatabaseExtension on Database {
       var column = table.columns.firstWhere((c) => c.name == e.key,
           orElse: () => throw Exception('Column where [${e.key}] not found.'));
       wheres.add(
-          '"${e.key}" = :${e.key}:${column.type.typeString}::${column.type.postgresType}');
+          '"${e.key}" = :${e.key}:${column.type.typeString}::${column.enumDefinition?.name ?? column.type.postgresType}');
       values[e.key] = e.value;
     }
-
+    if (updates.isEmpty) {
+      var firstWhere = where.keys.first;
+      updates.add('$firstWhere = $firstWhere');
+    }
     return single(
       'update "$tableName" set ${updates.join(', ')} where ${wheres.join(' and ')} returning *',
       mapper: mapper,

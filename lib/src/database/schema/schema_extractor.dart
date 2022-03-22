@@ -69,6 +69,7 @@ class SchemaExtractor {
         }
 
         var field = ColumnDefinition(
+          columnDescription.attnum,
           column.columnName,
           type: dataType,
           isNullable: isNullable,
