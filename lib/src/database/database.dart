@@ -74,7 +74,11 @@ extension DatabaseExtension on Database {
     }
     var valueVariables = <String>[];
     for (var key in keys) {
-      var column = table[key]!;
+      var column = table[key];
+      if (column == null) {
+        throw Exception(
+            'Column [$key] not found. Available (${table.columns.map((c) => c.name).join(', ')})');
+      }
       valueVariables.add(
           ':$key::${column.enumDefinition?.name ?? column.type.postgresType}');
     }

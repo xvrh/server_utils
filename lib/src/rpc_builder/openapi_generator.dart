@@ -313,7 +313,9 @@ class _SchemaBuilder {
 
   String? _commentString(String? comment) {
     if (comment != null) {
-      return LineSplitter.split(comment).map((l) => l.substring(4)).join('\n');
+      return LineSplitter.split(comment)
+          .map((l) => l.substring(3).trim())
+          .join('\n');
     }
     return null;
   }

@@ -119,7 +119,7 @@ import 'package:server_utils/database.dart';
 
     code.writeln('class $className {');
     if (table != null) {
-      code.writeln('static final table = TableDefinition(');
+      code.writeln('static const table = TableDefinition(');
       code.write('${escapeDartString(table.name)},');
       code.write('[');
       for (var column in table.columns) {

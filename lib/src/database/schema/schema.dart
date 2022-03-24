@@ -17,7 +17,7 @@ class TableDefinition {
   final String name;
   final List<ColumnDefinition> columns;
 
-  TableDefinition(this.name, this.columns);
+  const TableDefinition(this.name, this.columns);
 
   ColumnDefinition? operator [](String columnName) =>
       columns.firstWhereOrNull((e) => e.name == columnName);
@@ -36,7 +36,8 @@ class ColumnDefinition {
   final String? foreignTable;
   final EnumDefinition? enumDefinition;
 
-  const ColumnDefinition(this.id,
+  const ColumnDefinition(
+    this.id,
     this.name, {
     required this.type,
     bool? isNullable,
@@ -74,7 +75,7 @@ class EnumDefinition {
   final List<String> values;
   final int typeId;
 
-  EnumDefinition(this.name, this.values, {required this.typeId});
+  const EnumDefinition(this.name, this.values, {required this.typeId});
 
   String toCode() {
     return "EnumDefinition('$name', [${values.map((v) => escapeDartString(v)).join(',')}], typeId: $typeId)";
