@@ -25,7 +25,8 @@ void checkResponseSuccess(Uri url, Response response) {
         RpcException.deserialize(rpcException.rpcExceptionType, innerJson);
     throw exception;
   } else {
-    throw InternalServerException(rpcException);
+    Error.throwWithStackTrace(InternalServerException(rpcException),
+        StackTrace.fromString(rpcException.stackTrace));
   }
 }
 
