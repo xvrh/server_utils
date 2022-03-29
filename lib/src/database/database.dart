@@ -1,5 +1,5 @@
-import 'schema/schema.dart';
 import 'page.dart';
+import 'schema/schema.dart';
 
 typedef Mapper<T> = T Function(Map<String, dynamic>);
 

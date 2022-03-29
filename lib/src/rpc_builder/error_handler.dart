@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:logging/logging.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'annotations.dart';
 import 'exception_wrapper.dart';
 import 'exceptions.dart';
-import 'package:logging/logging.dart';
 
 final _logger = Logger('rpc');
 

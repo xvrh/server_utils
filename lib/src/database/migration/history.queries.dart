@@ -1,4 +1,4 @@
-import 'package:server_utils/database.dart';
+import '../../../database.dart';
 import 'history_schema.dart';
 
 part 'history.queries.gen.dart';

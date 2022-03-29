@@ -1,8 +1,8 @@
-import 'package:collection/collection.dart';
-import 'utils/sql_parser.dart';
-import 'package:analyzer/dart/ast/ast.dart';
-import 'queries_decorators.dart' show Col;
 import 'package:analyzer/dart/analysis/utilities.dart';
+import 'package:analyzer/dart/ast/ast.dart';
+import 'package:collection/collection.dart';
+import 'queries_decorators.dart' show Col;
+import 'utils/sql_parser.dart';
 
 QueriesFile parseQueries(String content) {
   var parseResult = parseString(content: content);

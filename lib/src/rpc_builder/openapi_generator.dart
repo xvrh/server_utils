@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:analyzer/dart/analysis/analysis_context.dart';
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
@@ -9,10 +8,9 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/file_system/physical_file_system.dart';
+import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 import '../utils/string.dart';
-import 'package:collection/collection.dart';
-
 import 'utils.dart';
 
 Future<Map<String, dynamic>> generateOpenApiSchema(

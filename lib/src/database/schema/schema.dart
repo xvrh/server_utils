@@ -1,5 +1,5 @@
 import 'package:collection/collection.dart';
-import 'package:server_utils/src/utils/escape_dart_string.dart';
+import '../../utils/escape_dart_string.dart';
 
 class DatabaseSchema {
   static final empty = DatabaseSchema([], []);

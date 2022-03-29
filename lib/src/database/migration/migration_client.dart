@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:postgres/postgres.dart';
 
 abstract class MigrationClient {

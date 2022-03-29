@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:package_config/package_config.dart';
-import 'package:server_utils/database.dart';
+import '../../../database.dart';
 import 'default_migration_client.dart';
+import 'history.queries.dart';
+import 'history_crud.dart';
 import 'isolate_runner.dart';
 import 'migration_client.dart';
 import 'script.dart';
-import 'history_crud.dart';
-import 'history.queries.dart';
 
 class Migrator {
   static const _migrationTable = '_migration_history';

@@ -1,15 +1,15 @@
 import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 import 'package:postgres/postgres.dart';
+//TODO(xha): expose columnID from FieldDescription
+// ignore: implementation_imports
+import 'package:postgres/src/query.dart' show FieldDescription;
 import '../../../database_builder.dart';
 import '../../utils/quick_dart_formatter.dart';
 import 'dart_generator.dart';
 import 'data_type_postgres.dart';
 import 'queries_parser.dart';
 import 'utils/sql_parser.dart';
-//TODO(xha): expose columnID from FieldDescription
-// ignore: implementation_imports
-import 'package:postgres/src/query.dart' show FieldDescription;
 
 class QueriesGeneratorException implements Exception {
   final String message;

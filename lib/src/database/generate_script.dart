@@ -4,11 +4,11 @@ import 'package:glob/glob.dart';
 import 'package:glob/list_local_fs.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
+import 'package:pool/pool.dart';
 import 'package:postgres/postgres.dart';
 import 'package:watcher/watcher.dart';
 import '../../database.dart';
 import 'orm/queries_generator.dart';
-import 'package:pool/pool.dart';
 import 'utils.dart';
 
 final _logger = Logger('database_builder');

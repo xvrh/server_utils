@@ -1,5 +1,4 @@
 import 'package:server_utils/database.dart';
-
 import 'example_database_schema.dart';
 
 part 'select.queries.gen.dart';

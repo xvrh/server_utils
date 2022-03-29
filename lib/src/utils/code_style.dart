@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:analyzer/dart/analysis/features.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:pub_semver/pub_semver.dart';
 import 'package:path/path.dart' as p;
+import 'package:pub_semver/pub_semver.dart';
 
 final _featureSet = FeatureSet.fromEnableFlags2(
     sdkLanguageVersion: Version(2, 15, 0), flags: []);

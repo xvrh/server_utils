@@ -1,5 +1,6 @@
 // GENERATED-FILE
-import 'package:server_utils/database.dart';
+
+import '../../../database.dart';
 
 class MigrationHistory {
   static final table = TableDefinition(

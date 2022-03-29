@@ -1,4 +1,5 @@
 // GENERATED-FILE
+
 import 'package:server_utils/database.dart';
 
 class AppRole implements EnumLike {

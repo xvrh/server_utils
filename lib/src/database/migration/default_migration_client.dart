@@ -1,10 +1,9 @@
 import 'dart:io';
-
 import 'package:postgres_pool/postgres_pool.dart';
-import 'package:server_utils/src/database/migration/migration_client.dart';
+import '../../utils/escape_dart_string.dart';
 import '../postgres.dart';
 import '../utils.dart';
-import '../../utils/escape_dart_string.dart';
+import 'migration_client.dart';
 
 class PostgresMigrationClient implements MigrationClient {
   final PostgresClient client;

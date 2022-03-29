@@ -1,6 +1,6 @@
 // GENERATED-FILE
 
-import 'package:server_utils/database.dart';
+import '../../../database.dart';
 import 'history_schema.dart';
 
 extension DatabaseCrudExtension on Database {

@@ -1,4 +1,4 @@
-import 'package:server_utils/database.dart';
+import '../../../database.dart';
 
 part 'schema_extractor.queries.gen.dart';
 
