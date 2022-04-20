@@ -16,6 +16,7 @@ import 'api.dart' show News, MoveType, CmsPage;
 export 'api.dart' show News, MoveType, CmsPage;
 
 // ignore_for_file: implementation_imports
+// ignore_for_file: unnecessary_string_interpolations
 
 class NewsClient {
   final Client _client;

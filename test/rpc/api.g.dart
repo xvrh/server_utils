@@ -43,7 +43,7 @@ Map<String, dynamic> _$CmsPageToJson<TContent>(CmsPage<TContent> instance) =>
 // **************************************************************************
 
 const $newsApi = Api<NewsApi>.info(
-    path: '/news/', name: 'NewsApi', factory: _$NewsApiHandler);
+    path: '/news', name: 'NewsApi', factory: _$NewsApiHandler);
 
 Handler _$NewsApiHandler(NewsApi api) {
   var router = createRpcRouter($newsApi);

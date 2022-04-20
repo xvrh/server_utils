@@ -26,7 +26,7 @@ const _$OneEnumEnumMap = {
 // **************************************************************************
 
 const $pageApi = Api<PageApi>.info(
-    path: '/page/', name: 'PageApi', factory: _$PageApiHandler);
+    path: '/page', name: 'PageApi', factory: _$PageApiHandler);
 
 Handler _$PageApiHandler(PageApi api) {
   var router = createRpcRouter($pageApi);

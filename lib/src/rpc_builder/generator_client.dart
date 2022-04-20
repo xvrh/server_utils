@@ -156,6 +156,7 @@ ${groupedImports.join('\n')}
 ${groupedExports.join('\n')}
 
 // ignore_for_file: implementation_imports
+// ignore_for_file: unnecessary_string_interpolations
  
 class $className {
   final Client _client;

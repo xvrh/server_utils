@@ -16,6 +16,7 @@ import 'api.dart' show Entity;
 export 'api.dart' show Entity;
 
 // ignore_for_file: implementation_imports
+// ignore_for_file: unnecessary_string_interpolations
 
 class PageClient {
   final Client _client;
