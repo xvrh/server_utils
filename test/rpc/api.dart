@@ -195,6 +195,10 @@ class NewsApi {
   @Get()
   Map<String?, int?>? echoMapNullable(Map<String?, int?>? map) => map;
 
+  @Get('custom/{parameter}/{id}/{flag}')
+  Future<String> withParameter(String parameter, int id, bool flag) async =>
+      'Hello $parameter $id $flag';
+
   Handler get handler => _$NewsApiHandler(this);
 }
 

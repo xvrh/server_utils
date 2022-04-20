@@ -11,9 +11,7 @@ class Value {
 
   String fromJsonCode(ValueType newType) => newType.fromJsonCode(this);
 
-  static final _identifierRegExp =
-      RegExp(r'^[a-z_\$][a-z0-9_\$]*$', caseSensitive: false);
-  bool get isSimpleIdentifier => _identifierRegExp.hasMatch(accessor);
+  bool get isSimpleIdentifier => isSimpleDartIdentifier(accessor);
 
   Value get asNonNull => Value(accessor, type.copyWith(isNullable: false));
 }

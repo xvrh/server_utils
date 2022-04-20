@@ -23,8 +23,6 @@ class PageClient {
 
   PageClient(this._client, {required String basePath}) : _basePath = basePath;
 
-  void close() => _client.close();
-
   Future<Entity> fetchEntity() async {
     var $url =
         Uri.parse(path_helper.url.join(_basePath, 'page', 'fetch-entity'));

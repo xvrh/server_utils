@@ -28,12 +28,12 @@ class RpcRouterGenerator extends GeneratorForAnnotation<Api> {
 
     var code = StringBuffer();
 
-    var trimmedPath = CharMatcher.charSet('/').trimFrom(apiAnnotation.path);
+    var apiPath = CharMatcher.charSet('/').trimFrom(apiAnnotation.path);
     var infoVariableName = '\$${className.words.toLowerCamel()}';
     var factoryVariableName = '_\$${className}Handler';
 
     code.writeln('''
-const $infoVariableName = Api<$className>.info(path: '/$trimmedPath/', name: '$className', factory: $factoryVariableName);    
+const $infoVariableName = Api<$className>.info(path: '/${_normalizeRouterPath(apiPath)}', name: '$className', factory: $factoryVariableName);    
 
 Handler $factoryVariableName($className api) {
   var router = createRpcRouter($infoVariableName);
@@ -41,71 +41,87 @@ Handler $factoryVariableName($className api) {
 
     for (var method in classElement.methods) {
       var actionAnnotation = findActionAnnotation(method);
-      if (actionAnnotation != null) {
-        var actionType = actionAnnotation.type!
-            .getDisplayString(withNullability: true)
-            .toLowerCase();
+      if (actionAnnotation == null) continue;
 
-        var methodContent = StringBuffer();
+      var actionType = actionAnnotation.type!
+          .getDisplayString(withNullability: true)
+          .toLowerCase();
+      var actionPath = actionAnnotation.getField('path')?.toStringValue();
+      var endpointPath = actionPath ?? method.name.words.toLowerHyphen();
 
-        methodContent.writeln('api.${method.name}(');
+      var pathParameters = [
+        ...extractPathParameters(apiPath),
+        ...extractPathParameters(endpointPath),
+      ];
+      endpointPath = _normalizeRouterPath(endpointPath);
 
-        var needBody = false;
-        for (var parameter in method.parameters) {
-          var isNullable =
-              parameter.type.nullabilitySuffix == NullabilitySuffix.question;
-          var parameterType = typeFromDart(parameter.type);
+      var methodContent = StringBuffer();
 
-          String getter;
-          if (const ['get', 'delete'].contains(actionType)) {
-            var castMethod =
-                _castMethodForType(parameter.type, isNullable: isNullable);
-            getter = "request.queryParameter('${parameter.name}').$castMethod";
+      methodContent.writeln('api.${method.name}(');
 
-            if (castMethod.endsWith('Json')) {
-              getter = parameterType.fromJsonCode(
-                  Value(getter, ObjectType(isNullable: isNullable)));
-            }
-          } else {
-            needBody = true;
-            getter = "body['${parameter.name}']";
-            getter = parameterType
-                .fromJsonCode(Value(getter, ObjectType(isNullable: true)));
+      var needBody = false;
+      for (var parameter in method.parameters) {
+        var isNullable =
+            parameter.type.nullabilitySuffix == NullabilitySuffix.question;
+        var parameterType = typeFromDart(parameter.type);
+
+        var isPathParameter = pathParameters.contains(parameter.name);
+        pathParameters.remove(parameter.name);
+        String getter;
+
+        if (isPathParameter || const ['get', 'delete'].contains(actionType)) {
+          var castMethod =
+              _castMethodForType(parameter.type, isNullable: isNullable);
+          getter =
+              "request.${isPathParameter ? 'path' : 'query'}Parameter('${parameter.name}').$castMethod";
+
+          if (castMethod.endsWith('Json')) {
+            getter = parameterType.fromJsonCode(
+                Value(getter, ObjectType(isNullable: isNullable)));
           }
-
-          if (parameter.isNamed) {
-            methodContent.writeln('${parameter.name}: $getter, ');
-          } else {
-            methodContent.writeln('$getter, ');
-          }
-        }
-
-        methodContent.writeln(')');
-
-        var endpointName = method.name.words.toLowerHyphen();
-        code.writeln('''
-router.$actionType('$endpointName', (request) ${(needBody || method.returnType.isDartAsyncFuture) ? 'async' : ''} {
-        ''');
-        if (needBody) {
-          code.writeln('var body = await request.body;');
-        }
-
-        var methodContentCode = methodContent.toString();
-
-        var flattedReturn = futureType(method.returnType);
-        var isReturnVoid = flattedReturn.isVoid;
-
-        var awaitKeyword = method.returnType.isDartAsyncFuture ? 'await' : '';
-        if (!isReturnVoid) {
-          var returnType = typeFromDart(flattedReturn);
-          code.writeln('var result = $awaitKeyword $methodContentCode;');
-          code.writeln('return ${returnType.toJsonCode('result')};');
         } else {
-          code.writeln('$awaitKeyword $methodContentCode;');
+          needBody = true;
+          getter = "body['${parameter.name}']";
+          getter = parameterType
+              .fromJsonCode(Value(getter, ObjectType(isNullable: true)));
         }
 
-        code.writeln('});');
+        if (parameter.isNamed) {
+          methodContent.writeln('${parameter.name}: $getter, ');
+        } else {
+          methodContent.writeln('$getter, ');
+        }
       }
+
+      if (pathParameters.isNotEmpty) {
+        throw Exception(
+            'Path parameters [${pathParameters.join(', ')}] are not used in method [${method.name}]');
+      }
+
+      methodContent.writeln(')');
+
+      code.writeln('''
+router.$actionType('$endpointPath', (request) ${(needBody || method.returnType.isDartAsyncFuture) ? 'async' : ''} {
+        ''');
+      if (needBody) {
+        code.writeln('var body = await request.body;');
+      }
+
+      var methodContentCode = methodContent.toString();
+
+      var flattedReturn = futureType(method.returnType);
+      var isReturnVoid = flattedReturn.isVoid;
+
+      var awaitKeyword = method.returnType.isDartAsyncFuture ? 'await' : '';
+      if (!isReturnVoid) {
+        var returnType = typeFromDart(flattedReturn);
+        code.writeln('var result = $awaitKeyword $methodContentCode;');
+        code.writeln('return ${returnType.toJsonCode('result')};');
+      } else {
+        code.writeln('$awaitKeyword $methodContentCode;');
+      }
+
+      code.writeln('});');
 
       code.writeln('');
     }
@@ -137,4 +153,8 @@ String _castMethodForType(DartType type, {required bool isNullable}) {
   } else {
     return '${methodPrefix}Json';
   }
+}
+
+String _normalizeRouterPath(String path) {
+  return path.replaceAll('{', '<').replaceAll('}', '>');
 }

@@ -40,94 +40,89 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
 
     for (var method in classElement.methods) {
       var actionAnnotation = findActionAnnotation(method);
-      if (actionAnnotation != null) {
-        var actionType = actionAnnotation.type!
-            .getDisplayString(withNullability: true)
-            .toLowerCase();
+      if (actionAnnotation == null) continue;
+      var actionType = actionAnnotation.type!
+          .getDisplayString(withNullability: true)
+          .toLowerCase();
+      var actionPath = actionAnnotation.getField('path')?.toStringValue();
+      var endpointPath = actionPath ?? method.name.words.toLowerHyphen();
 
-        _importsForType(method.returnType, extraImports);
-        for (var parameter in method.parameters) {
-          _importsForType(parameter.type, extraImports);
+      var pathParameterNames = [
+        ...extractPathParameters(apiAnnotation.path),
+        ...extractPathParameters(endpointPath),
+      ];
+      var pathParameters = method.parameters
+          .where((p) => pathParameterNames.contains(p.name))
+          .toList();
+      var remainingParameters =
+          method.parameters.where((p) => !pathParameters.contains(p)).toList();
+
+      _importsForType(method.returnType, extraImports);
+      for (var parameter in method.parameters) {
+        _importsForType(parameter.type, extraImports);
+      }
+
+      List<ParameterElement> queryParameters;
+      String sendCode;
+      var headersCode = '';
+      if (const ['get', 'delete'].contains(actionType)) {
+        sendCode = 'await _client.$actionType(\$url)';
+        queryParameters = remainingParameters;
+      } else {
+        queryParameters = [];
+        var bodyParameters = remainingParameters.toList();
+
+        var body = '';
+        if (bodyParameters.isNotEmpty) {
+          body = ', body: jsonEncode({';
+          for (var parameter in bodyParameters) {
+            body += "'${parameter.name}': ";
+            body +=
+                '${typeFromDart(parameter.type).toJsonCode(parameter.name)},\n';
+          }
+          body += '})';
+
+          headersCode = ", headers: {'content-type': 'application/json'}";
         }
 
-        var endpointName = method.name.words.toLowerHyphen();
-        code.writeln(
-            '''Future<${futureType(method.returnType)}> ${method.name}(${encodeParameters(method.parameters)}) async {
-          var \$url = Uri.parse(path_helper.url.join(_basePath, '${apiAnnotation.path}', '$endpointName'));''');
+        sendCode = 'await _client.$actionType(\$url$body$headersCode)';
+      }
 
-        var queryParameters = method.parameters;
-        String sendCode;
-        var headersCode = '';
-        if (const ['get', 'delete'].contains(actionType)) {
-          sendCode = 'await _client.$actionType(\$url)';
-        } else {
-          queryParameters = [];
-          var bodyParameters = method.parameters.toList();
+      code.writeln(
+          '''Future<${futureType(method.returnType)}> ${method.name}(${encodeParameters(method.parameters)}) async {
+          var \$url = Uri.parse(path_helper.url.join(_basePath, 
+          '${_interpolatePath(apiAnnotation.path, pathParameters)}', 
+          '${_interpolatePath(endpointPath, pathParameters)}'));''');
 
-          var body = '';
-          if (bodyParameters.isNotEmpty) {
-            body = ', body: jsonEncode({';
-            for (var parameter in bodyParameters) {
-              body += "'${parameter.name}': ";
-              body +=
-                  '${typeFromDart(parameter.type).toJsonCode(parameter.name)},\n';
-            }
-            body += '})';
+      if (queryParameters.isNotEmpty) {
+        code.writeln(r'$url = $url.replace(queryParameters: {');
 
-            headersCode = ", headers: {'content-type': 'application/json'}";
+        for (var parameter in queryParameters) {
+          if (parameter.type.nullabilitySuffix == NullabilitySuffix.question) {
+            code.writeln('if (${parameter.name} != null)');
           }
 
-          sendCode = 'await _client.$actionType(\$url$body$headersCode)';
+          var encodedParameter = _parameterToString(parameter);
+          code.writeln("'${parameter.name}': $encodedParameter,");
         }
 
-        if (queryParameters.isNotEmpty) {
-          code.writeln(r'$url = $url.replace(queryParameters: {');
+        code.writeln('});');
+      }
 
-          for (var parameter in queryParameters) {
-            if (parameter.type.nullabilitySuffix ==
-                NullabilitySuffix.question) {
-              code.writeln('if (${parameter.name} != null)');
-            }
-
-            String encodedParameter;
-
-            if (parameter.type.isDartCoreString) {
-              encodedParameter = parameter.name;
-            } else if (parameter.type.isDartCoreBool ||
-                parameter.type.isDartCoreInt ||
-                parameter.type.isDartCoreDouble ||
-                parameter.type.isDartCoreNum ||
-                isDateTime(parameter.type) ||
-                isEnum(parameter.type)) {
-              encodedParameter = '${parameter.name}.toString()';
-            } else {
-              var parameterType =
-                  typeFromDart(parameter.type).copyWith(isNullable: false);
-              encodedParameter =
-                  'jsonEncode(${parameterType.toJsonCode(parameter.name)})';
-            }
-
-            code.writeln("'${parameter.name}': $encodedParameter,");
-          }
-
-          code.writeln('});');
-        }
-
-        code.writeln('''
+      code.writeln('''
           var \$response = $sendCode;
           checkResponseSuccess(\$url, \$response);''');
 
-        if (!isVoid(method.returnType)) {
-          var returnType = typeFromDart(futureType(method.returnType));
-          code.writeln('''
+      if (!isVoid(method.returnType)) {
+        var returnType = typeFromDart(futureType(method.returnType));
+        code.writeln('''
           var \$decodedResponse = jsonDecode(\$response.body);
           return ${returnType.fromJsonCode(Value(r'$decodedResponse', ObjectType(isNullable: true)))};
         ''');
-        }
-
-        code.writeln('}');
-        code.writeln('');
       }
+
+      code.writeln('}');
+      code.writeln('');
     }
 
     var groupedImports = <String>[];
@@ -204,4 +199,35 @@ class _Import {
   final String showType;
 
   _Import(this.uri, this.showType);
+}
+
+String _parameterToString(ParameterElement parameter, {bool? isInterpolation}) {
+  isInterpolation ??= false;
+  if (parameter.type.isDartCoreString) {
+    return parameter.name;
+  } else if (parameter.type.isDartCoreBool ||
+      parameter.type.isDartCoreInt ||
+      parameter.type.isDartCoreDouble ||
+      parameter.type.isDartCoreNum ||
+      isDateTime(parameter.type) ||
+      isEnum(parameter.type)) {
+    return isInterpolation ? parameter.name : '${parameter.name}.toString()';
+  } else {
+    var parameterType =
+        typeFromDart(parameter.type).copyWith(isNullable: false);
+    return 'jsonEncode(${parameterType.toJsonCode(parameter.name)})';
+  }
+}
+
+String _interpolatePath(String path, List<ParameterElement> parameters) {
+  return path.replaceAllMapped(pathParamPattern, (match) {
+    var parameterName = match.group(1);
+    var parameter = parameters.firstWhere((p) => p.name == parameterName);
+    var code = _parameterToString(parameter, isInterpolation: true);
+    if (isSimpleDartIdentifier(code)) {
+      return '\$$code';
+    } else {
+      return '\${$code}';
+    }
+  });
 }

@@ -7,6 +7,12 @@ import 'package:meta/meta.dart';
 import 'package:source_gen/source_gen.dart';
 import 'annotations.dart';
 
+final pathParamPattern = RegExp(r'\{([^}]+)\}');
+
+List<String> extractPathParameters(String path) {
+  return pathParamPattern.allMatches(path).map((m) => m.group(1)!).toList();
+}
+
 Api readApiAnnotation(ConstantReader reader) =>
     Api(reader.read('path').stringValue);
 

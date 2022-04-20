@@ -78,7 +78,7 @@ class EnumDefinition {
   const EnumDefinition(this.name, this.values, {required this.typeId});
 
   String toCode() {
-    return "EnumDefinition('$name', [${values.map((v) => escapeDartString(v)).join(',')}], typeId: $typeId)";
+    return "EnumDefinition('$name', [${values.map((v) => escapeDartString(v)).join(',')}], typeId: 0)";
   }
 }
 

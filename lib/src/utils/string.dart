@@ -25,3 +25,9 @@ extension ListStringExtensions on Iterable<String> {
 
 const nonBreakableSpace = '\u00A0';
 const thinSpace = '\u202F';
+
+final _identifierRegExp =
+    RegExp(r'^[a-z_\$][a-z0-9_\$]*$', caseSensitive: false);
+bool isSimpleDartIdentifier(String accessor) {
+  return _identifierRegExp.hasMatch(accessor);
+}

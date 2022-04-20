@@ -23,8 +23,6 @@ class NewsClient {
 
   NewsClient(this._client, {required String basePath}) : _basePath = basePath;
 
-  void close() => _client.close();
-
   Future<String> simpleString() async {
     var $url =
         Uri.parse(path_helper.url.join(_basePath, 'news', 'simple-string'));
@@ -527,5 +525,14 @@ class NewsClient {
     var $decodedResponse = jsonDecode($response.body);
     return ($decodedResponse as Map<String, Object?>?)
         ?.map((k, v) => MapEntry(k, (v as num?)?.toInt()));
+  }
+
+  Future<String> withParameter(String parameter, int id, bool flag) async {
+    var $url = Uri.parse(
+        path_helper.url.join(_basePath, 'news', 'custom/$parameter/$id/$flag'));
+    var $response = await _client.get($url);
+    checkResponseSuccess($url, $response);
+    var $decodedResponse = jsonDecode($response.body);
+    return $decodedResponse! as String;
   }
 }

@@ -70,6 +70,10 @@ class _RequestWrapper {
         parameterName, request.requestedUri.queryParameters[parameterName]);
   }
 
+  _ParameterWrapper pathParameter(String parameterName) {
+    return _ParameterWrapper(parameterName, request.params[parameterName]);
+  }
+
   Future<Map<String, Object?>>? _body;
   Future<Map<String, Object?>> get body async => _body ??= _decodeBody();
 

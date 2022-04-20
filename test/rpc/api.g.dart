@@ -363,5 +363,14 @@ Handler _$NewsApiHandler(NewsApi api) {
     return result;
   });
 
+  router.get('custom/<parameter>/<id>/<flag>', (request) async {
+    var result = await api.withParameter(
+      request.pathParameter('parameter').requiredString(),
+      request.pathParameter('id').requiredInt(),
+      request.pathParameter('flag').requiredBool(),
+    );
+    return result;
+  });
+
   return router.handler;
 }

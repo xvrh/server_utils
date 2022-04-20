@@ -10,6 +10,7 @@ import 'api.g.client.dart' as client_lib;
 void main() {
   late HttpServer server;
   late client_lib.NewsClient client;
+  late Client httpClient;
 
   setUpAll(() async {
     var router = Router();
@@ -22,12 +23,13 @@ void main() {
   });
 
   setUp(() {
-    client = client_lib.NewsClient(Client(),
+    httpClient = Client();
+    client = client_lib.NewsClient(httpClient,
         basePath: '${'http'}://${server.address.host}:${server.port}');
   });
 
   tearDown(() {
-    client.close();
+    httpClient.close();
   });
 
   test('Simple string', () async {
@@ -217,5 +219,10 @@ void main() {
   test('List map null', () async {
     expect(await client.echoListNullable(null), null);
     expect(await client.echoMapNullable(null), null);
+  });
+
+  test('With path parameters', () async {
+    expect(
+        await client.withParameter('World', 2, false), 'Hello World 2 false');
   });
 }
