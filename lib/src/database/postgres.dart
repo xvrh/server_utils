@@ -37,12 +37,20 @@ class Postgres {
     var overridePath = Platform.environment['POSTGRES_DATA_DIR'];
     var root = overridePath != null
         ? path.absolute(overridePath)
-        : path.join(Platform.environment['HOME']!, '.postgres-data');
+        : path.join(_homePath, '.postgres-data');
     var userDir = Directory(path.join(root, name));
     if (!userDir.existsSync()) {
       userDir.createSync(recursive: true);
     }
     return userDir.path;
+  }
+
+  static String get _homePath {
+    if (Platform.isWindows) {
+      return Platform.environment['HOMEPATH']!;
+    } else {
+      return Platform.environment['HOME']!;
+    }
   }
 
   static String temporaryPath() {

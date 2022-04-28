@@ -72,18 +72,19 @@ class RpcClientGenerator extends GeneratorForAnnotation<Api> {
         queryParameters = [];
         var bodyParameters = remainingParameters.toList();
 
-        var body = '';
-        if (bodyParameters.isNotEmpty) {
-          body = ', body: jsonEncode({';
-          for (var parameter in bodyParameters) {
-            body += "'${parameter.name}': ";
-            body +=
-                '${typeFromDart(parameter.type).toJsonCode(parameter.name)},\n';
+        var body = ', body: jsonEncode({';
+        for (var parameter in bodyParameters) {
+          var type = typeFromDart(parameter.type);
+          if (type.isNullable) {
+            body += 'if (${parameter.name} != null)';
           }
-          body += '})';
-
-          headersCode = ", headers: {'content-type': 'application/json'}";
+          body += "'${parameter.name}': ";
+          body +=
+              '${type.copyWith(isNullable: false).toJsonCode(parameter.name)},\n';
         }
+        body += '})';
+
+        headersCode = ", headers: {'content-type': 'application/json'}";
 
         sendCode = 'await _client.$actionType(\$url$body$headersCode)';
       }

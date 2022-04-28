@@ -12,9 +12,14 @@ void checkResponseSuccess(Uri url, Response response) {
         jsonDecode(response.body) as Map<String, dynamic>);
   } catch (_) {
     // deserialization failed, this is not an encoded RpcException
-    var message = 'Request to $url failed with status ${response.statusCode}';
+    var message =
+        'Request to [${response.request?.method}] $url failed with status ${response.statusCode}';
     if (response.reasonPhrase != null) {
       message = '$message: ${response.reasonPhrase}';
+    }
+    var body = response.body;
+    if (body.isNotEmpty) {
+      message += '\n$body';
     }
     throw ClientException('$message.', url);
   }
