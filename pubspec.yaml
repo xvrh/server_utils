@@ -1,29 +1,44 @@
 name: server_utils
 
 environment:
-  sdk: '>=2.15.0 <3.0.0'
+  sdk: '>=2.18.0 <3.0.0'
 
 dependencies:
-  analyzer:
+  analyzer: ^4.0.0
+  build:
+  collection:
+  convert:
+  crypto:
   dart_style:
+  glob:
+  http:
+  json_annotation:
   logging:
   markdown:
   more:
+  package_config:
+  path:
   petitparser:
+  pool:
   postgres:
   postgres_pool:
   process_runner:
+  pub_semver:
   quiver:
+  shelf:
   shelf_proxy:
   shelf_router:
   shelf_static:
+  source_gen:
+  stream_transform:
+  vm_service:
   watcher:
+  yaml:
 
 dev_dependencies:
   build_runner:
   build_test:
   faker:
-  json_annotation:
   json_serializable:
   lints:
   test:

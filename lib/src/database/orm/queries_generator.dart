@@ -5,7 +5,7 @@ import 'package:postgres/postgres.dart';
 // ignore: implementation_imports
 import 'package:postgres/src/query.dart' show FieldDescription;
 import '../../../database_builder.dart';
-import '../../utils/quick_dart_formatter.dart';
+import '../../utils/dart_formatter.dart';
 import 'dart_generator.dart';
 import 'data_type_postgres.dart';
 import 'queries_parser.dart';

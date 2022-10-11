@@ -4,7 +4,6 @@ import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:dart_style/dart_style.dart';
 import 'dart_project.dart';
-import 'fix_absolute_import.dart' show featureSet;
 
 void main() {
   for (var project in getSubOrContainingProjects(Directory.current.path)) {
@@ -37,7 +36,7 @@ final String newLineChar = Platform.isWindows ? '\r\n' : '\n';
 
 String reorderImports(String source) {
   return _reorderImports(
-      source, parseString(content: source, featureSet: featureSet).unit);
+      source, parseString(content: source).unit);
 }
 
 String _reorderImports(String content, CompilationUnit unit) {
@@ -111,7 +110,7 @@ String _reorderImports(String content, CompilationUnit unit) {
   var contentBefore = content.substring(0, minOffset);
   var reorderedContent = '';
 
-  String _writeBlock(List<UriBasedDirective> directives) {
+  String writeBlock(List<UriBasedDirective> directives) {
     var result = '';
     for (var directive in directives) {
       var wholeDirective = wholeDirectives.firstWhere(
@@ -128,9 +127,9 @@ String _reorderImports(String content, CompilationUnit unit) {
     return '$result$newLineChar$newLineChar';
   }
 
-  reorderedContent += _removeBlankLines(_writeBlock(imports));
-  reorderedContent += _removeBlankLines(_writeBlock(exports));
-  reorderedContent += _removeBlankLines(_writeBlock(parts));
+  reorderedContent += _removeBlankLines(writeBlock(imports));
+  reorderedContent += _removeBlankLines(writeBlock(exports));
+  reorderedContent += _removeBlankLines(writeBlock(parts));
 
   var contentAfter = content.substring(maxOffset);
 

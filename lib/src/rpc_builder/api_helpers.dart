@@ -8,6 +8,7 @@ import 'annotations.dart' show Api;
 import 'error_handler.dart';
 import 'exceptions.dart';
 
+// ignore: library_private_types_in_public_api
 _RpcRouter createRpcRouter(Api apiInfo) => _RpcRouter(apiInfo);
 
 class _RpcRouter {

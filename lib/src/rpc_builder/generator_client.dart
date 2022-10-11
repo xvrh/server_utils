@@ -184,11 +184,11 @@ void _importsForType(DartType type, List<_Import> imports) {
       _importsForType(typeArgument, imports);
     }
   }
-  if (type.element != null &&
-      type.element!.library != null &&
-      !type.element!.library!.isDartCore &&
-      type.element!.name != 'Future') {
-    var element = type.element;
+  if (type.element2 != null &&
+      type.element2!.library != null &&
+      !type.element2!.library!.isDartCore &&
+      type.element2!.name != 'Future') {
+    var element = type.element2;
     if (element is ClassElement) {
       var uri = element.library.source.uri;
       imports.add(_Import(uri, element.name));

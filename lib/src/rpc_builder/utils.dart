@@ -3,7 +3,6 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 //ignore: implementation_imports
 import 'package:analyzer/src/dart/element/type.dart' show DynamicTypeImpl;
-import 'package:meta/meta.dart';
 import 'package:source_gen/source_gen.dart';
 import 'annotations.dart';
 
@@ -21,33 +20,22 @@ DartObject? findActionAnnotation(MethodElement element) {
 }
 
 bool hasFromJsonMethod(DartType type) {
-  if (type.element is! ClassElement) return false;
+  if (type.element2 is! ClassElement) return false;
 
-  var classElement = type.element! as ClassElement;
+  var classElement = type.element2! as ClassElement;
 
   return classElement.getNamedConstructor('fromJson') != null ||
       classElement.getMethod('fromJson') != null;
 }
 
-final _requiredChecker = TypeChecker.fromRuntime(required.runtimeType);
-
-bool isRequiredParameter(ParameterElement parameter) {
-  return parameter.isRequiredNamed ||
-      _requiredChecker.firstAnnotationOf(parameter) != null;
-}
-
 bool isDateTime(DartType type) =>
-    type.element != null &&
-    type.element!.library != null &&
-    type.element!.library!.isDartCore &&
+    type.element2 != null &&
+    type.element2!.library != null &&
+    type.element2!.library!.isDartCore &&
     type.getDisplayString(withNullability: false) == 'DateTime';
 
 bool isEnum(DartType type) {
-  var element = type.element;
-  if (element is ClassElement) {
-    return element.isEnum;
-  }
-  return false;
+  return type.element2 is EnumElement;
 }
 
 bool isJsonSimpleType(DartType type) =>

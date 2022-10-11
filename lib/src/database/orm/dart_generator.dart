@@ -1,5 +1,5 @@
 import '../../utils/escape_dart_string.dart';
-import '../../utils/quick_dart_formatter.dart';
+import '../../utils/dart_formatter.dart';
 import '../../utils/string.dart';
 import '../../utils/type.dart';
 import '../schema/schema.dart';
@@ -78,6 +78,7 @@ class DartGenerator {
   Future<String> generateEntities({List<String>? imports}) async {
     var code = StringBuffer('''
 // GENERATED-FILE
+
 import 'package:server_utils/database.dart';
 ''');
 

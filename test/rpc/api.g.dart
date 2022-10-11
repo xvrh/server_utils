@@ -290,7 +290,7 @@ Handler _$NewsApiHandler(NewsApi api) {
   router.get('echo-enum', (request) {
     var result = api.echoEnum(
       request.queryParameter('type1').requiredEnum(MoveType.values),
-      type2: request.queryParameter('type2').nullableEnum(MoveType?.values),
+      type2: request.queryParameter('type2').nullableEnum(MoveType.values),
     );
     return result.map((i) => apiUtils.enumName(i)).toList();
   });

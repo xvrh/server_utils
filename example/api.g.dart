@@ -12,7 +12,7 @@ Entity _$EntityFromJson(Map<String, dynamic> json) => Entity(
     );
 
 Map<String, dynamic> _$EntityToJson(Entity instance) => <String, dynamic>{
-      'myEnum': _$OneEnumEnumMap[instance.myEnum],
+      'myEnum': _$OneEnumEnumMap[instance.myEnum]!,
       'otherProp': instance.otherProp,
     };
 

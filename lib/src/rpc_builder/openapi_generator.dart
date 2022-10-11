@@ -77,10 +77,10 @@ class _SchemaBuilder {
       var apiClass = result.unit.declarations
           .whereType<ClassDeclaration>()
           .where((c) => c.metadata.any((m) => m.name.name == apiMetaName))
-          .where((c) => api.className == null || c.name.name == api.className)
+          .where((c) => api.className == null || c.name2.toString() == api.className)
           .single;
 
-      var apiTag = _removeSuffix(apiClass.name.name, suffix: 'Api');
+      var apiTag = _removeSuffix(apiClass.name2.toString(), suffix: 'Api');
       tags.add({'name': apiTag, 'description': api.description});
 
       var apiMeta =
@@ -93,7 +93,7 @@ class _SchemaBuilder {
       }
 
       for (var method in apiClass.members.whereType<MethodDeclaration>()) {
-        var methodElement = method.declaredElement! as MethodElement;
+        var methodElement = method.declaredElement2! as MethodElement;
         var meta = method.metadata.firstWhereOrNull((m) => const [
               'Get',
               'Post',
@@ -102,7 +102,7 @@ class _SchemaBuilder {
               'Delete'
             ].contains(m.name.name));
         if (meta != null) {
-          var methodPath = method.name.name.words.toLowerHyphen();
+          var methodPath = method.name2.toString().words.toLowerHyphen();
           if (meta.arguments!.arguments.isNotEmpty) {
             methodPath =
                 (meta.arguments!.arguments.first as StringLiteral).stringValue!;
@@ -193,7 +193,7 @@ class _SchemaBuilder {
           var comment = _commentString(methodElement.documentationComment);
           var pathEntry = paths['/$fullUrl'] ??= {};
           pathEntry[httpMethod] = {
-            'operationId': method.name.name,
+            'operationId': method.name2.toString(),
             'tags': [apiTag],
             if (comment != null) 'description': comment,
             if (parameters.isNotEmpty) 'parameters': parameters,
@@ -248,18 +248,18 @@ class _SchemaBuilder {
   String _addSchema(DartType type) {
     var typeName = type.getDisplayString(withNullability: false);
     if (!schemas.containsKey(typeName)) {
-      var element = type.element!;
+      var element = type.element2!;
       if (element is ClassElement) {
         List<String>? enums;
         var comment = _commentString(element.documentationComment);
 
-        if (element.isEnum) {
+        if (element is EnumElement) {
           enums = element.fields
               .where((f) => f.isStatic && f.name != 'values')
               .map((e) => e.name)
               .toList();
         } else if (element.allSupertypes
-            .any((s) => s.element.name == 'EnumLike')) {
+            .any((s) => s.element2.name == 'EnumLike')) {
           enums = element.fields
               .where((f) => f.isConst && f.hasInitializer && f.name != 'values')
               .map((e) =>

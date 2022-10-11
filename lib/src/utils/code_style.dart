@@ -1,18 +1,13 @@
 import 'dart:convert';
-import 'package:analyzer/dart/analysis/features.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:path/path.dart' as p;
-import 'package:pub_semver/pub_semver.dart';
-
-final _featureSet = FeatureSet.fromEnableFlags2(
-    sdkLanguageVersion: Version(2, 15, 0), flags: []);
 
 String fixCodeStyle(String content,
     {required String packageName, required String libPath}) {
   var newContent = content;
 
-  var unit = parseString(content: content, featureSet: _featureSet).unit;
+  var unit = parseString(content: content).unit;
 
   for (var directive
       in unit.directives.reversed.whereType<NamespaceDirective>()) {
@@ -38,7 +33,7 @@ String fixCodeStyle(String content,
 }
 
 String _reorderImports(String content) {
-  var unit = parseString(content: content, featureSet: _featureSet).unit;
+  var unit = parseString(content: content).unit;
 
   var wholeDirectives = <_WholeDirective>[];
   var imports = <ImportDirective>[];
@@ -91,7 +86,7 @@ String _reorderImports(String content) {
   var contentBefore = content.substring(0, minOffset);
   var reorderedContent = '';
 
-  String _writeBlock(List<UriBasedDirective> directives) {
+  String writeBlock(List<UriBasedDirective> directives) {
     var result = '';
     for (var directive in directives) {
       var wholeDirective = wholeDirectives.firstWhere(
@@ -108,9 +103,9 @@ String _reorderImports(String content) {
     return '$result\n\n';
   }
 
-  reorderedContent += _removeBlankLines(_writeBlock(imports));
-  reorderedContent += _removeBlankLines(_writeBlock(exports));
-  reorderedContent += _removeBlankLines(_writeBlock(parts));
+  reorderedContent += _removeBlankLines(writeBlock(imports));
+  reorderedContent += _removeBlankLines(writeBlock(exports));
+  reorderedContent += _removeBlankLines(writeBlock(parts));
 
   var contentAfter = content.substring(maxOffset);
 

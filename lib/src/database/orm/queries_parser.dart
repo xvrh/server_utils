@@ -13,7 +13,7 @@ QueriesFile parseQueries(String content) {
   for (var extension in ast.declarations
       .whereType<ExtensionDeclaration>()
       .where((e) => (e.extendedType as NamedType).name.name == 'Database')) {
-    var name = extension.name?.name;
+    var name = extension.name2?.toString();
     if (name == null) continue;
 
     var queries = <QueryDeclaration>[];
@@ -22,7 +22,7 @@ QueriesFile parseQueries(String content) {
       var parameters = method.parameters!;
       var info = MethodInfo(
         _typeToString(returnType),
-        method.name.name,
+        method.name2.toString(),
         DartParameters(parameters.toSource(),
             parameters.parameters.map(_parameterFromAst).toList()),
       );
@@ -55,7 +55,7 @@ QueriesFile parseQueries(String content) {
       }
 
       if (sqlQuery == null) {
-        throw Exception('[${method.name}]: No SQL query found (q(...) method)');
+        throw Exception('[$method]: No SQL query found (q(...) method)');
       }
 
       var header = QueryHeader(info, projection, testValues);
@@ -71,7 +71,7 @@ QueriesFile parseQueries(String content) {
 DartParameter _parameterFromAst(FormalParameter parameter) {
   if (parameter is SimpleFormalParameter) {
     var type = parameter.type! as NamedType;
-    return DartParameter(parameter.identifier!.name, _typeToString(type));
+    return DartParameter(parameter.name!.toString(), _typeToString(type));
   } else if (parameter is DefaultFormalParameter) {
     return _parameterFromAst(parameter.parameter);
   } else {

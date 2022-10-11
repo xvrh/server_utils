@@ -290,7 +290,8 @@ class NewsClient {
   Future<List<String>> getListStringPost() async {
     var $url = Uri.parse(
         path_helper.url.join(_basePath, 'news', 'get-list-string-post'));
-    var $response = await _client.post($url);
+    var $response = await _client.post($url,
+        body: jsonEncode({}), headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return ($decodedResponse! as List<Object?>)
@@ -310,7 +311,8 @@ class NewsClient {
   Future<List<bool>> getListBoolPost() async {
     var $url = Uri.parse(
         path_helper.url.join(_basePath, 'news', 'get-list-bool-post'));
-    var $response = await _client.post($url);
+    var $response = await _client.post($url,
+        body: jsonEncode({}), headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
     var $decodedResponse = jsonDecode($response.body);
     return ($decodedResponse! as List<Object?>).map((i) => i! as bool).toList();
@@ -454,14 +456,16 @@ class NewsClient {
   Future<void> throwANotFoundException() async {
     var $url = Uri.parse(
         path_helper.url.join(_basePath, 'news', 'throwa-not-found-exception'));
-    var $response = await _client.post($url);
+    var $response = await _client.post($url,
+        body: jsonEncode({}), headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
   }
 
   Future<void> throwAInvalidInputException() async {
     var $url = Uri.parse(path_helper.url
         .join(_basePath, 'news', 'throwa-invalid-input-exception'));
-    var $response = await _client.post($url);
+    var $response = await _client.post($url,
+        body: jsonEncode({}), headers: {'content-type': 'application/json'});
     checkResponseSuccess($url, $response);
   }
 

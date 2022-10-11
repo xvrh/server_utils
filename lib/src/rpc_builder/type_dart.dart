@@ -37,12 +37,12 @@ ValueType typeFromDart(DartType type) {
   } else if (type.isDynamic) {
     return DynamicType();
   } else {
-    var element = type.element;
+    var element = type.element2;
     if (element is ClassElement) {
-      if (element.isEnum) {
+      if (element is EnumElement) {
         return EnumType(element.name, isNullable: isNullable);
       } else if (element.allSupertypes
-          .any((s) => s.element.name == 'EnumLike')) {
+          .any((s) => s.element2.name == 'EnumLike')) {
         return EnumLikeType(element.name, isNullable: isNullable);
       }
 
