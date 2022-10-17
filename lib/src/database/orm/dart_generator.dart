@@ -152,7 +152,7 @@ import 'package:server_utils/database.dart';
 
       if (field.domain != null) {
         var fromJsonCode = field.jsonType.fromJsonCode(
-            Value("row['${field.name}']", ObjectType(isNullable: true)));
+            Value("row['${field.column.name}']", ObjectType(isNullable: true)));
         code.writeln('$fromJsonCode,');
       } else if (enumDefinition == null) {
         code.writeln(
